@@ -1,4 +1,6 @@
 import { useManagedScopeResolution } from "../../stores/enterpriseIdentityStore";
+import { localOnlySpeechMode, localOnlySpeechModes } from "../../helpers/localOnlyEngine.js";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { ShieldCheck } from "../icons";
 import { EnterpriseAudioSettings } from "./EnterpriseAudioSettings";
 import { useRegistryVersion } from "../../hooks/useRegistryVersion";
@@ -98,7 +100,7 @@ export function MeetingTranscriptionPanel() {
     effectiveMode: effectiveTranscriptionMode,
     isModeAllowed,
   } = usePolicyModeOptions<InferenceModeOption>(
-    [
+    localOnlySpeechModes([
       {
         id: "openwhispr",
         label: t("settingsPage.transcription.modes.openwhispr"),
@@ -137,9 +139,9 @@ export function MeetingTranscriptionPanel() {
         disabled: true,
         badge: t("common.comingSoon"),
       },
-    ],
+    ]),
     "transcription",
-    meetingTranscriptionMode,
+    localOnlySpeechMode(meetingTranscriptionMode),
     {
       byokProviders: MEETING_BYOK_PROVIDER_IDS,
       enterpriseProviders: ["azure", "openai-compatible"],
@@ -254,15 +256,17 @@ export function MeetingTranscriptionPanel() {
           {managed.messageKey ? t(managed.messageKey) : managed.message}
         </p>
       ) : (
-        <InferenceModeSelector
-          modes={
-            managedActive
-              ? transcriptionModes.filter((mode) => mode.id === "enterprise")
-              : transcriptionModes
-          }
-          activeMode={managedActive ? "enterprise" : effectiveTranscriptionMode}
-          onSelect={handleTranscriptionModeSelect}
-        />
+        !isLocalOnly() && (
+          <InferenceModeSelector
+            modes={
+              managedActive
+                ? transcriptionModes.filter((mode) => mode.id === "enterprise")
+                : transcriptionModes
+            }
+            activeMode={managedActive ? "enterprise" : effectiveTranscriptionMode}
+            onSelect={handleTranscriptionModeSelect}
+          />
+        )
       )}
 
       {managed.kind === "manual" && effectiveTranscriptionMode === "openwhispr" && !isSignedIn && (

@@ -486,7 +486,9 @@
           "needsComputer": "需要 {{needed}} GB，這台電腦有 {{free}} GB 可用空間。",
           "noSpaceMac": "聽寫需要 {{needed}} GB 可用空間，這台 Mac 只有 {{free}} GB。請釋放一些空間後繼續。",
           "noSpaceComputer": "聽寫需要 {{needed}} GB 可用空間，這台電腦只有 {{free}} GB。請釋放一些空間後繼續。"
-        }
+        },
+        "attribution": "CC BY-SA 4.0, oruk/orukeet",
+        "macosUnsupported": "Orukeet 需要 macOS {{version}} 或更新版本。請更新 macOS，以便在這台 Mac 上使用語音辨識。"
       }
     },
     "steps": {

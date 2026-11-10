@@ -7,6 +7,8 @@
 // Settings are only written by onProceed.
 import { useMemo, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
+import { isLocalOnly } from "../../config/localOnly.js";
+import { ORUKEET_MINIMUM_MACOS_VERSION } from "../../helpers/localOnlyEngine.js";
 import { Button } from "../ui/button";
 import { ProviderIcon } from "../ui/ProviderIcon";
 import { Check, Globe, Laptop, Monitor } from "../icons";
@@ -468,7 +470,14 @@ export function LocalSetupStep({
   };
 
   let foot = t("onboarding.rehaul.localSetup.foot.default");
-  if (phase === "blocked") {
+  // Orukeet needs macOS 15.5; say so plainly rather than a generic "unavailable".
+  const macTooOld =
+    isLocalOnly() && plan.profile.platform === "darwin" && plan.profile.parakeetSupported === false;
+  if (phase === "blocked" && macTooOld) {
+    foot = t("onboarding.rehaul.localSetup.macosUnsupported", {
+      version: ORUKEET_MINIMUM_MACOS_VERSION,
+    });
+  } else if (phase === "blocked") {
     foot = t("onboarding.rehaul.localSetup.foot.dictationUnavailable");
   } else if (phase === "failed") {
     foot = t("onboarding.rehaul.localSetup.foot.dictationFailed");
@@ -571,6 +580,14 @@ export function LocalSetupStep({
       >
         {foot}
       </p>
+      {isLocalOnly() && (
+        <p
+          data-local-setup-attribution=""
+          className="mx-1 mt-1 text-center text-xs leading-normal text-[var(--onboarding-text-tertiary)]"
+        >
+          {t("onboarding.rehaul.localSetup.attribution")}
+        </p>
+      )}
     </section>
   );
 }

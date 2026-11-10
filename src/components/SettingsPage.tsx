@@ -1,4 +1,6 @@
 import { EnterpriseAudioSettings } from "./settings/EnterpriseAudioSettings";
+import { localOnlySpeechMode, localOnlySpeechModes } from "../helpers/localOnlyEngine.js";
+import { isLocalOnly } from "../config/localOnly.js";
 import { useRegistryVersion } from "../hooks/useRegistryVersion";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -551,7 +553,7 @@ function TranscriptionSection({
     effectiveMode: effectiveTranscriptionMode,
     isModeAllowed,
   } = usePolicyModeOptions<InferenceModeOption>(
-    [
+    localOnlySpeechModes([
       {
         id: "openwhispr",
         label: t("settingsPage.transcription.modes.openwhispr"),
@@ -588,9 +590,9 @@ function TranscriptionSection({
             },
           ]
         : []),
-    ],
+    ]),
     "transcription",
-    transcriptionMode,
+    localOnlySpeechMode(transcriptionMode),
     {
       byokProviders: TRANSCRIPTION_POLICY_PROVIDER_IDS,
       enterpriseProviders: TRANSCRIPTION_ENTERPRISE_POLICY_PROVIDER_IDS,
@@ -786,11 +788,13 @@ function TranscriptionSection({
               </Button>
             </div>
           )}
-          <InferenceModeSelector
-            modes={transcriptionModes}
-            activeMode={effectiveTranscriptionMode}
-            onSelect={handleTranscriptionModeSelect}
-          />
+          {!isLocalOnly() && (
+            <InferenceModeSelector
+              modes={transcriptionModes}
+              activeMode={effectiveTranscriptionMode}
+              onSelect={handleTranscriptionModeSelect}
+            />
+          )}
 
           {effectiveTranscriptionMode === "providers" && renderTranscriptionPicker("cloud")}
           {effectiveTranscriptionMode === "local" && renderTranscriptionPicker("local")}

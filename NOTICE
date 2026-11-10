@@ -1,0 +1,11 @@
+Third-party notices
+
+Speech recognition model
+------------------------
+Orukeet by Oruk AI, https://huggingface.co/oruk/orukeet
+License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+Derived from NVIDIA Parakeet TDT 0.6B v3.
+
+Software
+--------
+This software is based on OpenWhispr (MIT License).

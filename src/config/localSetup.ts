@@ -16,6 +16,8 @@ import {
 } from "../stores/policyRules";
 import type { PolicyDecisionSnapshot } from "../stores/policyRules";
 import { getASRModelOrganization } from "../helpers/localASROrganization";
+import { isLocalOnly } from "./localOnly.js";
+import { DEFAULT_LOCAL_SPEECH_MODEL } from "./localOnlyDefaults.js";
 import { formatBytes, spaceSizeUnit } from "../utils/formatBytes";
 import modelRegistryData from "../models/modelRegistryData.json" with { type: "json" };
 import { registryData } from "../models/registryData.js";
@@ -235,7 +237,11 @@ export function pickDictationModel(
 ): { modelId: string; group: LanguageGroup | "olderMac" } {
   const group =
     profile.parakeetSupported === false ? "olderMac" : languageGroup(normalizeLanguages(languages));
-  return { modelId: table.models.dictation[group], group };
+  // Local-only has one speech engine for every machine and language group.
+  return {
+    modelId: isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : table.models.dictation[group],
+    group,
+  };
 }
 
 function speechInfo(modelId: string): SpeechModelInfo | undefined {

@@ -330,12 +330,6 @@ export default function UploadAudioView({ onNoteCreated, onOpenSettings }: Uploa
   const uploadRestrictionId = useId();
   const uploadRestrictionDescription = uploadFeatureAllowed ? undefined : uploadRestrictionId;
 
-  const setUploadTranscriptionMode = useSettingsStore((s) => s.setUploadTranscriptionMode);
-  const setUploadCloudTranscriptionMode = useSettingsStore(
-    (s) => s.setUploadCloudTranscriptionMode
-  );
-  const setUploadUseLocalWhisper = useSettingsStore((s) => s.setUploadUseLocalWhisper);
-
   const cortiClientId = useSettingsStore((s) => s.cortiClientId);
   const cortiClientSecret = useSettingsStore((s) => s.cortiClientSecret);
   const cortiEnvironment = useSettingsStore((s) => s.cortiEnvironment);
@@ -1060,12 +1054,6 @@ export default function UploadAudioView({ onNoteCreated, onOpenSettings }: Uploa
     }
   };
 
-  const switchToCloud = () => {
-    setUploadTranscriptionMode("openwhispr");
-    setUploadCloudTranscriptionMode("openwhispr");
-    setUploadUseLocalWhisper(false);
-  };
-
   const getTranscribingLabel = (): string => {
     if (managed.kind === "managed")
       return t("notes.upload.transcribingProvider", {
@@ -1288,7 +1276,6 @@ export default function UploadAudioView({ onNoteCreated, onOpenSettings }: Uploa
             isProUser={!!isProUser}
             onUpgrade={() => usage?.openCheckout()}
             onCreateAccount={requestSignIn}
-            onSwitchToCloud={switchToCloud}
             onOpenSettings={onOpenSettings}
           />
         )}
@@ -1638,7 +1625,6 @@ interface SelectedViewProps {
   isProUser: boolean;
   onUpgrade: () => void;
   onCreateAccount: () => void;
-  onSwitchToCloud: () => void;
   onOpenSettings?: (section: string) => void;
 }
 
@@ -1659,7 +1645,6 @@ function SelectedView({
   isProUser,
   onUpgrade,
   onCreateAccount,
-  onSwitchToCloud,
   onOpenSettings,
 }: SelectedViewProps) {
   const canTranscribe = !fileTooLarge && !requiresUpgrade && !byokTooLarge;
@@ -1747,13 +1732,6 @@ function SelectedView({
         {byokTooLarge && requiresAccount && (
           <Button onClick={onCreateAccount} className={PRIMARY_ACTION_CLASS}>
             {t("notes.upload.createAccount")}
-          </Button>
-        )}
-
-        {/* BYOK too large — signed in, Pro: Switch to Cloud */}
-        {byokTooLarge && !requiresAccount && isProUser && (
-          <Button onClick={onSwitchToCloud} className={PRIMARY_ACTION_CLASS}>
-            {t("notes.upload.switchToCloud")}
           </Button>
         )}
 

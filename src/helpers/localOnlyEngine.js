@@ -1,0 +1,27 @@
+// The one speech engine of the local-only meeting assistant is Orukeet. These pure
+// helpers narrow upstream's engine and mode lists to it; upstream keeps every list
+// when local-only is off. ESM, shared by the renderer and tests.
+import { isLocalOnly } from "../config/localOnly.js";
+
+export const LOCAL_ONLY_ORGANIZATION_ID = "oruk";
+
+// Dictation, meetings and upload offer only the local mode.
+export function localOnlySpeechModes(options) {
+  return isLocalOnly() ? options.filter((option) => option.id === "local") : options;
+}
+
+// The stored mode of a speech scope, which can only be local in local-only.
+export function localOnlySpeechMode(mode) {
+  return isLocalOnly() ? "local" : mode;
+}
+
+export function localOnlyOrganizations(organizations) {
+  return isLocalOnly()
+    ? organizations.filter((organization) => organization.id === LOCAL_ONLY_ORGANIZATION_ID)
+    : organizations;
+}
+
+// Orukeet runs on macOS 15.5 or later. Same value as parakeetCapability.js, which is
+// CommonJS and cannot be imported by the renderer (test/components/localOnlyPicker.test.js
+// pins that they agree).
+export const ORUKEET_MINIMUM_MACOS_VERSION = "15.5";

@@ -486,7 +486,9 @@
           "needsComputer": "Se necesitan {{needed}} GB y este equipo tiene {{free}} GB libres.",
           "noSpaceMac": "El dictado necesita {{needed}} GB libres y este Mac tiene {{free}} GB. Libera espacio para continuar.",
           "noSpaceComputer": "El dictado necesita {{needed}} GB libres y este equipo tiene {{free}} GB. Libera espacio para continuar."
-        }
+        },
+        "attribution": "CC BY-SA 4.0, oruk/orukeet",
+        "macosUnsupported": "Orukeet requiere macOS {{version}} o posterior. Actualiza macOS para usar el reconocimiento de voz en este Mac."
       }
     },
     "steps": {

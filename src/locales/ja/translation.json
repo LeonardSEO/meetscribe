@@ -486,7 +486,9 @@
           "needsComputer": "{{needed}} GB が必要です。このコンピュータの空き容量は {{free}} GB です。",
           "noSpaceMac": "ディクテーションには {{needed}} GB の空き容量が必要ですが、この Mac は {{free}} GB です。続けるには空き容量を増やしてください。",
           "noSpaceComputer": "ディクテーションには {{needed}} GB の空き容量が必要ですが、このコンピュータは {{free}} GB です。続けるには空き容量を増やしてください。"
-        }
+        },
+        "attribution": "CC BY-SA 4.0, oruk/orukeet",
+        "macosUnsupported": "Orukeet には macOS {{version}} 以降が必要です。この Mac で音声認識を使うには、macOS をアップデートしてください。"
       }
     },
     "steps": {

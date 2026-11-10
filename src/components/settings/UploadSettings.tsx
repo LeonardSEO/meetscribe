@@ -1,4 +1,6 @@
 import { EnterpriseAudioSettings } from "./EnterpriseAudioSettings";
+import { localOnlySpeechMode, localOnlySpeechModes } from "../../helpers/localOnlyEngine.js";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Cloud, Key, Cpu, Network, ShieldCheck } from "../icons";
@@ -60,7 +62,7 @@ export function UploadTranscriptionPanel() {
     effectiveMode: effectiveTranscriptionMode,
     isModeAllowed,
   } = usePolicyModeOptions<InferenceModeOption>(
-    [
+    localOnlySpeechModes([
       {
         id: "openwhispr",
         label: t("settingsPage.transcription.modes.openwhispr"),
@@ -97,9 +99,9 @@ export function UploadTranscriptionPanel() {
             },
           ]
         : []),
-    ],
+    ]),
     "transcription",
-    uploadTranscriptionMode,
+    localOnlySpeechMode(uploadTranscriptionMode),
     {
       byokProviders: TRANSCRIPTION_POLICY_PROVIDER_IDS,
       enterpriseProviders: TRANSCRIPTION_ENTERPRISE_POLICY_PROVIDER_IDS,
@@ -198,15 +200,17 @@ export function UploadTranscriptionPanel() {
           {managed.messageKey ? t(managed.messageKey) : managed.message}
         </p>
       ) : (
-        <InferenceModeSelector
-          modes={
-            managedActive
-              ? transcriptionModes.filter((mode) => mode.id === "enterprise")
-              : transcriptionModes
-          }
-          activeMode={managedActive ? "enterprise" : effectiveTranscriptionMode}
-          onSelect={handleTranscriptionModeSelect}
-        />
+        !isLocalOnly() && (
+          <InferenceModeSelector
+            modes={
+              managedActive
+                ? transcriptionModes.filter((mode) => mode.id === "enterprise")
+                : transcriptionModes
+            }
+            activeMode={managedActive ? "enterprise" : effectiveTranscriptionMode}
+            onSelect={handleTranscriptionModeSelect}
+          />
+        )
       )}
 
       {managed.kind === "manual" &&

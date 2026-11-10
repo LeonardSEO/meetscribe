@@ -486,7 +486,9 @@
           "needsComputer": "Dafür werden {{needed}} GB benötigt, und auf diesem Computer sind {{free}} GB frei.",
           "noSpaceMac": "Das Diktat braucht {{needed}} GB freien Speicherplatz, und dieser Mac hat {{free}} GB. Geben Sie Speicherplatz frei, um fortzufahren.",
           "noSpaceComputer": "Das Diktat braucht {{needed}} GB freien Speicherplatz, und dieser Computer hat {{free}} GB. Geben Sie Speicherplatz frei, um fortzufahren."
-        }
+        },
+        "attribution": "CC BY-SA 4.0, oruk/orukeet",
+        "macosUnsupported": "Orukeet benötigt macOS {{version}} oder neuer. Aktualisiere macOS, um die Spracherkennung auf diesem Mac zu nutzen."
       }
     },
     "steps": {

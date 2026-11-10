@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from "react";
+import { isLocalOnly } from "../config/localOnly.js";
 import { useRegistryVersion } from "../hooks/useRegistryVersion";
 import { isAwaitingCatalog } from "../models/modelLifecycle.js";
 import { getRegistryData } from "../models/registryData.js";
@@ -471,7 +472,8 @@ export default function TranscriptionModelPicker({
   onCloudModelSelect,
   selectedLocalModel,
   onLocalModelSelect,
-  selectedLocalProvider = "whisper",
+  // Local-only never starts on Whisper: its backend value for Orukeet is "nvidia".
+  selectedLocalProvider = isLocalOnly() ? "nvidia" : "whisper",
   onLocalProviderSelect,
   useLocalWhisper,
   onModeChange,
@@ -516,7 +518,13 @@ export default function TranscriptionModelPicker({
   const customTranscriptionApiKey = useSettingsStore((s) => s.customTranscriptionApiKey);
   const setCustomTranscriptionApiKey = useSettingsStore((s) => s.setCustomTranscriptionApiKey);
   const isSignedIn = useSettingsStore((s) => s.isSignedIn);
-  const effectiveLocal = mode === "local" ? true : mode === "cloud" ? false : useLocalWhisper;
+  const effectiveLocal = isLocalOnly()
+    ? true
+    : mode === "local"
+      ? true
+      : mode === "cloud"
+        ? false
+        : useLocalWhisper;
   const [localModels, setLocalModels] = useState<LocalModel[]>([]);
   const [parakeetModels, setParakeetModels] = useState<LocalModel[]>([]);
   const [parakeetCapability, setParakeetCapability] = useState<ParakeetCheckResult | null>(null);
@@ -580,6 +588,9 @@ export default function TranscriptionModelPicker({
 
   useEffect(() => {
     if (parakeetCapability?.supported !== false) return;
+    // Local-only has no Whisper to fall back to: the Oruk tab stays, marked as
+    // needing a newer macOS, and the saved engine is never rerouted.
+    if (isLocalOnly()) return;
 
     // Tabs are pure browse state, so the browsed tab and the committed
     // provider must each leave the sherpa tabs on their own: moving the tab off
@@ -1569,7 +1580,9 @@ export default function TranscriptionModelPicker({
   return (
     <div className={`space-y-2 ${className}`}>
       <ConnectionCheckAnnouncer announcement={check.announcement} />
-      {!mode && <ModeToggle useLocalWhisper={effectiveLocal} onModeChange={handleModeChange} />}
+      {!mode && !isLocalOnly() && (
+        <ModeToggle useLocalWhisper={effectiveLocal} onModeChange={handleModeChange} />
+      )}
 
       {!effectiveLocal ? (
         <>

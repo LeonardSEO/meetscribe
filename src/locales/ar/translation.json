@@ -3895,7 +3895,9 @@
           "needsComputer": "يتطلب هذا {{needed}} غيغابايت، وفي هذا الحاسوب {{free}} غيغابايت حرة.",
           "noSpaceMac": "يحتاج الإملاء إلى {{needed}} غيغابايت حرة، وفي جهاز Mac هذا {{free}} غيغابايت. حرّر بعض المساحة للمتابعة.",
           "noSpaceComputer": "يحتاج الإملاء إلى {{needed}} غيغابايت حرة، وفي هذا الحاسوب {{free}} غيغابايت. حرّر بعض المساحة للمتابعة."
-        }
+        },
+        "attribution": "CC BY-SA 4.0, oruk/orukeet",
+        "macosUnsupported": "يتطلب Orukeet نظام macOS {{version}} أو أحدث. حدّث macOS لاستخدام التعرف على الكلام على هذا الجهاز Mac."
       }
     },
     "steps": {
