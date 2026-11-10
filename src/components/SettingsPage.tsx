@@ -103,6 +103,7 @@ import ChatAgentSettings from "./settings/ChatAgentSettings";
 import DictationAgentSettings from "./settings/DictationAgentSettings";
 import DictationTranslationSettings from "./settings/DictationTranslationSettings";
 import InferenceConfigEditor from "./settings/InferenceConfigEditor";
+import FoundrySection from "./settings/FoundrySection";
 import { MeetingTranscriptionPanel } from "./settings/MeetingSettings";
 import { UploadTranscriptionPanel } from "./settings/UploadSettings";
 import LanguageSelector from "./ui/LanguageSelector";
@@ -5096,33 +5097,37 @@ EOF`,
       )}
       {hasMountedLlms && (
         <TabPanel active={activeSection === "llms"}>
-          <LlmsTabs
-            initialTab={
-              activeSection === "llms" ? (initialSubTab as LlmTab | undefined) : undefined
-            }
-            renderChatIntelligence={() => <ChatAgentSettings />}
-            renderDictationCleanup={() => (
-              <div className="space-y-6">
-                <AiModelsSection
-                  useCleanupModel={useCleanupModel}
-                  setUseCleanupModel={(value) => {
-                    updateCleanupSettings({ useCleanupModel: value });
-                  }}
-                  toast={toast}
-                />
-                <div className="border-t border-border/70 pt-6">
-                  <SectionHeader
-                    title={t("settingsPage.prompts.title")}
-                    description={t("settingsPage.prompts.description")}
+          {isLocalOnly() ? (
+            <FoundrySection />
+          ) : (
+            <LlmsTabs
+              initialTab={
+                activeSection === "llms" ? (initialSubTab as LlmTab | undefined) : undefined
+              }
+              renderChatIntelligence={() => <ChatAgentSettings />}
+              renderDictationCleanup={() => (
+                <div className="space-y-6">
+                  <AiModelsSection
+                    useCleanupModel={useCleanupModel}
+                    setUseCleanupModel={(value) => {
+                      updateCleanupSettings({ useCleanupModel: value });
+                    }}
+                    toast={toast}
                   />
-                  <PromptStudio />
+                  <div className="border-t border-border/70 pt-6">
+                    <SectionHeader
+                      title={t("settingsPage.prompts.title")}
+                      description={t("settingsPage.prompts.description")}
+                    />
+                    <PromptStudio />
+                  </div>
                 </div>
-              </div>
-            )}
-            renderDictationAgent={() => <DictationAgentSettings />}
-            renderDictationTranslation={() => <DictationTranslationSettings />}
-            renderNoteFormatting={() => <NoteFormattingSettings />}
-          />
+              )}
+              renderDictationAgent={() => <DictationAgentSettings />}
+              renderDictationTranslation={() => <DictationTranslationSettings />}
+              renderNoteFormatting={() => <NoteFormattingSettings />}
+            />
+          )}
         </TabPanel>
       )}
       {renderSectionContent()}

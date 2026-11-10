@@ -228,7 +228,16 @@ function outputSpentThinkingKey(
 const hasTranscript = (material: NoteMaterial | undefined): material is NoteMaterial =>
   (material?.transcript.trim().length ?? 0) > 0;
 
-async function readLocalContextBudget(modelId: string): Promise<LocalContextBudget | null> {
+/**
+ * The window a refused request is split against: Foundry's own limit from
+ * Settings (there is no local runtime to ask), otherwise the local model's.
+ */
+async function readContextBudget(modelId: string): Promise<LocalContextBudget | null> {
+  const noteFormatting = selectResolvedNoteFormatting(getSettings());
+  if (noteFormatting.mode === "enterprise" && noteFormatting.provider === "foundry") {
+    const limit = getSettings().foundryMaxInputTokens;
+    return limit > 0 ? { maxContextTokens: limit, modelName: modelId } : null;
+  }
   try {
     const result = await window.electronAPI?.getLocalContextBudget?.(modelId);
     if (!result?.success || !(result.maxContextTokens && result.maxContextTokens > 0)) return null;
@@ -236,6 +245,18 @@ async function readLocalContextBudget(modelId: string): Promise<LocalContextBudg
   } catch {
     return null;
   }
+}
+
+/** Foundry's configured output limit lowers the requested allowance; other routes keep it. */
+function foundryOutputCap(
+  noteFormatting: ResolvedNoteFormatting,
+  requested: number,
+  settings: { foundryMaxOutputTokens: number }
+): number {
+  if (noteFormatting.mode !== "enterprise" || noteFormatting.provider !== "foundry")
+    return requested;
+  const limit = settings.foundryMaxOutputTokens;
+  return limit > 0 ? Math.min(requested, limit) : requested;
 }
 
 const emptyReplyError = () =>
@@ -324,9 +345,9 @@ async function runEnhancement(run: EnhancementRun): Promise<string> {
   // the user's text with a digest of it.
   const material = run.options.material;
   if (!hasTranscript(material)) throw refusal;
-  // Only a local model refuses as CONTEXT_TOO_LARGE, so the refusal identifies
-  // the route however note formatting reached it (its own mode or cleanup's).
-  const budget = await readLocalContextBudget(run.modelId);
+  // Only a local model or Foundry refuses as CONTEXT_TOO_LARGE, so the refusal
+  // identifies the route however note formatting reached it (its own mode or cleanup's).
+  const budget = await readContextBudget(run.modelId);
   if (!budget) throw refusal;
   if (run.isCancelled()) throw new Error("cancelled");
   return runInParts(run, budget, material);
@@ -586,7 +607,11 @@ export function runBackgroundAction(
       const requestConfig: ReasoningConfig = {
         systemPrompt,
         // A rewrite repeats a summary written under NOTE_OUTPUT_MAX_TOKENS, plus its edit.
-        maxTokens: rewritesSummary ? 2 * NOTE_OUTPUT_MAX_TOKENS : NOTE_OUTPUT_MAX_TOKENS,
+        maxTokens: foundryOutputCap(
+          noteFormatting,
+          rewritesSummary ? 2 * NOTE_OUTPUT_MAX_TOKENS : NOTE_OUTPUT_MAX_TOKENS,
+          settings
+        ),
         temperature: 0.3,
         disableThinking: settings.noteFormattingDisableThinking,
         reasoningEffort: settings.noteFormattingReasoningEffort,

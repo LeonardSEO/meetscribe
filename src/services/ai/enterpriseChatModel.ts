@@ -4,7 +4,7 @@ import type {
   LanguageModelV3StreamPart,
 } from "@ai-sdk/provider";
 import type { EnterpriseProvider } from "../../models/ModelRegistry";
-import { getEnterpriseCallSettings } from "./enterpriseSettings";
+import { capFoundryOutputTokens, getEnterpriseCallSettings } from "./enterpriseSettings";
 import type { InferenceScope } from "../../config/inferenceScopes";
 
 // Enterprise SDKs (Bedrock/Azure/Vertex) must run in the main process — SigV4
@@ -62,6 +62,12 @@ export function createEnterpriseChatModel(
 
       const streamId = crypto.randomUUID();
       const config = getEnterpriseCallSettings(provider, inferenceScope);
+      const capOutput = (picked: Record<string, unknown>) => {
+        const requested =
+          typeof picked.maxOutputTokens === "number" ? picked.maxOutputTokens : undefined;
+        const capped = capFoundryOutputTokens(provider, requested);
+        return capped === undefined ? picked : { ...picked, maxOutputTokens: capped };
+      };
       let unsubscribe: (() => void) | undefined;
       const stopListening = () => {
         unsubscribe?.();
@@ -114,7 +120,7 @@ export function createEnterpriseChatModel(
             provider,
             modelId,
             config,
-            options: pickSerializableOptions(options),
+            options: capOutput(pickSerializableOptions(options)),
           })
             .then((result) => {
               if (result && !result.success)

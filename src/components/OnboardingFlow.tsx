@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CompactAuthenticationFlow } from "./CompactAuthenticationFlow";
 import UseCaseStep from "./onboarding/UseCaseStep";
 import { hasUseCaseIntent } from "./onboarding/useCases";
+import FoundrySetupStep from "./onboarding/FoundrySetupStep";
 import OnboardingShell, { OnboardingStepHeader } from "./onboarding/OnboardingShell";
 import CompactPermissionsStep from "./onboarding/CompactPermissionsStep";
 import LanguageSelectionStep from "./onboarding/LanguageSelectionStep";
@@ -785,11 +786,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const proceedLocalSetup = useCallback(
     async (handOff: () => LocalSetupHandOff) => {
       if (!localSetupPlan) return;
-      await proceedWithLocalSetup(localSetupPlan, handOff, (beforeComplete) =>
-        finalizeOnboarding("local", beforeComplete)
-      );
+      await proceedWithLocalSetup(localSetupPlan, handOff, async (beforeComplete) => {
+        // Local-only has one more step, the optional AI provider, before it finishes.
+        if (!isLocalOnly()) return finalizeOnboarding("local", beforeComplete);
+        discardPendingLocalSetup();
+        beforeComplete?.();
+        goTo("foundry-setup");
+      });
     },
-    [finalizeOnboarding, localSetupPlan]
+    [finalizeOnboarding, goTo, localSetupPlan]
   );
 
   const handleSetupSelection = useCallback(
@@ -1308,6 +1313,21 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
         );
 
+      case "foundry-setup":
+        return (
+          <div className="h-full w-full pt-2">
+            <OnboardingStepHeader
+              title={t("foundry.onboarding.title")}
+              description={t("foundry.onboarding.description")}
+              wideTitle
+            />
+            <FoundrySetupStep
+              isFinishing={isFinishing}
+              onDone={() => void finalizeOnboarding("local")}
+            />
+          </div>
+        );
+
       case "local-setup":
         return (
           <div className="h-full w-full pt-2">
@@ -1357,7 +1377,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const inlineProviderStep =
     currentStepId === "byok-dictation" ||
     currentStepId === "byok-assistant" ||
-    currentStepId === "local-setup";
+    currentStepId === "local-setup" ||
+    currentStepId === "foundry-setup";
   // Choice/provider pages own their forward action. Hotkey/demo pages withhold
   // Continue until complete; Notes does the same until a calendar is connected.
   const showsContinue =
@@ -1383,7 +1404,11 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         // The required-models step is the exception: it is an org-mandated
         // blocker, so backing out of it (to auth) is suppressed.
         onBack={
-          hasShellNavigation && session.history.length > 0 && currentStepId !== "required-models"
+          hasShellNavigation &&
+          session.history.length > 0 &&
+          currentStepId !== "required-models" &&
+          // The local setup it would return to is already committed.
+          currentStepId !== "foundry-setup"
             ? goBack
             : undefined
         }

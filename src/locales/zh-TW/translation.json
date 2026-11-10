@@ -6428,5 +6428,58 @@
       "bootstrapMismatch": "引導檔案與您的帳號、此工作區或其設定的憑證不符。",
       "testLinkOtherWorkspace": "此測試連結對應的是其他工作區。請切換到該工作區，然後重新開啟連結。"
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "AI 模型供應商",
+      "description": "由一個供應商處理所有 AI 工作：摘要、文字整理、聊天和助理。轉錄一律留在此裝置上。"
+    },
+    "baseUrl": {
+      "label": "基礎 URL",
+      "help": "相容 OpenAI 的端點，例如以 /openai/v1 結尾的 Azure AI Foundry 資源。",
+      "required": "請輸入基礎 URL。",
+      "scheme": "基礎 URL 必須以 https:// 開頭（本機網路中的伺服器可使用 http://）。",
+      "refused": "基礎 URL 未被接受：{{message}}"
+    },
+    "model": {
+      "label": "部署或模型",
+      "help": "Azure AI Foundry 中的部署名稱，或您的供應商要求的模型名稱。",
+      "required": "請輸入部署名稱或模型名稱。"
+    },
+    "apiKey": {
+      "label": "API 金鑰",
+      "placeholder": "貼上您的 API 金鑰",
+      "replace": "貼上新金鑰以取代已儲存的金鑰",
+      "saved": "金鑰已儲存",
+      "help": "僅可寫入。金鑰會加密儲存在此電腦上，不會再次顯示。",
+      "required": "請輸入 API 金鑰。",
+      "saveFailed": "無法儲存 API 金鑰：{{message}}",
+      "cleared": "基礎 URL 指向另一台伺服器，因此已刪除儲存的金鑰。請重新輸入 API 金鑰。"
+    },
+    "wireApi": {
+      "label": "API 格式",
+      "help": "Responses 適用於目前的 OpenAI 和 Azure AI Foundry 模型。對於只提供 Chat Completions 的伺服器，請選擇該格式。"
+    },
+    "limits": {
+      "input": {
+        "label": "最大輸入 token 數",
+        "help": "較長的會議會分段摘要，以維持在此上限之內。"
+      },
+      "output": {
+        "label": "最大輸出 token 數",
+        "help": "向模型要求的最長回覆。"
+      },
+      "invalid": "請輸入大於 0 的整數。"
+    },
+    "save": "儲存",
+    "saved": "已儲存",
+    "testNeedsSave": "請連同 API 金鑰一併儲存供應商，然後測試連線。",
+    "onboarding": {
+      "title": "連接 AI 模型",
+      "description": "沒有它轉錄也能正常運作。新增供應商以使用摘要、聊天和助理。",
+      "save": "儲存並完成",
+      "skip": "暫時略過",
+      "skipHint": "您可以稍後在「設定」的「AI 模型」中新增。"
+    }
   }
 }

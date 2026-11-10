@@ -334,14 +334,23 @@ test("changing the base URL origin clears the stored key; same origin keeps it",
 test("a stored key is cleared when there is no previous base URL or it cannot be parsed", () => {
   const none = memoryEnv();
   assert.equal(none.state.key, "k");
-  assert.equal(applyFoundryConfig(none, { baseUrl: "https://a.example.com/v1" }, none.clearKey).keyCleared, true);
+  assert.equal(
+    applyFoundryConfig(none, { baseUrl: "https://a.example.com/v1" }, none.clearKey).keyCleared,
+    true
+  );
   assert.equal(none.state.key, "");
   const bad = memoryEnv({ baseUrl: "not a url" });
-  assert.equal(applyFoundryConfig(bad, { baseUrl: "https://a.example.com/v1" }, bad.clearKey).keyCleared, true);
+  assert.equal(
+    applyFoundryConfig(bad, { baseUrl: "https://a.example.com/v1" }, bad.clearKey).keyCleared,
+    true
+  );
   assert.equal(bad.state.key, "");
   const noKey = memoryEnv();
   noKey.state.key = "";
-  assert.equal(applyFoundryConfig(noKey, { baseUrl: "https://a.example.com/v1" }, noKey.clearKey).keyCleared, false);
+  assert.equal(
+    applyFoundryConfig(noKey, { baseUrl: "https://a.example.com/v1" }, noKey.clearKey).keyCleared,
+    false
+  );
 });
 
 test("isAzureHost matches the Azure suffixes only", () => {

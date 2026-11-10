@@ -1,10 +1,9 @@
 import i18n from "../../i18n";
+import { chatSupportsTools, isLocalChatProvider } from "./chatToolSupport";
 import ReasoningService, { type AgentStreamChunk } from "../../services/ReasoningService";
 import {
   getCloudModel,
-  getLocalModel,
   getProviderDisplayName,
-  isEnterpriseProvider,
 } from "../../models/ModelRegistry";
 import { providerSupportsImages } from "../../services/ai/inferenceProviders";
 import { getSettings, selectCalendarConnected, useSettingsStore } from "../../stores/settingsStore";
@@ -116,8 +115,6 @@ const RAG_NOTE_SNIPPET_LENGTH = 500;
 const STREAM_FLUSH_INTERVAL_MS = 32;
 const MAX_SAVED_REASONING_CHARS = 20_000;
 
-const LOCAL_TOOL_MIN_PARAMS_B = 4;
-
 // The tool reads the DB mirror over IPC (not the control panel's store), so it
 // also works from the dictation window, for the workspace every window uses now.
 async function readAppliedSharedWords(): Promise<SharedDictionaryWord[]> {
@@ -142,11 +139,6 @@ async function hideAppliedSharedWords(ids: string[]): Promise<void> {
   const workspaceId = readActiveWorkspaceId();
   if (!workspaceId) throw new Error("No active workspace");
   await setSharedWordsHidden(workspaceId, ids, true);
-}
-
-function estimateModelSizeB(modelId: string): number {
-  const match = modelId.match(/-([\d.]+)[bB]/);
-  return match ? parseFloat(match[1]) : 0;
 }
 
 const CONNECTOR_CONNECTION_TARGETS = ["gmail", "slack", "linear", "github"] as const;
@@ -602,24 +594,8 @@ export function createChatTurnEngine(
       const isCloudAgent = llmMode === "openwhispr" && settings.isSignedIn;
       const isLanAgent = llmMode === "self-hosted" && !!llmConfig.remoteUrl;
       const isCustomAgent = llmMode === "providers" && llmConfig.provider === "custom";
-      const isLocalProvider =
-        !isEnterpriseProvider(llmConfig.provider) &&
-        ![
-          "openai",
-          "groq",
-          "custom",
-          "anthropic",
-          "gemini",
-          "tinfoil",
-          "openrouter",
-          "corti",
-        ].includes(llmConfig.provider);
-      // The catalog's supportsTools decides; the size guess covers models without it.
-      const localModelCanUseTool =
-        isLocalProvider &&
-        (getLocalModel(llmConfig.model)?.supportsTools ??
-          estimateModelSizeB(llmConfig.model) >= LOCAL_TOOL_MIN_PARAMS_B);
-      const supportsTools = isCloudAgent || !isLocalProvider || localModelCanUseTool;
+      const isLocalProvider = isLocalChatProvider(llmConfig.provider);
+      const supportsTools = chatSupportsTools({ llmConfig, isCloudAgent });
       // A local or LAN model may have a 16k context; hosted models have room to spare.
       const contextTier =
         !isCloudAgent && (isLocalProvider || isLanAgent) ? "selfHosted" : "hosted";

@@ -6456,5 +6456,58 @@
       "bootstrapMismatch": "Le fichier d’amorçage ne correspond pas à votre compte, à cet espace de travail ou à ses identifiants configurés.",
       "testLinkOtherWorkspace": "Ce lien de test concerne un autre espace de travail. Passez à cet espace de travail et rouvrez le lien."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "Fournisseur du modèle d’IA",
+      "description": "Un seul fournisseur répond à toutes les tâches d’IA : résumés, nettoyage, chat et assistant. La transcription reste sur cet appareil."
+    },
+    "baseUrl": {
+      "label": "URL de base",
+      "help": "Le point de terminaison compatible OpenAI, par exemple votre ressource Azure AI Foundry se terminant par /openai/v1.",
+      "required": "Saisissez l’URL de base.",
+      "scheme": "L’URL de base doit commencer par https:// (ou http:// pour un serveur de ce réseau).",
+      "refused": "L’URL de base n’a pas été acceptée : {{message}}"
+    },
+    "model": {
+      "label": "Déploiement ou modèle",
+      "help": "Le nom du déploiement dans Azure AI Foundry, ou le nom de modèle attendu par votre fournisseur.",
+      "required": "Saisissez le nom du déploiement ou du modèle."
+    },
+    "apiKey": {
+      "label": "Clé API",
+      "placeholder": "Collez votre clé API",
+      "replace": "Collez une nouvelle clé pour remplacer celle enregistrée",
+      "saved": "Clé enregistrée",
+      "help": "En écriture seule. La clé est stockée chiffrée sur cet ordinateur et n’est plus jamais affichée.",
+      "required": "Saisissez la clé API.",
+      "saveFailed": "Impossible d’enregistrer la clé API : {{message}}",
+      "cleared": "L’URL de base pointe vers un autre serveur, la clé enregistrée a donc été supprimée. Saisissez de nouveau la clé API."
+    },
+    "wireApi": {
+      "label": "Format de l’API",
+      "help": "Responses convient aux modèles actuels d’OpenAI et d’Azure AI Foundry. Choisissez Chat Completions pour les serveurs qui n’offrent que ce format."
+    },
+    "limits": {
+      "input": {
+        "label": "Jetons d’entrée maximum",
+        "help": "Les réunions plus longues sont résumées par parties pour rester sous cette limite."
+      },
+      "output": {
+        "label": "Jetons de sortie maximum",
+        "help": "La réponse la plus longue demandée au modèle."
+      },
+      "invalid": "Saisissez un nombre entier supérieur à 0."
+    },
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "testNeedsSave": "Enregistrez le fournisseur avec sa clé API pour tester la connexion.",
+    "onboarding": {
+      "title": "Connecter un modèle d’IA",
+      "description": "La transcription fonctionne déjà sans lui. Ajoutez un fournisseur pour les résumés, le chat et l’assistant.",
+      "save": "Enregistrer et terminer",
+      "skip": "Passer pour l’instant",
+      "skipHint": "Vous pourrez l’ajouter plus tard dans Paramètres, sous Modèles d’IA."
+    }
   }
 }

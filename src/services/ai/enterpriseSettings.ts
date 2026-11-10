@@ -65,3 +65,17 @@ export function getEnterpriseCallSettings(
     managedContext,
   };
 }
+
+/**
+ * Foundry's output limit applies to every request that goes to it; other
+ * providers keep the caller's value.
+ */
+export function capFoundryOutputTokens(
+  provider: EnterpriseProvider,
+  requested: number | undefined
+): number | undefined {
+  if (provider !== "foundry") return requested;
+  const limit = getSettings().foundryMaxOutputTokens;
+  if (!(limit > 0)) return requested;
+  return requested && requested > 0 ? Math.min(requested, limit) : limit;
+}

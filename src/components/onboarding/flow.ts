@@ -36,7 +36,9 @@ export type OnboardingStepId =
       Kept so a session saved on either still parses and reconciles onto it. */
   | "local-dictation"
   | "local-assistant"
-  | "local-setup";
+  | "local-setup"
+  /** Local-only: the one LLM provider. Skippable, since transcription needs no LLM. */
+  | "foundry-setup";
 
 export type OnboardingAuthPath = "account" | "guest" | null;
 export type OnboardingSetupMode = "cloud" | "byok" | "local" | null;
@@ -144,6 +146,7 @@ const STEP_ORDER: OnboardingStepId[] = [
   "local-dictation",
   "local-assistant",
   "local-setup",
+  "foundry-setup",
 ];
 
 const KNOWN_STEPS = new Set<OnboardingStepId>(STEP_ORDER);
@@ -242,8 +245,8 @@ export function resetOnboardingProgress(storage: OnboardingStorage): void {
 export function getOnboardingRoute(context: OnboardingRouteContext): OnboardingStepId[] {
   if (isLocalOnly()) {
     // No account step and no setup choice: the permission grants and a seen
-    // hotkey (as for guests), then the local model setup.
-    return ["permissions", "dictation-hotkey", ...SETUP_ROUTES.local];
+    // hotkey (as for guests), then the local model setup and the optional LLM provider.
+    return ["permissions", "dictation-hotkey", ...SETUP_ROUTES.local, "foundry-setup"];
   }
   if (context.authPath === null) return ["auth"];
 

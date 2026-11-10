@@ -2507,6 +2507,7 @@ declare global {
         success: boolean;
         text?: string;
         error?: string;
+        code?: string;
         messageKey?: string;
         messageParams?: Record<string, string | number>;
         action?: string;

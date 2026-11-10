@@ -6428,5 +6428,58 @@
       "bootstrapMismatch": "Die Bootstrap-Datei passt nicht zu Ihrem Konto, diesem Workspace oder seinen konfigurierten Zugangsdaten.",
       "testLinkOtherWorkspace": "Dieser Testlink gilt für einen anderen Workspace. Wechseln Sie zu diesem Workspace und öffnen Sie den Link erneut."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "KI-Modellanbieter",
+      "description": "Ein Anbieter beantwortet alle KI-Aufgaben: Zusammenfassungen, Bereinigung, Chat und Assistent. Die Transkription bleibt auf diesem Gerät."
+    },
+    "baseUrl": {
+      "label": "Basis-URL",
+      "help": "Der OpenAI-kompatible Endpunkt, zum Beispiel Ihre Azure AI Foundry-Ressource mit der Endung /openai/v1.",
+      "required": "Geben Sie die Basis-URL ein.",
+      "scheme": "Die Basis-URL muss mit https:// beginnen (oder mit http:// für einen Server in diesem Netzwerk).",
+      "refused": "Die Basis-URL wurde nicht akzeptiert: {{message}}"
+    },
+    "model": {
+      "label": "Bereitstellung oder Modell",
+      "help": "Der Bereitstellungsname in Azure AI Foundry oder der Modellname, den Ihr Anbieter erwartet.",
+      "required": "Geben Sie den Bereitstellungs- oder Modellnamen ein."
+    },
+    "apiKey": {
+      "label": "API-Schlüssel",
+      "placeholder": "API-Schlüssel einfügen",
+      "replace": "Neuen Schlüssel einfügen, um den gespeicherten zu ersetzen",
+      "saved": "Schlüssel gespeichert",
+      "help": "Nur zum Schreiben. Der Schlüssel wird verschlüsselt auf diesem Computer gespeichert und nie wieder angezeigt.",
+      "required": "Geben Sie den API-Schlüssel ein.",
+      "saveFailed": "Der API-Schlüssel konnte nicht gespeichert werden: {{message}}",
+      "cleared": "Die Basis-URL verweist auf einen anderen Server, daher wurde der gespeicherte Schlüssel entfernt. Geben Sie den API-Schlüssel erneut ein."
+    },
+    "wireApi": {
+      "label": "API-Format",
+      "help": "Responses passt zu aktuellen OpenAI- und Azure AI Foundry-Modellen. Wählen Sie Chat Completions für Server, die nur dieses Format anbieten."
+    },
+    "limits": {
+      "input": {
+        "label": "Maximale Eingabe-Tokens",
+        "help": "Längere Besprechungen werden in Teilen zusammengefasst, um unter diesem Limit zu bleiben."
+      },
+      "output": {
+        "label": "Maximale Ausgabe-Tokens",
+        "help": "Die längste vom Modell angeforderte Antwort."
+      },
+      "invalid": "Geben Sie eine ganze Zahl größer als 0 ein."
+    },
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "testNeedsSave": "Speichern Sie den Anbieter mit seinem API-Schlüssel, um die Verbindung zu testen.",
+    "onboarding": {
+      "title": "KI-Modell verbinden",
+      "description": "Die Transkription funktioniert bereits ohne. Fügen Sie einen Anbieter für Zusammenfassungen, Chat und den Assistenten hinzu.",
+      "save": "Speichern und abschließen",
+      "skip": "Vorerst überspringen",
+      "skipHint": "Sie können dies später in den Einstellungen unter KI-Modelle hinzufügen."
+    }
   }
 }

@@ -6449,5 +6449,58 @@
       "bootstrapMismatch": "Il file di bootstrap non corrisponde al tuo account, a questo workspace o alle credenziali configurate.",
       "testLinkOtherWorkspace": "Questo link di test è per un altro workspace. Passa a quel workspace e apri di nuovo il link."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "Provider del modello IA",
+      "description": "Un solo provider risponde a tutte le attività IA: riassunti, pulizia, chat e assistente. La trascrizione resta su questo dispositivo."
+    },
+    "baseUrl": {
+      "label": "URL di base",
+      "help": "L’endpoint compatibile con OpenAI, ad esempio la tua risorsa Azure AI Foundry che termina con /openai/v1.",
+      "required": "Inserisci l’URL di base.",
+      "scheme": "L’URL di base deve iniziare con https:// (o http:// per un server di questa rete).",
+      "refused": "L’URL di base non è stato accettato: {{message}}"
+    },
+    "model": {
+      "label": "Distribuzione o modello",
+      "help": "Il nome della distribuzione in Azure AI Foundry, o il nome del modello atteso dal tuo provider.",
+      "required": "Inserisci il nome della distribuzione o del modello."
+    },
+    "apiKey": {
+      "label": "Chiave API",
+      "placeholder": "Incolla la tua chiave API",
+      "replace": "Incolla una nuova chiave per sostituire quella salvata",
+      "saved": "Chiave salvata",
+      "help": "Sola scrittura. La chiave è archiviata cifrata su questo computer e non viene più mostrata.",
+      "required": "Inserisci la chiave API.",
+      "saveFailed": "Impossibile salvare la chiave API: {{message}}",
+      "cleared": "L’URL di base punta a un altro server, quindi la chiave salvata è stata rimossa. Inserisci di nuovo la chiave API."
+    },
+    "wireApi": {
+      "label": "Formato API",
+      "help": "Responses è adatto ai modelli attuali di OpenAI e Azure AI Foundry. Scegli Chat Completions per i server che offrono solo quel formato."
+    },
+    "limits": {
+      "input": {
+        "label": "Token di input massimi",
+        "help": "Le riunioni più lunghe vengono riassunte a parti per restare sotto questo limite."
+      },
+      "output": {
+        "label": "Token di output massimi",
+        "help": "La risposta più lunga richiesta al modello."
+      },
+      "invalid": "Inserisci un numero intero maggiore di 0."
+    },
+    "save": "Salva",
+    "saved": "Salvato",
+    "testNeedsSave": "Salva il provider con la sua chiave API per provare la connessione.",
+    "onboarding": {
+      "title": "Collega un modello IA",
+      "description": "La trascrizione funziona già senza. Aggiungi un provider per riassunti, chat e assistente.",
+      "save": "Salva e termina",
+      "skip": "Salta per ora",
+      "skipHint": "Puoi aggiungerlo più tardi in Impostazioni, sotto Modelli IA."
+    }
   }
 }

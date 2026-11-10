@@ -5,7 +5,7 @@ import {
   type EnterpriseProvider as EnterpriseProviderId,
 } from "../../../models/ModelRegistry";
 import { getSettings } from "../../../stores/settingsStore";
-import { getEnterpriseCallSettings } from "../enterpriseSettings";
+import { capFoundryOutputTokens, getEnterpriseCallSettings } from "../enterpriseSettings";
 import { wrapCleanupTranscript } from "../../../config/prompts";
 import { getLlmRequestTimeoutSeconds } from "../../../helpers/llmRequestTimeout.js";
 import logger from "../../../utils/logger";
@@ -38,6 +38,7 @@ export const enterpriseProvider: InferenceProvider = {
         ...config,
         systemPrompt,
         provider: enterpriseId,
+        maxTokens: capFoundryOutputTokens(enterpriseId, config.maxTokens),
         supportsTemperature,
         timeoutMs: getLlmRequestTimeoutSeconds({ scope: config.inferenceScope }) * 1000,
         ...getEnterpriseCallSettings(enterpriseId, config.inferenceScope || "dictationCleanup"),
@@ -54,6 +55,7 @@ export const enterpriseProvider: InferenceProvider = {
         error: result.error,
       });
       const enhanced = new Error(result.error || `${enterpriseId} reasoning failed`) as Error & {
+        code?: string;
         messageKey?: string;
         messageParams?: Record<string, string | number>;
         action?: string;
@@ -67,6 +69,7 @@ export const enterpriseProvider: InferenceProvider = {
           underlyingError?: string;
         };
       };
+      if (result.code) enhanced.code = result.code;
       enhanced.messageKey = result.messageKey;
       enhanced.messageParams = result.messageParams;
       enhanced.action = result.action;

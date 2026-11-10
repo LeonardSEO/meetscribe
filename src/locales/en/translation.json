@@ -6428,5 +6428,58 @@
       "bootstrapMismatch": "The bootstrap file doesn't match your account, this workspace or its configured credentials.",
       "testLinkOtherWorkspace": "This test link is for a different workspace. Switch to that workspace and open the link again."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "AI model provider",
+      "description": "One provider answers every AI task: summaries, cleanup, chat and the assistant. Transcription stays on this device."
+    },
+    "baseUrl": {
+      "label": "Base URL",
+      "help": "The OpenAI-compatible endpoint, for example your Azure AI Foundry resource ending in /openai/v1.",
+      "required": "Enter the base URL.",
+      "scheme": "The base URL must start with https:// (or http:// for a server on this network).",
+      "refused": "The base URL was not accepted: {{message}}"
+    },
+    "model": {
+      "label": "Deployment or model",
+      "help": "The deployment name in Azure AI Foundry, or the model name your provider expects.",
+      "required": "Enter the deployment or model name."
+    },
+    "apiKey": {
+      "label": "API key",
+      "placeholder": "Paste your API key",
+      "replace": "Paste a new key to replace the saved one",
+      "saved": "Key saved",
+      "help": "Write-only. The key is stored encrypted on this computer and is never shown again.",
+      "required": "Enter the API key.",
+      "saveFailed": "The API key could not be saved: {{message}}",
+      "cleared": "The base URL points to a different server, so the stored key was removed. Enter the API key again."
+    },
+    "wireApi": {
+      "label": "API format",
+      "help": "Responses suits current OpenAI and Azure AI Foundry models. Choose Chat Completions for servers that only offer that format."
+    },
+    "limits": {
+      "input": {
+        "label": "Maximum input tokens",
+        "help": "Longer meetings are summarised in parts to stay under this limit."
+      },
+      "output": {
+        "label": "Maximum output tokens",
+        "help": "The longest reply requested from the model."
+      },
+      "invalid": "Enter a whole number above 0."
+    },
+    "save": "Save",
+    "saved": "Saved",
+    "testNeedsSave": "Save the provider with its API key to test the connection.",
+    "onboarding": {
+      "title": "Connect an AI model",
+      "description": "Transcription already works without it. Add a provider for summaries, chat and the assistant.",
+      "save": "Save and finish",
+      "skip": "Skip for now",
+      "skipHint": "You can add this later in Settings, under AI Models."
+    }
   }
 }

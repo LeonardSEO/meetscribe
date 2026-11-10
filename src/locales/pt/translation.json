@@ -6456,5 +6456,58 @@
       "bootstrapMismatch": "O arquivo de inicialização não corresponde à sua conta, a este espaço de trabalho ou às credenciais configuradas.",
       "testLinkOtherWorkspace": "Este link de teste é de outro espaço de trabalho. Mude para esse espaço de trabalho e abra o link novamente."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "Provedor do modelo de IA",
+      "description": "Um único provedor atende todas as tarefas de IA: resumos, limpeza, chat e assistente. A transcrição fica neste dispositivo."
+    },
+    "baseUrl": {
+      "label": "URL base",
+      "help": "O endpoint compatível com OpenAI, por exemplo o seu recurso do Azure AI Foundry terminando em /openai/v1.",
+      "required": "Informe a URL base.",
+      "scheme": "A URL base deve começar com https:// (ou http:// para um servidor desta rede).",
+      "refused": "A URL base não foi aceita: {{message}}"
+    },
+    "model": {
+      "label": "Implantação ou modelo",
+      "help": "O nome da implantação no Azure AI Foundry, ou o nome do modelo que o seu provedor espera.",
+      "required": "Informe o nome da implantação ou do modelo."
+    },
+    "apiKey": {
+      "label": "Chave de API",
+      "placeholder": "Cole a sua chave de API",
+      "replace": "Cole uma nova chave para substituir a salva",
+      "saved": "Chave salva",
+      "help": "Somente escrita. A chave é guardada criptografada neste computador e nunca é exibida novamente.",
+      "required": "Informe a chave de API.",
+      "saveFailed": "Não foi possível salvar a chave de API: {{message}}",
+      "cleared": "A URL base aponta para outro servidor, então a chave salva foi removida. Informe a chave de API novamente."
+    },
+    "wireApi": {
+      "label": "Formato da API",
+      "help": "Responses serve para os modelos atuais da OpenAI e do Azure AI Foundry. Escolha Chat Completions para servidores que só oferecem esse formato."
+    },
+    "limits": {
+      "input": {
+        "label": "Máximo de tokens de entrada",
+        "help": "Reuniões mais longas são resumidas em partes para ficar abaixo deste limite."
+      },
+      "output": {
+        "label": "Máximo de tokens de saída",
+        "help": "A resposta mais longa solicitada ao modelo."
+      },
+      "invalid": "Informe um número inteiro maior que 0."
+    },
+    "save": "Salvar",
+    "saved": "Salvo",
+    "testNeedsSave": "Salve o provedor com a sua chave de API para testar a conexão.",
+    "onboarding": {
+      "title": "Conecte um modelo de IA",
+      "description": "A transcrição já funciona sem ele. Adicione um provedor para resumos, chat e o assistente.",
+      "save": "Salvar e concluir",
+      "skip": "Pular por enquanto",
+      "skipHint": "Você pode adicionar isso depois em Configurações, em Modelos de IA."
+    }
   }
 }

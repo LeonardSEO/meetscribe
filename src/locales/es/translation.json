@@ -6449,5 +6449,58 @@
       "bootstrapMismatch": "El archivo de arranque no coincide con tu cuenta, este espacio de trabajo o sus credenciales configuradas.",
       "testLinkOtherWorkspace": "Este enlace de prueba es para otro espacio de trabajo. Cambia a ese espacio de trabajo y vuelve a abrir el enlace."
     }
+  },
+  "foundry": {
+    "section": {
+      "title": "Proveedor del modelo de IA",
+      "description": "Un solo proveedor atiende todas las tareas de IA: resúmenes, limpieza, chat y asistente. La transcripción se queda en este dispositivo."
+    },
+    "baseUrl": {
+      "label": "URL base",
+      "help": "El endpoint compatible con OpenAI, por ejemplo tu recurso de Azure AI Foundry terminado en /openai/v1.",
+      "required": "Introduce la URL base.",
+      "scheme": "La URL base debe empezar por https:// (o http:// para un servidor de esta red).",
+      "refused": "No se aceptó la URL base: {{message}}"
+    },
+    "model": {
+      "label": "Implementación o modelo",
+      "help": "El nombre de la implementación en Azure AI Foundry, o el nombre de modelo que espera tu proveedor.",
+      "required": "Introduce el nombre de la implementación o del modelo."
+    },
+    "apiKey": {
+      "label": "Clave de API",
+      "placeholder": "Pega tu clave de API",
+      "replace": "Pega una clave nueva para reemplazar la guardada",
+      "saved": "Clave guardada",
+      "help": "Solo escritura. La clave se guarda cifrada en este equipo y no se vuelve a mostrar.",
+      "required": "Introduce la clave de API.",
+      "saveFailed": "No se pudo guardar la clave de API: {{message}}",
+      "cleared": "La URL base apunta a otro servidor, así que se eliminó la clave guardada. Introduce la clave de API de nuevo."
+    },
+    "wireApi": {
+      "label": "Formato de la API",
+      "help": "Responses encaja con los modelos actuales de OpenAI y Azure AI Foundry. Elige Chat Completions para servidores que solo ofrecen ese formato."
+    },
+    "limits": {
+      "input": {
+        "label": "Máximo de tokens de entrada",
+        "help": "Las reuniones más largas se resumen por partes para no superar este límite."
+      },
+      "output": {
+        "label": "Máximo de tokens de salida",
+        "help": "La respuesta más larga que se pide al modelo."
+      },
+      "invalid": "Introduce un número entero mayor que 0."
+    },
+    "save": "Guardar",
+    "saved": "Guardado",
+    "testNeedsSave": "Guarda el proveedor con su clave de API para probar la conexión.",
+    "onboarding": {
+      "title": "Conecta un modelo de IA",
+      "description": "La transcripción ya funciona sin él. Añade un proveedor para resúmenes, chat y el asistente.",
+      "save": "Guardar y terminar",
+      "skip": "Omitir por ahora",
+      "skipHint": "Puedes añadirlo más tarde en Ajustes, en Modelos de IA."
+    }
   }
 }

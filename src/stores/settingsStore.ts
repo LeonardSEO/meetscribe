@@ -1,6 +1,7 @@
 import "../models/registryBootstrap.js";
 import { clampLocalOnlySpeech } from "./localOnlySpeechClamp";
 import { localOnlyDefault } from "../config/localOnlyDefaults.js";
+import { isLocalOnly } from "../config/localOnly.js";
 import { RETIRED_TINFOIL_MODEL_NAMES } from "../config/retiredCloudModelPolicy.js";
 import { create } from "zustand";
 import { GENERATE_NOTES_KEY } from "../helpers/builtinActions";
@@ -279,6 +280,17 @@ function readBoolean(key: string, fallback: boolean): boolean {
   if (stored === null) return fallback;
   if (fallback === true) return stored !== "false";
   return stored === "true";
+}
+
+export const DEFAULT_FOUNDRY_MAX_INPUT_TOKENS = 100000;
+export const DEFAULT_FOUNDRY_MAX_OUTPUT_TOKENS = 8000;
+
+export interface FoundryConfigPatch {
+  foundryBaseUrl?: string;
+  foundryWireApi?: "responses" | "chat";
+  foundryModel?: string;
+  foundryMaxInputTokens?: number;
+  foundryMaxOutputTokens?: number;
 }
 
 function readNumber(key: string, fallback: number): number {
@@ -1369,6 +1381,12 @@ export interface SettingsState
   azureApiKey: string;
   azureDeploymentName: string;
   azureApiVersion: string;
+  /** Mirror of what main stores; main ignores whatever the renderer sends at request time. */
+  foundryBaseUrl: string;
+  foundryWireApi: "responses" | "chat";
+  foundryModel: string;
+  foundryMaxInputTokens: number;
+  foundryMaxOutputTokens: number;
   vertexAuthMode: string;
   vertexProject: string;
   vertexLocation: string;
@@ -1385,6 +1403,7 @@ export interface SettingsState
   setAzureApiKey: (key: string) => void;
   setAzureDeploymentName: (value: string) => void;
   setAzureApiVersion: (value: string) => void;
+  setFoundryConfig: (patch: FoundryConfigPatch) => void;
   setVertexAuthMode: (value: string) => void;
   setVertexProject: (value: string) => void;
   setVertexLocation: (value: string) => void;
@@ -1798,6 +1817,11 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   azureApiKey: "",
   azureDeploymentName: readString("azureDeploymentName", ""),
   azureApiVersion: readString("azureApiVersion", "2024-10-21"),
+  foundryBaseUrl: "",
+  foundryWireApi: "responses",
+  foundryModel: readString("foundryModel", ""),
+  foundryMaxInputTokens: readNumber("foundryMaxInputTokens", DEFAULT_FOUNDRY_MAX_INPUT_TOKENS),
+  foundryMaxOutputTokens: readNumber("foundryMaxOutputTokens", DEFAULT_FOUNDRY_MAX_OUTPUT_TOKENS),
   vertexAuthMode: readString("vertexAuthMode", "adc"),
   vertexProject: readString("vertexProject", ""),
   vertexLocation: readString("vertexLocation", "us-central1"),
@@ -2566,6 +2590,40 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
     window.electronAPI?.saveAzureApiVersion?.(value);
     debouncedPersistToEnv();
   },
+  setFoundryConfig: (patch: FoundryConfigPatch) => {
+    const updates: Partial<SettingsState> = {};
+    if (patch.foundryBaseUrl !== undefined) updates.foundryBaseUrl = patch.foundryBaseUrl;
+    if (patch.foundryWireApi !== undefined) {
+      updates.foundryWireApi = patch.foundryWireApi === "chat" ? "chat" : "responses";
+    }
+    if (patch.foundryModel !== undefined) {
+      updates.foundryModel = patch.foundryModel.trim();
+      if (isBrowser) localStorage.setItem("foundryModel", updates.foundryModel);
+    }
+    for (const key of ["foundryMaxInputTokens", "foundryMaxOutputTokens"] as const) {
+      const value = patch[key];
+      if (value === undefined) continue;
+      const clamped = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+      if (clamped === 0) continue;
+      updates[key] = clamped;
+      if (isBrowser) localStorage.setItem(key, String(clamped));
+    }
+    useSettingsStore.setState(updates);
+    // One provider serves every LLM scope: persist that so readers of the raw
+    // scope fields see it too, not only the resolver.
+    const model = useSettingsStore.getState().foundryModel;
+    const s = useSettingsStore.getState();
+    s.setCloudReasoningForAllScopes({
+      cleanupCloudMode: "enterprise",
+      cleanupProvider: "foundry",
+      cleanupModel: model,
+    });
+    setResolvedLLMConfig("dictationAgentVision", {
+      mode: "enterprise",
+      provider: "foundry",
+      model,
+    });
+  },
   setVertexAuthMode: (value: string) => {
     if (isBrowser) localStorage.setItem("vertexAuthMode", value);
     set({ vertexAuthMode: value });
@@ -3211,6 +3269,23 @@ export const selectResolvedLLMConfig = (
   state: SettingsState,
   scope: InferenceScope
 ): ResolvedLLMConfig => {
+  // Local-only has one LLM provider for every scope, whatever an older profile stored.
+  if (isLocalOnly()) {
+    const def = INFERENCE_SCOPES[scope];
+    const read = (field: keyof InferenceScopeStoreKeys) => {
+      const key = def.storeKeys[field];
+      return key ? (state[key] as string | undefined) || undefined : undefined;
+    };
+    const disableThinkingKey = def.storeKeys.disableThinking;
+    return {
+      scope,
+      mode: "enterprise",
+      provider: "foundry",
+      model: state.foundryModel,
+      disableThinking: disableThinkingKey ? (state[disableThinkingKey] as boolean) : true,
+      reasoningEffort: read("reasoningEffort"),
+    };
+  }
   const def: InferenceScopeDefinition = INFERENCE_SCOPES[scope];
   const mode = state[def.storeKeys.mode] as InferenceMode;
   const parent = def.fallbackScope
