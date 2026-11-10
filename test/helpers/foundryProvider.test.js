@@ -302,7 +302,8 @@ test("saving the config normalizes and validates it", () => {
   );
   assert.equal(result.baseUrl, "https://x.openai.azure.com/openai/v1");
   assert.equal(env.state.wireApi, "chat");
-  assert.equal(env.state.key, "k", "first save keeps the key");
+  assert.equal(env.state.key, "", "a key stored with no recorded URL is cleared");
+  assert.equal(result.keyCleared, true);
   assert.throws(() =>
     applyFoundryConfig(env, { baseUrl: "http://169.254.169.254/v1" }, env.clearKey)
   );
@@ -328,6 +329,19 @@ test("changing the base URL origin clears the stored key; same origin keeps it",
   const moved = applyFoundryConfig(env, { baseUrl: "https://api.example.com/v1" }, env.clearKey);
   assert.equal(moved.keyCleared, true);
   assert.equal(env.state.key, "");
+});
+
+test("a stored key is cleared when there is no previous base URL or it cannot be parsed", () => {
+  const none = memoryEnv();
+  assert.equal(none.state.key, "k");
+  assert.equal(applyFoundryConfig(none, { baseUrl: "https://a.example.com/v1" }, none.clearKey).keyCleared, true);
+  assert.equal(none.state.key, "");
+  const bad = memoryEnv({ baseUrl: "not a url" });
+  assert.equal(applyFoundryConfig(bad, { baseUrl: "https://a.example.com/v1" }, bad.clearKey).keyCleared, true);
+  assert.equal(bad.state.key, "");
+  const noKey = memoryEnv();
+  noKey.state.key = "";
+  assert.equal(applyFoundryConfig(noKey, { baseUrl: "https://a.example.com/v1" }, noKey.clearKey).keyCleared, false);
 });
 
 test("isAzureHost matches the Azure suffixes only", () => {

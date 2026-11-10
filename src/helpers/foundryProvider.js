@@ -173,14 +173,18 @@ function applyFoundryConfig(env, input, clearKey) {
   const wireApi = input?.wireApi === "chat" ? "chat" : "responses";
   const previous = env.getFoundryConfig?.()?.baseUrl;
   let keyCleared = false;
-  if (previous) {
-    let previousOrigin;
-    try {
-      previousOrigin = new URL(previous).origin;
-    } catch {
-      previousOrigin = null;
+  // Fail closed: a stored key stays only when the previous URL is known, parses and
+  // shares the new origin. No previous URL, or an unparsable one, clears it.
+  if (env.getFoundryApiKey?.()) {
+    let previousOrigin = null;
+    if (previous) {
+      try {
+        previousOrigin = new URL(previous).origin;
+      } catch {
+        previousOrigin = null;
+      }
     }
-    if (previousOrigin !== new URL(baseUrl).origin) {
+    if (previousOrigin === null || previousOrigin !== new URL(baseUrl).origin) {
       clearKey();
       keyCleared = true;
     }
