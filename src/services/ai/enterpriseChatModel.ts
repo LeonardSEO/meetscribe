@@ -71,17 +71,30 @@ export function createEnterpriseChatModel(
       const stream = new ReadableStream<LanguageModelV3StreamPart>({
         start: (controller) => {
           let settled = false;
-          const fail = (message: string) => {
+          type StreamFailure = {
+            code?: string;
+            messageKey?: string;
+            messageParams?: Record<string, unknown>;
+          };
+          // Keep the classification: callers branch on `code` (CONTEXT_TOO_LARGE).
+          const fail = (message: string, details: StreamFailure = {}) => {
             if (settled) return;
             settled = true;
             stopListening();
-            controller.error(new Error(message));
+            const { code, messageKey, messageParams } = details;
+            controller.error(
+              Object.assign(new Error(message), {
+                ...(code ? { code } : {}),
+                ...(messageKey ? { messageKey } : {}),
+                ...(messageParams ? { messageParams } : {}),
+              })
+            );
           };
 
           unsubscribe = api.onEnterpriseStreamPart!((payload) => {
             if (payload.streamId !== streamId) return;
             if (payload.error) {
-              fail(payload.error);
+              fail(payload.error, payload);
             } else if (payload.done) {
               if (settled) return;
               settled = true;
@@ -104,7 +117,8 @@ export function createEnterpriseChatModel(
             options: pickSerializableOptions(options),
           })
             .then((result) => {
-              if (result && !result.success) fail(result.error || "Enterprise stream failed");
+              if (result && !result.success)
+                fail(result.error || "Enterprise stream failed", result);
             })
             .catch((error: Error) => fail(error.message));
         },

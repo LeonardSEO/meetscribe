@@ -60,6 +60,8 @@ const PERSISTED_KEYS = [
   "AZURE_OPENAI_API_VERSION",
   "VERTEX_PROJECT",
   "VERTEX_LOCATION",
+  "FOUNDRY_BASE_URL",
+  "FOUNDRY_WIRE_API",
   // Written by the Settings debug toggle (set-debug-logging)
   "OPENWHISPR_LOG_LEVEL",
   // "bundled" turns off model catalog updates (Settings privacy toggle, or managed installs)
@@ -342,6 +344,18 @@ class EnvironmentManager {
   }
   saveAzureEndpoint(value) {
     return this._saveKey("AZURE_OPENAI_ENDPOINT", value);
+  }
+  getFoundryConfig() {
+    return {
+      baseUrl: this._getKey("FOUNDRY_BASE_URL"),
+      wireApi: this._getKey("FOUNDRY_WIRE_API") === "chat" ? "chat" : "responses",
+    };
+  }
+  saveFoundryConfig({ baseUrl, wireApi }) {
+    this._saveKey("FOUNDRY_BASE_URL", baseUrl);
+    this._saveKey("FOUNDRY_WIRE_API", wireApi);
+    this.saveAllKeysToEnvFile().catch(() => {});
+    return { success: true };
   }
   getFoundryApiKey() {
     return this._getKey("FOUNDRY_API_KEY");

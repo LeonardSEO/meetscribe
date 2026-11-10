@@ -5716,6 +5716,20 @@ class IPCHandlers {
       "save-foundry-api-key",
       saveSecretKey("getFoundryApiKey", "saveFoundryApiKey", "foundryApiKey")
     );
+    const foundryProvider = require("./foundryProvider");
+    ipcMain.handle("save-foundry-config", async (event, input) => {
+      const result = foundryProvider.applyFoundryConfig(this.environmentManager, input, () =>
+        this.environmentManager.saveFoundryApiKey("")
+      );
+      if (result.keyCleared) {
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed()) win.webContents.send("api-key-updated", "foundryApiKey");
+        }
+      }
+      return result;
+    });
+    // Base URL and wire API only; the key is never returned.
+    ipcMain.handle("get-foundry-config", async () => this.environmentManager.getFoundryConfig());
     ipcMain.handle("has-foundry-api-key", async () =>
       Boolean(this.environmentManager.getFoundryApiKey())
     );
@@ -5797,11 +5811,12 @@ class IPCHandlers {
           runtime?.provider === "bedrock" && runtime.enterprise?.bedrockRegion
             ? { ...(config || {}), bedrockRegion: runtime.enterprise.bedrockRegion }
             : config;
-        const mapped = mapEnterpriseError(provider, err, mappingConfig);
+        const mapped = mapEnterpriseError(provider, err, withRuntimeConfig(mappingConfig, runtime));
         return {
           success: false,
           error: mapped.message,
           messageKey: mapped.messageKey,
+          code: mapped.code,
           messageParams: mapped.messageParams,
           action: mapped.action,
           actionKey: mapped.actionKey,
@@ -5916,13 +5931,18 @@ class IPCHandlers {
             runtime?.provider === "bedrock" && runtime.enterprise?.bedrockRegion
               ? { ...(config || {}), bedrockRegion: runtime.enterprise.bedrockRegion }
               : config || {};
-          const mapped = mapEnterpriseError(provider, err, mappingConfig);
+          const mapped = mapEnterpriseError(
+            provider,
+            err,
+            withRuntimeConfig(mappingConfig, runtime)
+          );
           return {
             success: false,
             error: mapped.message,
             // mapEnterpriseError matches provider failures, so a truncation falls through
             // to its generic mapping — keep the key the throw site set.
             messageKey: err.messageKey || mapped.messageKey,
+            code: mapped.code,
             messageParams: mapped.messageParams,
             action: mapped.action,
             actionKey: mapped.actionKey,
@@ -6007,9 +6027,20 @@ class IPCHandlers {
           runtime?.provider === "bedrock" && runtime.enterprise?.bedrockRegion
             ? { ...(config || {}), bedrockRegion: runtime.enterprise.bedrockRegion }
             : config || {};
-        const mapped = mapEnterpriseError(provider, err, mappingConfig);
-        send({ error: mapped.message, messageKey: mapped.messageKey, code: mapped.code });
-        return { success: false, error: mapped.message };
+        const mapped = mapEnterpriseError(provider, err, withRuntimeConfig(mappingConfig, runtime));
+        send({
+          error: mapped.message,
+          messageKey: mapped.messageKey,
+          messageParams: mapped.messageParams,
+          code: mapped.code,
+        });
+        return {
+          success: false,
+          error: mapped.message,
+          messageKey: mapped.messageKey,
+          messageParams: mapped.messageParams,
+          code: mapped.code,
+        };
       } finally {
         this.enterpriseStreamAborts.delete(streamId);
         if (!event.sender.isDestroyed()) {
@@ -7466,14 +7497,15 @@ class IPCHandlers {
         return (await response.json()).data;
       },
     });
+    // Foundry's base URL comes from main's store, so error wording follows it too.
+    const withRuntimeConfig = (config, runtime) =>
+      runtime?.provider === "foundry"
+        ? { ...config, foundryBaseUrl: runtime.enterprise.foundryBaseUrl }
+        : config;
     const resolveEnterpriseRuntime = async (event, provider, model, config = {}) => {
       // Foundry is never managed and never takes its key from the renderer.
       if (provider === "foundry") {
-        return require("./foundryProvider").resolveFoundryRuntime(
-          this.environmentManager,
-          model,
-          config
-        );
+        return require("./foundryProvider").resolveFoundryRuntime(this.environmentManager, model);
       }
       const manual = {
         provider,

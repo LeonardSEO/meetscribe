@@ -509,9 +509,7 @@ function mapFoundryError(error, config = {}) {
   const { asProviderError } = require("./providerHttpErrors");
   let azure = false;
   try {
-    azure = /\.(openai|services\.ai|cognitiveservices)\.azure\.com$/i.test(
-      new URL(config?.foundryBaseUrl).hostname
-    );
+    azure = require("./foundryProvider").isAzureHost(new URL(config?.foundryBaseUrl).hostname);
   } catch {
     // No usable base URL: describe it as a server.
   }

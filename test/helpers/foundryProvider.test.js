@@ -6,6 +6,8 @@ const {
   createFoundryModel,
   getFoundryCredential,
   resolveFoundryRuntime,
+  applyFoundryConfig,
+  isAzureHost,
 } = require("../../src/helpers/foundryProvider.js");
 const { getEnterpriseAIModel } = require("../../src/helpers/enterpriseAiProviders.js");
 const {
@@ -250,22 +252,215 @@ test("foundry errors are classified by status, not by Azure heuristics", () => {
   assert.equal(mapped.messageKey, "providerErrors.authFailed");
 });
 
-test("the renderer-supplied apiKey is ignored for foundry", async () => {
-  const env = { getFoundryApiKey: () => "stored-key" };
+test("the renderer-supplied apiKey, base URL and wire API are ignored for foundry", async () => {
+  const env = {
+    getFoundryApiKey: () => "stored-key",
+    getFoundryConfig: () => ({ baseUrl: "https://x.openai.azure.com/openai/v1", wireApi: "chat" }),
+  };
   assert.deepEqual(getFoundryCredential(env), { apiKey: "stored-key" });
   const runtime = resolveFoundryRuntime(env, "dep", {
     apiKey: "renderer-key",
-    foundryBaseUrl: "https://x.openai.azure.com",
+    foundryBaseUrl: "https://evil.example.com/v1",
     foundryWireApi: "responses",
     managedContext: { accountId: "a" },
   });
   assert.equal(runtime.apiKey, "stored-key");
   assert.equal(runtime.provider, "foundry");
   assert.equal(runtime.model, "dep");
-  assert.equal(runtime.enterprise.foundryBaseUrl, "https://x.openai.azure.com");
+  assert.equal(runtime.enterprise.foundryBaseUrl, "https://x.openai.azure.com/openai/v1");
+  assert.equal(runtime.enterprise.foundryWireApi, "chat");
 
   stubFetch();
   const model = createFoundryModel(runtime.model, runtime.apiKey, runtime.enterprise);
   const request = await call(model);
+  assert.ok(request.url.startsWith("https://x.openai.azure.com/"));
   assert.equal(new Headers(request.init.headers).get("authorization"), "Bearer stored-key");
+});
+
+function memoryEnv(initial = {}) {
+  const state = { baseUrl: "", wireApi: "responses", key: "k", ...initial };
+  return {
+    state,
+    getFoundryConfig: () => ({ baseUrl: state.baseUrl, wireApi: state.wireApi }),
+    saveFoundryConfig: ({ baseUrl, wireApi }) => Object.assign(state, { baseUrl, wireApi }),
+    getFoundryApiKey: () => state.key,
+    clearKey: () => {
+      state.key = "";
+    },
+  };
+}
+
+test("saving the config normalizes and validates it", () => {
+  const env = memoryEnv();
+  const result = applyFoundryConfig(
+    env,
+    {
+      baseUrl: "https://x.openai.azure.com/openai/deployments/g/chat/completions?api-version=1",
+      wireApi: "chat",
+    },
+    env.clearKey
+  );
+  assert.equal(result.baseUrl, "https://x.openai.azure.com/openai/v1");
+  assert.equal(env.state.wireApi, "chat");
+  assert.equal(env.state.key, "k", "first save keeps the key");
+  assert.throws(() =>
+    applyFoundryConfig(env, { baseUrl: "http://169.254.169.254/v1" }, env.clearKey)
+  );
+  assert.throws(() =>
+    applyFoundryConfig(env, { baseUrl: "http://api.example.com/v1" }, env.clearKey)
+  );
+  assert.equal(
+    env.state.baseUrl,
+    "https://x.openai.azure.com/openai/v1",
+    "a refused save changes nothing"
+  );
+});
+
+test("changing the base URL origin clears the stored key; same origin keeps it", () => {
+  const env = memoryEnv({ baseUrl: "https://x.openai.azure.com/openai/v1" });
+  const same = applyFoundryConfig(
+    env,
+    { baseUrl: "https://x.openai.azure.com", wireApi: "chat" },
+    env.clearKey
+  );
+  assert.equal(same.keyCleared, false);
+  assert.equal(env.state.key, "k");
+  const moved = applyFoundryConfig(env, { baseUrl: "https://api.example.com/v1" }, env.clearKey);
+  assert.equal(moved.keyCleared, true);
+  assert.equal(env.state.key, "");
+});
+
+test("isAzureHost matches the Azure suffixes only", () => {
+  assert.equal(isAzureHost("x.openai.azure.com"), true);
+  assert.equal(isAzureHost("X.Services.AI.Azure.com"), true);
+  assert.equal(isAzureHost("openai.azure.com.evil.example"), false);
+});
+
+test("metadata and link-local hosts are refused however they are written", () => {
+  for (const url of [
+    "http://[::ffff:169.254.169.254]/v1",
+    "https://[::ffff:169.254.169.254]/v1",
+    "https://[::ffff:a9fe:a9fe]/v1",
+    "https://[::169.254.169.254]/v1",
+    "https://[::a9fe:a9fe]/v1",
+    "https://[0:0:0:0:0:ffff:a9fe:a9fe]/v1",
+    "https://[64:ff9b::a9fe:a9fe]/v1",
+    "https://2852039166/v1",
+    "https://0xa9fea9fe/v1",
+    "https://0251.0376.0251.0376/v1",
+    "https://169.254.1.1/v1",
+    "https://[fe80::1]/v1",
+    "https://[febf::1]/v1",
+    "https://[fd00:ec2::254]/v1",
+    "https://[FD00:EC2:0:0:0:0:0:254]/v1",
+  ]) {
+    assert.throws(() => validateFoundryEndpoint(url), /not allowed/, url);
+  }
+  // Ordinary mapped/public addresses are not caught by accident.
+  validateFoundryEndpoint("https://[::ffff:8.8.8.8]/v1");
+  validateFoundryEndpoint("http://[::ffff:192.168.1.5]/v1");
+});
+
+function responsesModel(name, baseUrl = "https://x.openai.azure.com") {
+  return createFoundryModel(name, "k", { foundryBaseUrl: baseUrl, foundryWireApi: "responses" });
+}
+
+test("a 400 about encrypted_content retries once without include and remembers it", async () => {
+  calls = [];
+  let mode = "reject";
+  global.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push({ url: String(url), body });
+    if (mode === "reject" && body.include) {
+      return new Response(
+        JSON.stringify({
+          error: { message: "Unknown parameter: include reasoning.encrypted_content" },
+        }),
+        { status: 400, headers: { "content-type": "application/json" } }
+      );
+    }
+    return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  const model = responsesModel("retry-dep");
+  try {
+    await model.doGenerate({ prompt });
+  } catch {}
+  assert.equal(calls.length, 2);
+  assert.ok(calls[0].body.include);
+  assert.equal(calls[0].body.store, false);
+  assert.ok(!("include" in calls[1].body));
+  assert.equal(calls[1].body.store, false);
+
+  calls.length = 0;
+  try {
+    await model.doGenerate({ prompt });
+  } catch {}
+  assert.equal(calls.length, 1, "remembered: no failing attempt first");
+  assert.ok(!("include" in calls[0].body));
+
+  calls.length = 0;
+  try {
+    await responsesModel("other-dep").doGenerate({ prompt });
+  } catch {}
+  assert.ok(calls[0].body.include, "other models still try include");
+});
+
+test("an unrelated 400 is not retried and nothing is remembered", async () => {
+  calls = [];
+  global.fetch = async (url, init) => {
+    calls.push(JSON.parse(init.body));
+    return new Response(JSON.stringify({ error: { message: "bad prompt" } }), {
+      status: 400,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  const model = responsesModel("plain-400-dep");
+  try {
+    await model.doGenerate({ prompt });
+  } catch {}
+  try {
+    await model.doGenerate({ prompt });
+  } catch {}
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every((body) => body.include));
+});
+
+test("streaming also retries without include", async () => {
+  calls = [];
+  global.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push(body);
+    if (body.include) {
+      return new Response(JSON.stringify({ error: { message: "include not supported" } }), {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response("", { status: 200, headers: { "content-type": "text/event-stream" } });
+  };
+  try {
+    const { stream } = await responsesModel("stream-dep").doStream({ prompt });
+    const reader = stream.getReader();
+    while (!(await reader.read()).done);
+  } catch {}
+  assert.equal(calls.length, 2);
+  assert.ok(!("include" in calls[1]));
+});
+
+test("shared classifier: BYOK status handling is unchanged outside the new 400 codes", () => {
+  const { providerHttpError } = require("../../src/helpers/providerHttpErrors.js");
+  const code = (status, body) =>
+    providerHttpError({ provider: "OpenAI", status, body, surface: "llm" }).code;
+  assert.equal(code(401, "x"), "PROVIDER_AUTH_FAILED");
+  assert.equal(code(429, "rate"), "PROVIDER_RATE_LIMITED");
+  assert.equal(code(404, "model_not_found"), "PROVIDER_MODEL_NOT_FOUND");
+  assert.equal(code(400, "model does not exist"), "PROVIDER_MODEL_NOT_FOUND");
+  assert.equal(code(400, "something else"), "PROVIDER_BAD_REQUEST");
+  assert.equal(code(413, "big"), "PROVIDER_PAYLOAD_TOO_LARGE");
+  assert.equal(code(503, "down"), "PROVIDER_UNAVAILABLE");
+  assert.equal(code(400, '{"error":{"code":"context_length_exceeded"}}'), "CONTEXT_TOO_LARGE");
+  assert.equal(code(400, '{"error":{"code":"content_filter"}}'), "PROVIDER_CONTENT_FILTERED");
+  // Only 400 is reinterpreted: a 500 mentioning the words stays an outage.
+  assert.equal(code(500, "context_length_exceeded"), "PROVIDER_UNAVAILABLE");
+  assert.equal(code(429, "content_filter"), "PROVIDER_RATE_LIMITED");
 });

@@ -50,6 +50,13 @@ Module._load = function loadWithMocks(request, parent, isMain) {
   if (request === "./tokenStore") return { get: () => "test-token" };
   if (parent?.filename === handlersModulePath) {
     if (request === "./debugLogger") return new Proxy({}, { get: () => () => {} });
+    if (request === "ai") {
+      return {
+        generateText: async () => {
+          throw streamError;
+        },
+      };
+    }
     if (request === "./enterpriseAiProviders") {
       return {
         getEnterpriseAIModel: async () => ({
@@ -76,7 +83,13 @@ function anything() {
 }
 
 let stored = "";
+let savedConfig = { baseUrl: "", wireApi: "responses" };
 const environmentManager = {
+  getFoundryConfig: () => savedConfig,
+  saveFoundryConfig: (config) => {
+    savedConfig = config;
+    return { success: true };
+  },
   getFoundryApiKey: () => stored,
   saveFoundryApiKey: (key) => {
     stored = key;
@@ -128,6 +141,7 @@ test("save-foundry-api-key rejects a non-string", () => {
 
 test("the enterprise stream error carries messageKey as well as the message", async () => {
   sent.length = 0;
+  savedConfig = { baseUrl: "https://x.openai.azure.com/openai/v1", wireApi: "responses" };
   streamError = Object.assign(new Error("bad"), {
     statusCode: 400,
     responseBody: JSON.stringify({ error: { code: "context_length_exceeded" } }),
@@ -136,7 +150,7 @@ test("the enterprise stream error carries messageKey as well as the message", as
     streamId: "s1",
     provider: "foundry",
     modelId: "dep",
-    config: { foundryBaseUrl: "https://x.openai.azure.com", foundryWireApi: "responses" },
+    config: { foundryBaseUrl: "https://evil.example.com/v1", foundryWireApi: "chat" },
     options: {},
   });
   assert.equal(result.success, false);
@@ -144,4 +158,45 @@ test("the enterprise stream error carries messageKey as well as the message", as
   assert.ok(errorMessage, "an error part was sent");
   assert.equal(errorMessage.messageKey, "providerErrors.contextTooLarge");
   assert.equal(errorMessage.code, "CONTEXT_TOO_LARGE");
+  assert.equal(result.code, "CONTEXT_TOO_LARGE");
+});
+
+test("save-foundry-config stores the config, get-foundry-config never returns the key", async () => {
+  stored = "secret-sentinel";
+  const saved = await handlers.get("save-foundry-config")(event, {
+    baseUrl: "https://x.openai.azure.com",
+    wireApi: "chat",
+  });
+  assert.equal(saved.baseUrl, "https://x.openai.azure.com/openai/v1");
+  assert.equal(saved.keyCleared, false);
+  const config = await handlers.get("get-foundry-config")(event);
+  assert.deepEqual(config, { baseUrl: "https://x.openai.azure.com/openai/v1", wireApi: "chat" });
+  assert.ok(!JSON.stringify(config).includes("secret-sentinel"));
+});
+
+test("moving to another origin through save-foundry-config clears the key", async () => {
+  stored = "secret-sentinel";
+  const moved = await handlers.get("save-foundry-config")(event, {
+    baseUrl: "https://api.example.com/v1",
+    wireApi: "chat",
+  });
+  assert.equal(moved.keyCleared, true);
+  assert.equal(stored, "");
+  await assert.rejects(async () =>
+    handlers.get("save-foundry-config")(event, { baseUrl: "http://169.254.169.254/v1" })
+  );
+});
+
+test("process-enterprise-reasoning returns the code for a context-length refusal", async () => {
+  streamError = Object.assign(new Error("bad"), {
+    statusCode: 400,
+    responseBody: JSON.stringify({ error: { code: "context_length_exceeded" } }),
+  });
+  savedConfig = { baseUrl: "https://x.openai.azure.com/openai/v1", wireApi: "responses" };
+  const result = await handlers.get("process-enterprise-reasoning")(event, "text", "dep", "agent", {
+    provider: "foundry",
+  });
+  assert.equal(result.success, false);
+  assert.equal(result.code, "CONTEXT_TOO_LARGE");
+  assert.equal(result.messageKey, "providerErrors.contextTooLarge");
 });

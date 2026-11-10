@@ -2527,7 +2527,13 @@ declare global {
         modelId: string;
         config: Record<string, unknown>;
         options: Record<string, unknown>;
-      }) => Promise<{ success: boolean; error?: string }>;
+      }) => Promise<{
+        success: boolean;
+        error?: string;
+        messageKey?: string;
+        messageParams?: Record<string, unknown>;
+        code?: string;
+      }>;
       enterpriseStreamCancel?: (streamId: string) => Promise<void>;
       onEnterpriseStreamPart?: (
         callback: (payload: {
@@ -2535,6 +2541,9 @@ declare global {
           part?: unknown;
           done?: boolean;
           error?: string;
+          messageKey?: string;
+          messageParams?: Record<string, unknown>;
+          code?: string;
         }) => void
       ) => () => void;
       listBedrockModels?: (config: Record<string, unknown>) => Promise<{
@@ -2802,6 +2811,11 @@ declare global {
       saveAzureApiKey?: (key: string) => Promise<void>;
       saveFoundryApiKey?: (key: string) => Promise<void>;
       hasFoundryApiKey?: () => Promise<boolean>;
+      saveFoundryConfig?: (config: {
+        baseUrl: string;
+        wireApi: "responses" | "chat";
+      }) => Promise<{ baseUrl: string; wireApi: "responses" | "chat"; keyCleared: boolean }>;
+      getFoundryConfig?: () => Promise<{ baseUrl: string; wireApi: "responses" | "chat" }>;
       getAzureDeployment?: () => Promise<string | null>;
       saveAzureDeployment?: (value: string) => Promise<void>;
       getAzureApiVersion?: () => Promise<string | null>;
