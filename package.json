@@ -75,7 +75,7 @@
     "format": "npm run format:js",
     "format:check": "eslint . && cd src && eslint . && prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "lint": "eslint . && cd src && eslint .",
-    "test": "node --import tsx --test \"test/**/*.test.js\"",
+    "test": "node --import tsx --import ./test/setup/upstreamMode.js --test \"test/**/*.test.js\"",
     "typecheck": "cd src && tsc --noEmit",
     "quality-check": "npm run model-registry:verify && npm run format:check && npm run typecheck",
     "i18n:check": "node scripts/check-i18n.js",
