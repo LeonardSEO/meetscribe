@@ -1,6 +1,7 @@
 const http = require("http");
 const crypto = require("crypto");
 const { openExternalUrl } = require("./externalUrlOpener");
+const { isBlockedUrl } = require("./blockedHosts");
 
 const OAUTH_TIMEOUT_MS = 120000;
 const DEFAULT_DESKTOP_CALLBACK_URL = "https://openwhispr.com/auth/desktop-callback";
@@ -101,6 +102,14 @@ function runOAuthLoopbackFlow({
       if (renderResultPage) {
         res.writeHead(ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8" });
         res.end(renderResultPage({ ok }));
+        return;
+      }
+      // Local-only: the hosted desktop-callback page is an OpenWhispr site, so answer locally.
+      if (isBlockedUrl(getDesktopCallbackUrl())) {
+        res.writeHead(ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(
+          `<html><body><h3>${ok ? "Connected." : "Connection failed."} You can close this window.</h3></body></html>`
+        );
         return;
       }
       redirect(res, params);

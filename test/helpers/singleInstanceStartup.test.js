@@ -32,6 +32,8 @@ function runStartup({ lockAvailable, hidden }) {
     http: {},
     tls: { getCACertificates: () => [] },
     dotenv: { config: () => ({}) },
+    // Loaded before the lock; it must stay dependency-free (see the test below).
+    "./src/config/localOnly": { isLocalOnly: () => true },
     "./src/helpers/xwayland": {
       XWAYLAND_FLAG: "--ozone-platform=x11",
       shouldForceXWayland: () => false,
@@ -89,4 +91,10 @@ for (const hidden of [false, true]) {
 
 test("successful single-instance lock continues startup without failure logging", () => {
   assert.deepEqual(runStartup({ lockAvailable: true, hidden: true }), [["lock"], ["continue"]]);
+});
+
+test("the localOnly switch stays light enough to load before the single-instance lock", () => {
+  const source = fs.readFileSync(path.resolve(__dirname, "../../src/config/localOnly.js"), "utf8");
+  const code = source.replace(/\/\/.*$/gm, "");
+  assert.doesNotMatch(code, /\brequire\s*\(|^\s*import\s/m);
 });

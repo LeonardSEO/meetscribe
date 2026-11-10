@@ -7,6 +7,7 @@ const {
   ORUKEET_CLEANUP_RUNTIME_MODELS,
   isOrukeetClientToken,
 } = require("./orukeetProtocol");
+const { isBlockedUrl } = require("./blockedHosts");
 
 const MAX_PENDING_BYTES = 2 * 1024 * 1024;
 // Mono 16 kHz PCM16.
@@ -140,6 +141,11 @@ class OrukeetStreaming {
     const url = pipeline
       ? streamingUrl(baseUrl).replace("/v1/audio/transcriptions/stream", "/v1/pipeline/stream")
       : streamingUrl(baseUrl);
+    if (isBlockedUrl(url)) {
+      throw Object.assign(new Error("This connection is disabled in local-only mode"), {
+        code: "LOCAL_ONLY_BLOCKED",
+      });
+    }
     this.beginConnecting();
     this.ws = this.createSocket(
       url,

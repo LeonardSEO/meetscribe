@@ -1,5 +1,6 @@
 const { captureAuthFence } = require("./cloudApiRequest");
 const { createPolicyResponseError } = require("./policyResponseError");
+const { isLocalOnly } = require("../config/localOnly");
 
 const {
   ORUKEET_BASE_URL,
@@ -104,6 +105,13 @@ async function connectManagedOrukeet({
   withPolicyHeaders,
   pipelineOptions,
 }) {
+  // Local-only never talks to OpenWhispr's API or the managed Orukeet endpoint, whatever
+  // OPENWHISPR_API_URL says.
+  if (isLocalOnly()) {
+    throw Object.assign(new Error("Managed Orukeet is disabled in local-only mode"), {
+      code: "LOCAL_ONLY_BLOCKED",
+    });
+  }
   const apiUrl = getApiUrl();
   if (!apiUrl) throw new Error("OpenWhispr API URL not configured");
   const fence = captureAuthFence(tokenStore, tokenStore.getState().generation);

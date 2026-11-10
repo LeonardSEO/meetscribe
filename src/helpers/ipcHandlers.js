@@ -273,6 +273,7 @@ const {
 const { createUploadCancelRegistry } = require("./uploadCancelRegistry");
 const { applyOpenWhisprOriginHeader } = require("./sessionHeaders");
 const { blockDisabledHosts } = require("./blockedHosts");
+const { isLocalOnly } = require("../config/localOnly");
 const {
   CLOUD_UPLOAD_TIMEOUT_MS,
   CLOUD_CHUNK_MAX_ATTEMPTS,
@@ -10188,6 +10189,11 @@ class IPCHandlers {
 
       const connectInner = async () => {
         const isCloud = options.mode !== "byok";
+        if (isCloud && isLocalOnly()) {
+          throw Object.assign(new Error("Cloud dictation is disabled in local-only mode"), {
+            code: "LOCAL_ONLY_BLOCKED",
+          });
+        }
         // Dictation renderers before 1.8.4 omit `provider` and mean OpenAI; the
         // default lives here, at the boundary, so the token allowlist stays
         // fail-closed for genuinely unknown providers (#1624).

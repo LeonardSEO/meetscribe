@@ -156,3 +156,51 @@ test("blockDisabledHosts cancels blocked requests on a session and passes others
   assert.deepEqual(run("https://huggingface.co/oruk/orukeet"), {});
   assert.deepEqual(logged, ["api.openwhispr.com"]);
 });
+
+test("local-only managed Orukeet is refused without opening a socket, even with an API URL", async () => {
+  const { connectManagedOrukeet } = require("../../src/helpers/orukeetCloudSession");
+  const { OrukeetStreaming } = require("../../src/helpers/orukeetStreaming");
+  let sockets = 0;
+  let fetches = 0;
+  const streaming = new OrukeetStreaming({
+    createSocket: () => {
+      sockets += 1;
+      throw new Error("must not open");
+    },
+  });
+  const tokenStore = {
+    getState: () => ({ token: "t", generation: 1 }),
+    subscribe: () => () => {},
+  };
+  await assert.rejects(
+    connectManagedOrukeet({
+      streaming,
+      getApiUrl: () => "https://api.openwhispr.com",
+      proxyFetch: async () => {
+        fetches += 1;
+        throw new Error("must not fetch");
+      },
+      tokenStore,
+      withPolicyHeaders: (h) => h,
+    }),
+    { code: "LOCAL_ONLY_BLOCKED" }
+  );
+  assert.equal(sockets, 0);
+  assert.equal(fetches, 0);
+});
+
+test("OrukeetStreaming refuses a blocked websocket URL before creating a socket", async () => {
+  const { OrukeetStreaming } = require("../../src/helpers/orukeetStreaming");
+  let sockets = 0;
+  const streaming = new OrukeetStreaming({
+    createSocket: () => {
+      sockets += 1;
+      throw new Error("must not open");
+    },
+  });
+  await assert.rejects(
+    streaming.connect({ baseUrl: "https://orukeet.gizmovoice.ai", apiKey: "k" }),
+    { code: "LOCAL_ONLY_BLOCKED" }
+  );
+  assert.equal(sockets, 0);
+});
