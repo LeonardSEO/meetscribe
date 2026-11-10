@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import {
   useCallback,
   useEffect,
@@ -58,6 +59,7 @@ import {
   defaultAddTarget,
   filterRows,
   resolveSharedAccessState,
+  type SharedAccessState,
   rowsForList,
   shareTargetsFor,
   SORT_LABEL_KEYS,
@@ -285,16 +287,18 @@ export default function DictionaryView({ onUpgrade }: DictionaryViewProps): Reac
     useSharedDictionaryStore.getState().setRequestedList(null);
   }, [requestedList]);
 
-  const access = resolveSharedAccessState({
-    status,
-    signedIn: isSignedIn,
-    workspace,
-    personalSelected,
-    serverPaused: snapshot?.meta?.paused ?? null,
-    hasWords:
-      (snapshot?.entries.length ?? 0) > 0 ||
-      (snapshot?.meta?.scopes ?? []).some((scope) => scope.word_count > 0),
-  });
+  const access: SharedAccessState = isLocalOnly()
+    ? "unavailable"
+    : resolveSharedAccessState({
+        status,
+        signedIn: isSignedIn,
+        workspace,
+        personalSelected,
+        serverPaused: snapshot?.meta?.paused ?? null,
+        hasWords:
+          (snapshot?.entries.length ?? 0) > 0 ||
+          (snapshot?.meta?.scopes ?? []).some((scope) => scope.word_count > 0),
+      });
 
   // Where dictation posts when it uses a bring-your-own-key batch provider,
   // resolved the way dictation resolves it (audioManager.resolveBatchRoute).

@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import React, { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
@@ -416,6 +417,7 @@ export default function ControlPanel({ initialSettingsSection }: ControlPanelPro
   useEffect(() => {
     const dispose = window.electronAPI?.onLimitReached?.(
       (data: { wordsUsed: number; limit: number }) => {
+        if (isLocalOnly()) return;
         if (!hasShownUpgradePrompt.current) {
           hasShownUpgradePrompt.current = true;
           setLimitData(data);

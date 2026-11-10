@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import type { ReactElement, ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Sparkles } from "../icons";
@@ -76,8 +77,10 @@ interface UpsellBarProps {
 }
 
 /** Shown under a section's header when the user's plan doesn't include it. */
-export function UpsellBar({ message, onUpgrade, icon }: UpsellBarProps): ReactElement {
+export function UpsellBar({ message, onUpgrade, icon }: UpsellBarProps): ReactElement | null {
   const { t } = useTranslation();
+  // No plans exist without an account, so there is nothing to upsell.
+  if (isLocalOnly()) return null;
   return (
     <div
       className={`flex items-center gap-3 rounded-lg border border-primary/20 dark:border-primary/30 bg-primary/5 dark:bg-primary/10 ps-3.5 py-2 ${onUpgrade ? "pe-2" : "pe-3.5"}`}

@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import type { ComponentType } from "react";
 import { Calendar, Key, Link2, Network, SkillStack, Terminal } from "../icons";
 
@@ -5,14 +6,27 @@ export type IntegrationsSection = "connectors" | "skills" | "calendars" | "api" 
 
 export const DEFAULT_INTEGRATIONS_SECTION: IntegrationsSection = "calendars";
 
+// Connectors, API keys and MCP are paid cloud features; a local-only build has no plan to
+// unlock them, so they are hidden rather than shown with an upsell.
+const CLOUD_ONLY_SECTIONS: ReadonlySet<IntegrationsSection> = new Set(["connectors", "api", "mcp"]);
+
 export const INTEGRATIONS_SECTION_GROUPS: ReadonlyArray<{
   id: "assistant" | "meetings" | "developer";
   sections: readonly IntegrationsSection[];
-}> = [
-  { id: "meetings", sections: ["calendars"] },
-  { id: "assistant", sections: ["connectors", "skills"] },
-  { id: "developer", sections: ["api", "mcp", "cli"] },
-];
+}> = (
+  [
+    { id: "meetings", sections: ["calendars"] },
+    { id: "assistant", sections: ["connectors", "skills"] },
+    { id: "developer", sections: ["api", "mcp", "cli"] },
+  ] as const
+)
+  .map((group) => ({
+    id: group.id,
+    sections: isLocalOnly()
+      ? group.sections.filter((section) => !CLOUD_ONLY_SECTIONS.has(section))
+      : group.sections,
+  }))
+  .filter((group) => group.sections.length > 0);
 
 export const INTEGRATIONS_SECTION_ICONS: Record<
   IntegrationsSection,

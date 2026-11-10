@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { CreditCard, Gift, LogOut, UserCircle } from "./icons";
@@ -34,6 +35,9 @@ export default function ProfileMenu({
   const { isSignedIn, isLoaded, user, isOfflineAccount } = useAuth();
   const usage = useUsage();
   const { planLabel } = useAccountPlan(usage);
+
+  // Without an account there is no profile, plan or sign-in to offer.
+  if (isLocalOnly()) return <></>;
 
   // Until the session settles a signed-in user reads as signed out; hold the slot instead of
   // flashing Sign in.

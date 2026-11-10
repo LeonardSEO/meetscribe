@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import {
   filterByokProviderOptionsByPolicy,
   filterLocalModelOptionsByPolicy,
@@ -43,6 +44,7 @@ export function getOnboardingSetupAvailability({
     filterByokProviderOptionsByPolicy(llmProviders, "llm", policy).length > 0;
 
   const cloud =
+    !isLocalOnly() &&
     isModeAllowedByPolicy(policy, "transcription", "openwhispr") &&
     (!agentAllowed || isModeAllowedByPolicy(policy, "llm", "openwhispr"));
   // Only speech decides: the local assistant step is optional, and when AI text

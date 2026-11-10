@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import React, { useState } from "react";
 import { Gift, Lock, Settings, ShieldCheck, HelpCircle, X, Zap } from "./icons";
 import logoIcon from "../assets/icon.png";
@@ -181,7 +182,7 @@ export default function ControlPanelSidebar({
           </div>
         )}
 
-        {isSignedIn && onOpenReferrals && (
+        {!isLocalOnly() && isSignedIn && onOpenReferrals && (
           <button
             onClick={onOpenReferrals}
             aria-label={t("sidebar.referral")}

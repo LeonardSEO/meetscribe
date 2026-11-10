@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import type { ProviderStore, StoreBilling } from "./usageStore.ts";
 
 export type UpsellDecision = "show" | "hide" | "unknown";
@@ -16,6 +17,8 @@ export function decideUpsell({
   hasPaidAccess,
   isPastDue,
 }: UpsellInput): UpsellDecision {
+  // There is no plan to upgrade to without an account.
+  if (isLocalOnly()) return "hide";
   if (!authLoaded) return "unknown";
   // Signed out there is no usage response to await; the upsell is the point.
   if (!isSignedIn) return "show";

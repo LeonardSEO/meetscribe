@@ -1,3 +1,5 @@
+import { isLocalOnly } from "../config/localOnly.js";
+
 export type SettingsSectionType =
   | "account"
   | "general"
@@ -77,6 +79,18 @@ export function buildSettingsNav({
   hasWorkspace,
   canManageSettings,
 }: SettingsNavInput): SettingsNavEntry[] {
+  if (isLocalOnly()) {
+    // No account, billing or workspace pages without an account.
+    return [
+      { id: "general", group: "account" },
+      { id: "toneStyle", group: "account" },
+      { id: "hotkeys", group: "account" },
+      { id: "speechToText", group: "aiModels" },
+      { id: "llms", group: "aiModels" },
+      { id: "privacyData", group: "system" },
+      { id: "system", group: "system" },
+    ];
+  }
   const workspace: SettingsNavEntry[] = !isSignedIn
     ? []
     : [
@@ -110,7 +124,8 @@ export function resolveSettingsSection(
   requested: string | undefined,
   available: SettingsNavEntry[]
 ): SettingsSectionType {
-  if (!requested) return "account";
+  const fallback: SettingsSectionType = isLocalOnly() ? "general" : "account";
+  if (!requested) return fallback;
   const section = SECTION_ALIASES[requested] ?? requested;
   if (available.some((entry) => entry.id === section)) return section as SettingsSectionType;
   // A workspace page the user can't see (no workspace yet, or no manage_settings) still lands
@@ -121,5 +136,5 @@ export function resolveSettingsSection(
   ) {
     return "workspaceGeneral";
   }
-  return "account";
+  return fallback;
 }

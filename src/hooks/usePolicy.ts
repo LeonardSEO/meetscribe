@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import { useCallback, useMemo, useRef } from "react";
 import { getAuthRequestContextSnapshot, hasUsableCredential } from "../lib/authRequestContext";
 import { useShallow } from "zustand/react/shallow";
@@ -124,6 +125,11 @@ interface PolicyModeOptions<T> {
   isModeAllowed: (mode: InferenceMode) => boolean;
 }
 
+/** Local-only builds have no OpenWhispr cloud mode to offer. */
+export function withoutCloudModeOptions<T extends { id: InferenceMode }>(options: T[]): T[] {
+  return isLocalOnly() ? options.filter((option) => option.id !== "openwhispr") : options;
+}
+
 /** Visible mode options and a deterministic replacement for a denied managed selection. */
 export function usePolicyModeOptions<T extends { id: InferenceMode; disabled?: boolean }>(
   options: T[],
@@ -135,15 +141,25 @@ export function usePolicyModeOptions<T extends { id: InferenceMode; disabled?: b
   }
 ): PolicyModeOptions<T> {
   const snapshot = usePolicySnapshot();
-  const modes = filterModeOptionsByPolicy(options, scope, snapshot, providerCatalog);
+  const modes = withoutCloudModeOptions(
+    filterModeOptionsByPolicy(options, scope, snapshot, providerCatalog)
+  );
   const selectionIsVisible = modes.some((option) => option.id === selectedMode && !option.disabled);
-  const preservesRawSelection = snapshot.status === "idle" || snapshot.status === "unmanaged";
+  const preservesRawSelection =
+    (snapshot.status === "idle" || snapshot.status === "unmanaged") &&
+    !(isLocalOnly() && selectedMode === "openwhispr");
   return {
     modes,
     effectiveMode:
       preservesRawSelection || selectionIsVisible
         ? selectedMode
-        : reconcilePolicyModeSelection(options, scope, snapshot, selectedMode, providerCatalog),
+        : reconcilePolicyModeSelection(
+            withoutCloudModeOptions(options),
+            scope,
+            snapshot,
+            selectedMode,
+            providerCatalog
+          ),
     isModeAllowed: (mode: InferenceMode) => isModeAllowedByPolicy(snapshot, scope, mode),
   };
 }

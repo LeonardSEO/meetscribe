@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/badge";
@@ -51,34 +52,36 @@ export function CliPane({ title, isPaid, onUpgrade }: CliPaneProps): ReactElemen
           </SettingsPanelRow>
         </SettingsPanel>
 
-        <SettingsPanel>
-          <SettingsPanelRow className="space-y-2.5">
-            <div>
-              <div className="flex h-[18px] items-center gap-1.5">
-                <h3 className="text-xs font-semibold text-foreground">
-                  {t("integrations.cli.cloud.label")}
-                </h3>
-                {!isPaid && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
-                    {t("integrations.plan.pro")}
-                  </Badge>
-                )}
+        {!isLocalOnly() && (
+          <SettingsPanel>
+            <SettingsPanelRow className="space-y-2.5">
+              <div>
+                <div className="flex h-[18px] items-center gap-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">
+                    {t("integrations.cli.cloud.label")}
+                  </h3>
+                  {!isPaid && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                      {t("integrations.plan.pro")}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground/70 mt-0.5 leading-relaxed">
+                  {isPaid
+                    ? t("integrations.cli.cloud.description")
+                    : t("integrations.cli.cloud.proRequired")}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground/70 mt-0.5 leading-relaxed">
-                {isPaid
-                  ? t("integrations.cli.cloud.description")
-                  : t("integrations.cli.cloud.proRequired")}
-              </p>
-            </div>
-            {isPaid ? (
-              <CopyableCommand command={CLOUD_LOGIN_CMD} />
-            ) : (
-              <Button size="sm" onClick={onUpgrade}>
-                {t("integrations.cli.viewPlans")}
-              </Button>
-            )}
-          </SettingsPanelRow>
-        </SettingsPanel>
+              {isPaid ? (
+                <CopyableCommand command={CLOUD_LOGIN_CMD} />
+              ) : (
+                <Button size="sm" onClick={onUpgrade}>
+                  {t("integrations.cli.viewPlans")}
+                </Button>
+              )}
+            </SettingsPanelRow>
+          </SettingsPanel>
+        )}
       </div>
     </IntegrationsPane>
   );

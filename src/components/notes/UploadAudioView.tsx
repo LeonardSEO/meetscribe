@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import { useRegistryVersion } from "../../hooks/useRegistryVersion";
 import { useState, useRef, useEffect, useId } from "react";
 import { useTranslation } from "react-i18next";
@@ -394,7 +395,9 @@ export default function UploadAudioView({ onNoteCreated, onOpenSettings }: Uploa
   let isLargeFile = false;
 
   if (file) {
-    if (managedActive || useLocalWhisper) {
+    if (isLocalOnly()) {
+      // No plans or account: nothing to upgrade or sign in for, and local decoding has no limit.
+    } else if (managedActive || useLocalWhisper) {
       // Managed audio is prepared/chunked to its endpoint cap; local decoding has no size limit.
     } else if (isSelfHosted || cloudTranscriptionProvider === "custom" || uploadInPieces) {
       // Self-hosted / custom endpoints set their own limits; OpenRouter uploads go
@@ -600,7 +603,7 @@ export default function UploadAudioView({ onNoteCreated, onOpenSettings }: Uploa
 
   // Batch counterpart of the single-file size gating above; returns keys under notes.upload.*.
   const getBatchSizeErrorKey = (sizeBytes: number): string | null => {
-    if (managedActive) return null;
+    if (isLocalOnly() || managedActive) return null;
     if (
       useLocalWhisper ||
       isSelfHosted ||
