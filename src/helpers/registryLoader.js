@@ -2,6 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { verifyEnvelope, MAX_ENVELOPE_BYTES } = require("../models/registryEnvelope.cjs");
 const { validateManifest, acceptCatalog } = require("../models/registrySchema.cjs");
+const { isLocalOnly } = require("../config/localOnly");
 
 const REGISTRY_URL =
   "https://raw.githubusercontent.com/OpenWhispr/model-registry/published/v2/manifest.json";
@@ -54,7 +55,8 @@ function createRegistryLoader({
   appVersion,
   applySnapshot,
   fetch,
-  isEnabled = () => process.env.OPENWHISPR_MODEL_REGISTRY_MODE !== "bundled",
+  // Local-only is always bundled: the signed catalog lives on an OpenWhispr-owned repo.
+  isEnabled = () => !isLocalOnly() && process.env.OPENWHISPR_MODEL_REGISTRY_MODE !== "bundled",
   onError = () => {},
   startupDelayMs = 5000,
   intervalMs = 15 * 60 * 1000,

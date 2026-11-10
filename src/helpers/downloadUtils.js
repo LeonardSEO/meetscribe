@@ -7,6 +7,17 @@ const { execFile } = require("child_process");
 const { pipeline } = require("stream");
 const debugLogger = require("./debugLogger");
 const { runSystemTar } = require("./systemTar");
+const { isBlockedUrl, hostOf } = require("./blockedHosts");
+
+// Main-process fetches bypass the session block, so the shared helpers check too.
+function assertUrlAllowed(url) {
+  if (isBlockedUrl(url)) {
+    debugLogger.warn("Blocked request to a disabled host", { host: hostOf(url) });
+    throw Object.assign(new Error("This download is disabled in local-only mode"), {
+      code: "LOCAL_ONLY_BLOCKED",
+    });
+  }
+}
 
 const USER_AGENT = "OpenWhispr/1.0";
 const PROGRESS_THROTTLE_MS = 100;
@@ -249,6 +260,7 @@ function downloadAttempt(url, tempPath, options) {
 }
 
 async function fetchJson(url, options = {}) {
+  assertUrlAllowed(url);
   const { headers, ...init } = options;
   const response = await net.fetch(url, {
     method: "GET",
@@ -282,6 +294,7 @@ async function verifyFileSha256(filePath, expectedSha256, signal) {
 
 async function downloadFile(url, destPath, options = {}) {
   const { onProgress, maxRetries = DEFAULT_MAX_RETRIES, signal, expectedSize = 0 } = options;
+  assertUrlAllowed(url);
 
   const tempPath = `${destPath}.tmp`;
 

@@ -1,5 +1,6 @@
 const { Menu } = require("electron");
 const { i18nMain } = require("./i18nMain");
+const { isLocalOnly } = require("../config/localOnly");
 
 class MenuManager {
   static setupMainMenu(onOpenSettings) {
@@ -99,18 +100,23 @@ class MenuManager {
             { role: "window" },
           ],
         },
-        {
-          label: i18nMain.t("menu.help"),
-          submenu: [
-            {
-              label: i18nMain.t("menu.learnMore"),
-              click: async () => {
-                const { openExternalUrl } = require("./externalUrlOpener");
-                await openExternalUrl("https://github.com/OpenWhispr/openwhispr");
+        // Its only item opens the OpenWhispr repository, so local-only has no Help menu.
+        ...(isLocalOnly()
+          ? []
+          : [
+              {
+                label: i18nMain.t("menu.help"),
+                submenu: [
+                  {
+                    label: i18nMain.t("menu.learnMore"),
+                    click: async () => {
+                      const { openExternalUrl } = require("./externalUrlOpener");
+                      await openExternalUrl("https://github.com/OpenWhispr/openwhispr");
+                    },
+                  },
+                ],
               },
-            },
-          ],
-        },
+            ]),
       ];
 
       const menu = Menu.buildFromTemplate(template);

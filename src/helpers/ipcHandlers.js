@@ -272,6 +272,7 @@ const {
 } = require("./enterpriseAudioSetup");
 const { createUploadCancelRegistry } = require("./uploadCancelRegistry");
 const { applyOpenWhisprOriginHeader } = require("./sessionHeaders");
+const { blockDisabledHosts } = require("./blockedHosts");
 const {
   CLOUD_UPLOAD_TIMEOUT_MS,
   CLOUD_CHUNK_MAX_ATTEMPTS,
@@ -307,6 +308,9 @@ function getCloudUploadSession(partition) {
   if (!cloudUploadSessions.has(partition)) {
     const uploadSession = session.fromPartition(partition);
     applyOpenWhisprOriginHeader(uploadSession);
+    blockDisabledHosts(uploadSession, (host) =>
+      debugLogger.debug("Blocked request to a disabled host", { host })
+    );
     cloudUploadSessions.set(partition, uploadSession);
   }
   return cloudUploadSessions.get(partition);

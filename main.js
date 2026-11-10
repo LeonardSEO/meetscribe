@@ -344,6 +344,7 @@ const WindowsLoopbackAudioManager = require("./src/helpers/windowsLoopbackAudioM
 const MeetingAecManager = require("./src/helpers/meetingAecManager");
 const MeetingDetectionEngine = require("./src/helpers/meetingDetectionEngine");
 const { applyOpenWhisprOriginHeader } = require("./src/helpers/sessionHeaders");
+const { blockDisabledHosts } = require("./src/helpers/blockedHosts");
 const { i18nMain, changeLanguage } = require("./src/helpers/i18nMain");
 const { ensureYdotool } = require("./src/helpers/ensureYdotool");
 const sidecarRegistry = require("./src/helpers/sidecarRegistry");
@@ -1289,6 +1290,9 @@ async function startApp() {
   ipcHandlers.loadLocalModelPolicy();
 
   applyOpenWhisprOriginHeader(session.defaultSession);
+  blockDisabledHosts(session.defaultSession, (host) =>
+    debugLogger.debug("Blocked request to a disabled host", { host })
+  );
 
   await windowManager.setActivationModeCache(environmentManager.getActivationMode());
   windowManager.setFloatingIconAutoHide(environmentManager.getFloatingIconAutoHide());

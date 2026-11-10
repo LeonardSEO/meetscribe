@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { BRAND_GLASS_SURFACE } from "../ui/gradientCircle";
 import { cn } from "../lib/utils";
 import { useTranslation } from "react-i18next";
+import { isLocalOnly } from "../../config/localOnly";
 import { getPlatform } from "../../utils/platform";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { DitheredHero } from "./DitheredHero";
@@ -379,7 +380,7 @@ export function CompactOnboardingFrame({
         {children}
       </div>
 
-      {showLegalNotice && (
+      {showLegalNotice && !isLocalOnly() && (
         <p className="relative z-10 mx-auto mt-auto w-full max-w-sm shrink-0 px-2 pb-4 pt-5 text-center text-xs leading-[18px] text-[var(--onboarding-text-secondary)]">
           {t("auth.legal.prefix")}{" "}
           <a

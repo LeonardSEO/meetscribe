@@ -1,4 +1,5 @@
 const { autoUpdater } = require("electron-updater");
+const { isLocalOnly } = require("./config/localOnly");
 
 // electron-updater can only replace an AppImage on Linux; deb, rpm and tar.gz
 // installs are updated by the package manager instead.
@@ -27,6 +28,8 @@ class UpdateManager {
   }
 
   setupAutoUpdater() {
+    // The feed points at OpenWhispr/openwhispr; a local-only build must not replace itself with it.
+    if (isLocalOnly()) return;
     if (process.env.NODE_ENV === "development") {
       return;
     }
@@ -157,6 +160,9 @@ class UpdateManager {
   }
 
   async checkForUpdates() {
+    if (isLocalOnly()) {
+      return { updateAvailable: false, message: "Update checks are disabled" };
+    }
     try {
       if (process.env.NODE_ENV === "development") {
         return {
@@ -339,6 +345,7 @@ class UpdateManager {
   }
 
   checkForUpdatesOnStartup() {
+    if (isLocalOnly()) return;
     if (process.env.NODE_ENV !== "development" && isUpdaterSupported) {
       setTimeout(() => {
         this._autoCheckForUpdates("Startup");

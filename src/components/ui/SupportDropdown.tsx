@@ -10,6 +10,7 @@ import {
 } from "./dropdown-menu";
 import { cn } from "../lib/utils";
 import logger from "../../utils/logger";
+import { isLocalOnly } from "../../config/localOnly";
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -37,6 +38,8 @@ const openExternal = async (url: string) => {
 
 export default function SupportDropdown({ className, trigger }: SupportDropdownProps) {
   const { t } = useTranslation();
+  // Every entry points at OpenWhispr services (docs, community, support mail, issue tracker).
+  if (isLocalOnly()) return null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
