@@ -3750,6 +3750,7 @@
       "back": "返回",
       "restrictedByOrg": "會議轉錄已被您的組織限制。",
       "unsupportedSelfHosted": "筆記錄音尚不支援自架端點。請開啟設定，選擇本機或支援串流的服務商。",
+      "localModelMissing": "本機語音模型尚未下載。請開啟設定下載後，再重新開始錄音。",
       "unsupportedProvider": "筆記錄音無法使用 {{provider}} 進行即時轉錄。請開啟設定，選擇本機或支援串流的服務商。",
       "noProviderSelected": "尚未為筆記錄音選擇服務商。請開啟設定，選擇本機或支援串流的服務商。",
       "signInRequired": "筆記錄音需要登入，請先登入。",

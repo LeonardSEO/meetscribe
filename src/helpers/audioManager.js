@@ -1,6 +1,10 @@
 import i18n from "../i18n";
 import { isLocalOnly } from "../config/localOnly.js";
-import { DEFAULT_LOCAL_SPEECH_MODEL, cloudFallbackAllowed } from "../config/localOnlyDefaults.js";
+import {
+  DEFAULT_LOCAL_SPEECH_MODEL,
+  cloudFallbackAllowed,
+  usesLocalSpeech,
+} from "../config/localOnlyDefaults.js";
 import ReasoningService from "../services/ReasoningService";
 import {
   EMPTY_OUTPUT_MESSAGE_KEY,
@@ -1457,16 +1461,16 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
   // Managed enterprise STT outranks the local lane, so the local engine never
   // sees this recording, and its refusal must not stop the enterprise route.
   _runsLocalPreview() {
-    return Boolean(getSettings().useLocalWhisper) && !getManagedTranscriptionResolution();
+    return usesLocalSpeech(getSettings()) && !getManagedTranscriptionResolution();
   }
 
   // Offline local engines decode a renderer-captured 16 kHz WAV as-is, so the
   // batch recorder gets a PCM shadow (PcmTap). Online models commit their own
   // stream and every cloud lane wants the smaller WebM, so those get none.
   _startPcmTap() {
-    const { useLocalWhisper, localTranscriptionProvider, parakeetModel } = getSettings();
+    const { localTranscriptionProvider, parakeetModel, ...pcmSettings } = getSettings();
     const offlineLocal =
-      useLocalWhisper &&
+      usesLocalSpeech(pcmSettings) &&
       !getManagedTranscriptionResolution() &&
       !(localTranscriptionProvider === "nvidia" && isOnlineParakeetModel(parakeetModel));
     if (!offlineLocal) return null;
@@ -1723,12 +1727,13 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
 
       const {
         showTranscriptionPreview,
-        useLocalWhisper,
         localTranscriptionProvider,
         whisperModel,
         parakeetModel,
         cohereModel,
+        ...previewSettings
       } = getSettings();
+      const useLocalWhisper = usesLocalSpeech(previewSettings);
       const isNvidia = localTranscriptionProvider === "nvidia";
       // Online models stream+commit during capture, so PCM runs even with preview off.
       const streamingCommit = useLocalWhisper && isNvidia && isOnlineParakeetModel(parakeetModel);
@@ -2275,7 +2280,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
     this._localSpeechGateState = null;
 
     const shouldUseStrongLocalWhisperGate =
-      settings.useLocalWhisper && settings.localTranscriptionProvider === "whisper";
+      usesLocalSpeech(settings) && settings.localTranscriptionProvider === "whisper";
     if (
       speechGateDecision.skip &&
       (speechGateDecision.reason === "silence" || shouldUseStrongLocalWhisperGate)
@@ -2300,7 +2305,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
 
     try {
       // Local-only never leaves the device, whatever the stored toggle says.
-      const useLocalWhisper = isLocalOnly() || settings.useLocalWhisper;
+      const useLocalWhisper = usesLocalSpeech(settings);
       const localProvider = settings.localTranscriptionProvider;
       const whisperModel = settings.whisperModel;
       const parakeetModel =
@@ -4954,7 +4959,8 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
 
   shouldUseStreaming(isSignedInOverride) {
     const s = getSettings();
-    if (s.useLocalWhisper) return false;
+    // Local-only never opens a cloud realtime socket, whatever the stored toggle says.
+    if (usesLocalSpeech(s)) return false;
 
     // Managed enterprise STT is batch-only and outranks personal streaming
     // setups; an error resolution must fail closed on the batch path too.
@@ -5041,7 +5047,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
   ) {
     if (
       this.sttConfig?.orukeetPipeline !== "gemma12" ||
-      settings.useLocalWhisper ||
+      usesLocalSpeech(settings) ||
       settings.cloudTranscriptionMode !== "openwhispr" ||
       !settings.useCleanupModel ||
       !isCloudCleanupMode() ||

@@ -3757,6 +3757,7 @@
       "back": "Voltar",
       "restrictedByOrg": "A transcrição de reuniões está restrita pela sua organização.",
       "unsupportedSelfHosted": "A gravação de notas ainda não pode usar um endpoint auto-hospedado. Abra as Configurações e escolha Local ou um provedor de streaming.",
+      "localModelMissing": "O modelo de voz local ainda não foi baixado. Abra as Configurações, baixe-o e inicie a gravação novamente.",
       "unsupportedProvider": "A gravação de notas não pode usar {{provider}} para transcrição ao vivo. Abra as Configurações e escolha Local ou um provedor de streaming.",
       "noProviderSelected": "Nenhum provedor está selecionado para a gravação de notas. Abra as Configurações e escolha Local ou um provedor de streaming.",
       "signInRequired": "A gravação de notas exige que você entre na sua conta. Entre para continuar.",

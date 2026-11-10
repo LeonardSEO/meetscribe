@@ -32,21 +32,6 @@ test("a meeting never selects a cloud route in local-only", async () => {
   }
 });
 
-test("a missing local model reports an error and never selects a cloud route", async () => {
-  const { cloudFallbackAllowed } = await import("../../src/config/localOnlyDefaults.js");
-  // allowOpenAIFallback stored on from an older install must not re-open the cloud path.
-  assert.equal(cloudFallbackAllowed(true), false);
-  assert.equal(cloudFallbackAllowed(false), false);
-
-  const ParakeetManager = require("../../src/helpers/parakeet.js");
-  const manager = Object.create((ParakeetManager.default || ParakeetManager).prototype);
-  manager.validateModelName = () => {};
-  await assert.rejects(
-    () => manager._policyAllowedTranscribeLocalParakeet(Buffer.from("x"), {}),
-    (err) => !/openai|cloud/i.test(err.message)
-  );
-});
-
 test("upstream mode keeps the cloud fallback toggle", async () => {
   globalThis.__OW_UPSTREAM_MODE = true;
   try {

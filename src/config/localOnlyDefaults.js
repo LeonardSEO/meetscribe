@@ -34,6 +34,12 @@ export function localOnlyDefault(key, upstreamFallback) {
     : upstreamFallback;
 }
 
+// The one answer to "does speech stay on this device": always in local-only,
+// otherwise the stored toggle.
+export function usesLocalSpeech(settings) {
+  return isLocalOnly() || Boolean(settings?.useLocalWhisper);
+}
+
 // Local-only has no cloud engine to fall back to, whatever the stored toggle says.
 export function cloudFallbackAllowed(allowOpenAIFallback) {
   return !isLocalOnly() && allowOpenAIFallback === true;

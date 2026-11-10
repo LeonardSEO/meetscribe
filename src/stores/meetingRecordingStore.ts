@@ -1311,12 +1311,14 @@ export async function startRecording(args: StartRecordingArgs): Promise<StartRec
         reportMeetingError(
           needsSignIn
             ? "signInRequired"
-            : startResult?.code && MEETING_POLICY_REFUSALS.has(startResult.code)
-              ? startResult.code
-              : describeMeetingSetupError({
-                  message: startResult?.error || "Failed to start meeting transcription",
-                  messageKey: startResult?.messageKey,
-                }),
+            : startResult?.code === "LOCAL_MODEL_NOT_DOWNLOADED"
+              ? "LOCAL_MODEL_NOT_DOWNLOADED"
+              : startResult?.code && MEETING_POLICY_REFUSALS.has(startResult.code)
+                ? startResult.code
+                : describeMeetingSetupError({
+                    message: startResult?.error || "Failed to start meeting transcription",
+                    messageKey: startResult?.messageKey,
+                  }),
           { isRecording: false, isTranscribing: false }
         );
         stopMediaStream(systemCaptureResult.stream);

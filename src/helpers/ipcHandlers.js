@@ -54,6 +54,11 @@ const { classifyAndLog } = require("./networkErrors");
 const { resolveSystemDefaultMicrophone } = require("./systemDefaultMicrophone");
 const { ipcErrorFields } = require("./ipcErrorFields");
 const {
+  LOCAL_MODEL_NOT_DOWNLOADED,
+  isLocalMeetingModelAvailable,
+  checkLocalMeetingStart,
+} = require("./localMeetingModel");
+const {
   PROVIDER_ERROR_CODES,
   isProviderSettingsTarget,
   providerHttpError,
@@ -9112,6 +9117,7 @@ class IPCHandlers {
     let meetingLocalWin = null;
     let meetingLocalTranscript = "";
     let meetingLocalProvider = null;
+    let meetingLocalModelMissingReported = false;
     let meetingLocalModel = null;
     let meetingLocalLanguage = null;
     // The pass that is transcribing buffered audio, if any. Stop and rollback
@@ -9511,6 +9517,32 @@ class IPCHandlers {
       if (!chunks.length) return;
       const lease = this._activeLocalMeetingLease;
 
+      // Keep the audio until the model is back; discarding it here would lose the
+      // meeting. Say so once, not on every chunk.
+      if (
+        !isLocalMeetingModelAvailable({
+          provider: meetingLocalProvider,
+          model: meetingLocalModel,
+          parakeetManager: this.parakeetManager,
+          whisperManager: this.whisperManager,
+        })
+      ) {
+        if (!meetingLocalModelMissingReported) {
+          meetingLocalModelMissingReported = true;
+          debugLogger.error("Local meeting model missing; keeping audio buffered", {
+            model: meetingLocalModel,
+          });
+          if (meetingLocalWin && !meetingLocalWin.isDestroyed()) {
+            meetingLocalWin.webContents.send(
+              "meeting-transcription-error",
+              LOCAL_MODEL_NOT_DOWNLOADED
+            );
+          }
+        }
+        return;
+      }
+      meetingLocalModelMissingReported = false;
+
       const pcm24k = Buffer.concat(chunks);
       meetingLocalBuffers[source] = [];
 
@@ -9778,6 +9810,7 @@ class IPCHandlers {
       meetingLocalWin = null;
       meetingLocalTranscript = "";
       meetingLocalProvider = null;
+      meetingLocalModelMissingReported = false;
       meetingLocalModel = null;
       meetingLocalLanguage = null;
       meetingPendingMicChunks = [];
@@ -10467,6 +10500,24 @@ class IPCHandlers {
         }
 
         if (options.provider === "local") {
+          // Refuse before any capture starts: with no model every chunk would fail
+          // and the audio recorded so far would be thrown away.
+          const missingModel = checkLocalMeetingStart({
+            provider: options.localProvider || "whisper",
+            model: options.localModel || null,
+            parakeetManager: this.parakeetManager,
+            whisperManager: this.whisperManager,
+          });
+          if (missingModel) {
+            debugLogger.warn("Local meeting start refused: model not downloaded", {
+              provider: options.localProvider,
+              model: options.localModel,
+            });
+            await rollbackMeetingTranscriptionStart();
+            this.meetingDetectionEngine?.endRecordingSession(recordingSessionId);
+            this.meetingDetectionEngine?.setUserRecording(false);
+            return missingModel;
+          }
           meetingLocalMode = true;
           meetingLocalProvider = options.localProvider || "whisper";
           meetingLocalModel = options.localModel || null;

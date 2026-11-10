@@ -43,6 +43,8 @@ const MEETING_ERROR_KEYS: Record<string, string> = {
   accountChanged: "notes.meeting.stoppedAccountChanged",
   // An enterprise recording ended because the active workspace changed.
   workspaceChanged: "notes.meeting.stoppedWorkspaceChanged",
+  // Local meeting model is not on disk (main code, also the sentinel the store reports).
+  LOCAL_MODEL_NOT_DOWNLOADED: "notes.meeting.localModelMissing",
   unsupportedSelfHosted: "notes.meeting.unsupportedSelfHosted",
   unsupportedProvider: "notes.meeting.unsupportedProvider",
   noProviderSelected: "notes.meeting.noProviderSelected",
