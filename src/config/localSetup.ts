@@ -53,7 +53,7 @@ export interface LocalSetupRow {
   download: LocalSetupDownload;
   label: LocalSetupLabel | null; // null only for an organisation-required model
   /** organization: dictation only, when no model the allow-list approves runs on this computer. */
-  reason?: "tooSlow" | "memory" | "memoryUnread" | "organization" | "catalog";
+  reason?: "tooSlow" | "memory" | "memoryUnread" | "organization" | "catalog" | "os";
   /** null: the row says what it does, or (too slow) that it exceeds this computer's memory. */
   line: LocalSetupLine | null;
 }
@@ -290,6 +290,10 @@ function dictationRow(
     };
   }
   const { modelId, group } = pickDictationModel(languages, profile);
+  // Local-only has no Whisper to fall back to, so a Mac too old for Orukeet can't dictate.
+  if (isLocalOnly() && group === "olderMac") {
+    return { ...speechRowBase(modelId), label: "unavailable", reason: "os", line: null };
+  }
   const entry = group === "olderMac" ? table.olderMacDictation : machine.dictation[group];
   return { ...speechRowBase(modelId), label: entry.label, line: null };
 }

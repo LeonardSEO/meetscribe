@@ -46,3 +46,19 @@ test("LOCAL_ASR_ORGANIZATIONS holds only oruk", async () => {
   assert.equal(getSelectedASROrganization("nvidia", ""), "oruk");
   assert.equal(getSelectedASROrganization("whisper", "base"), "oruk");
 });
+
+test("a Mac too old for Orukeet gets a blocked dictation row, not a download", async () => {
+  const { buildLocalSetupPlan } = await import("../../src/config/localSetup.ts");
+  const mac = {
+    ...base,
+    platform: "darwin",
+    arch: "arm64",
+    parakeetSupported: false,
+    memoryGb: 16,
+  };
+  const plan = buildLocalSetupPlan({ profile: mac, spokenLanguages: ["nl"], policy: UNMANAGED });
+  const row = plan.rows.find((r) => r.id === "dictation");
+  assert.equal(row.label, "unavailable");
+  assert.equal(row.reason, "os");
+  assert.equal(row.modelId, "orukeet-v0.1.0");
+});

@@ -19,24 +19,33 @@ test("speech mode selection leaves only local", async () => {
   assert.equal(localOnlySpeechMode("openwhispr"), "local");
 });
 
-test("dictation, meeting and upload settings all narrow their modes to local", () => {
-  for (const file of [
-    "src/components/SettingsPage.tsx",
-    "src/components/settings/MeetingSettings.tsx",
-    "src/components/settings/UploadSettings.tsx",
-  ]) {
-    const src = read(file);
-    assert.match(src, /localOnlySpeechModes\(/, file);
-    assert.match(src, /localOnlySpeechMode\(/, file);
-    assert.match(src, /!isLocalOnly\(\) && \(\s*<InferenceModeSelector/, file);
-  }
-});
-
-test("the picker never commits whisper in local-only and upload has no switch to cloud", () => {
-  const picker = read("src/components/TranscriptionModelPicker.tsx");
-  assert.doesNotMatch(picker, /selectedLocalProvider = "whisper"/);
-  const upload = read("src/components/notes/UploadAudioView.tsx");
-  assert.doesNotMatch(upload, /const switchToCloud =/);
+test("effective settings resolve every speech scope to local nvidia orukeet", async () => {
+  const { selectPolicyEffectiveSettings } = await import("../../src/stores/settingsStore.ts");
+  const stored = {
+    useLocalWhisper: false,
+    uploadUseLocalWhisper: false,
+    meetingUseLocalWhisper: false,
+    transcriptionMode: "providers",
+    meetingTranscriptionMode: "openwhispr",
+    uploadTranscriptionMode: "openwhispr",
+    localTranscriptionProvider: "whisper",
+    meetingLocalTranscriptionProvider: "whisper",
+    uploadLocalTranscriptionProvider: "whisper",
+    parakeetModel: "",
+    meetingParakeetModel: "",
+    uploadParakeetModel: "",
+  };
+  const e = selectPolicyEffectiveSettings(stored, {
+    status: "unmanaged",
+    policy: null,
+    appVersion: null,
+  });
+  assert.equal(e.uploadUseLocalWhisper, true);
+  assert.equal(e.uploadTranscriptionMode, "local");
+  assert.equal(e.uploadLocalTranscriptionProvider, "nvidia");
+  assert.equal(e.uploadParakeetModel, "orukeet-v0.1.0");
+  assert.equal(e.localTranscriptionProvider, "nvidia");
+  assert.equal(e.meetingLocalTranscriptionProvider, "nvidia");
 });
 
 test("the first-run screen names the licence and the macOS requirement", () => {

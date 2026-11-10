@@ -1,4 +1,5 @@
 import "../models/registryBootstrap.js";
+import { clampLocalOnlySpeech } from "./localOnlySpeechClamp";
 import { localOnlyDefault } from "../config/localOnlyDefaults.js";
 import { RETIRED_TINFOIL_MODEL_NAMES } from "../config/retiredCloudModelPolicy.js";
 import { create } from "zustand";
@@ -3413,6 +3414,13 @@ function internBlockedLocalScopes(
  * leaving Zustand/localStorage preferences untouched for policy removal.
  */
 export function selectPolicyEffectiveSettings(
+  state: SettingsState,
+  policyState: PolicyDecisionSnapshot
+): SettingsState {
+  return clampLocalOnlySpeech(applyPolicyToSettings(state, policyState));
+}
+
+function applyPolicyToSettings(
   state: SettingsState,
   policyState: PolicyDecisionSnapshot
 ): SettingsState {

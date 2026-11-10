@@ -66,6 +66,7 @@ const UNAVAILABLE_HEADING_KEYS: Record<NonNullable<LocalSetupRow["reason"]>, str
   memoryUnread: "onboarding.rehaul.localSetup.unavailable.memoryUnread",
   organization: "onboarding.rehaul.localSetup.unavailable.organization",
   catalog: "transcription.parakeet.unavailable",
+  os: "transcription.parakeet.unavailable",
 };
 const DESCRIPTION_KEYS: Record<LocalSetupRowId, string> = {
   dictation: "onboarding.rehaul.localSetup.description.dictation",
@@ -505,6 +506,11 @@ export function LocalSetupStep({
     }
     if (row.label !== "unavailable" && !on && offToFit.includes(row.id)) {
       return t("onboarding.rehaul.localSetup.line.offToFit");
+    }
+    if (row.reason === "os") {
+      return t("onboarding.rehaul.localSetup.macosUnsupported", {
+        version: ORUKEET_MINIMUM_MACOS_VERSION,
+      });
     }
     if (row.line) return lineText(row.line, onMac, t);
     if (row.reason === "catalog") return null;
