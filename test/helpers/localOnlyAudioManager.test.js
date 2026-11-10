@@ -137,8 +137,25 @@ test("the meeting chunk loop keeps buffered audio and reports once while the mod
   const start = src.indexOf("const transcribeLocalMeetingChunk");
   const body = src.slice(start, start + 2500);
   assert.ok(
-    body.indexOf("isLocalMeetingModelAvailable") < body.indexOf("meetingLocalBuffers[source] = []"),
+    body.indexOf("_checkLocalMeetingModel") < body.indexOf("meetingLocalBuffers[source] = []"),
     "model is checked before the buffer is emptied"
   );
   assert.match(body, /meetingLocalModelMissingReported/);
+});
+
+test("the handler's model check refuses only in local-only mode", () => {
+  const IPCHandlers = require("../../src/helpers/ipcHandlers.js");
+  const handlers = Object.create(IPCHandlers.prototype);
+  handlers.parakeetManager = { isModelDownloaded: () => false };
+  handlers.whisperManager = { isModelDownloaded: () => false };
+  assert.equal(
+    handlers._checkLocalMeetingModel("nvidia", "orukeet-v0.1.0")?.code,
+    "LOCAL_MODEL_NOT_DOWNLOADED"
+  );
+  globalThis.__OW_UPSTREAM_MODE = true;
+  try {
+    assert.equal(handlers._checkLocalMeetingModel("nvidia", "orukeet-v0.1.0"), null);
+  } finally {
+    delete globalThis.__OW_UPSTREAM_MODE;
+  }
 });

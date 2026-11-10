@@ -53,11 +53,7 @@ const {
 const { classifyAndLog } = require("./networkErrors");
 const { resolveSystemDefaultMicrophone } = require("./systemDefaultMicrophone");
 const { ipcErrorFields } = require("./ipcErrorFields");
-const {
-  LOCAL_MODEL_NOT_DOWNLOADED,
-  isLocalMeetingModelAvailable,
-  checkLocalMeetingStart,
-} = require("./localMeetingModel");
+const { checkLocalMeetingStart } = require("./localMeetingModel");
 const {
   PROVIDER_ERROR_CODES,
   isProviderSettingsTarget,
@@ -709,6 +705,18 @@ const {
 } = require("./meetingNotificationDestination");
 
 class IPCHandlers {
+  // Local-only: the failure to report when the meeting's local model is not on
+  // disk, else null. Upstream keeps its behaviour and never refuses here.
+  _checkLocalMeetingModel(provider, model) {
+    if (!isLocalOnly()) return null;
+    return checkLocalMeetingStart({
+      provider,
+      model,
+      parakeetManager: this.parakeetManager,
+      whisperManager: this.whisperManager,
+    });
+  }
+
   constructor(managers) {
     this.environmentManager = managers.environmentManager;
     this.databaseManager = managers.databaseManager;
@@ -9519,24 +9527,15 @@ class IPCHandlers {
 
       // Keep the audio until the model is back; discarding it here would lose the
       // meeting. Say so once, not on every chunk.
-      if (
-        !isLocalMeetingModelAvailable({
-          provider: meetingLocalProvider,
-          model: meetingLocalModel,
-          parakeetManager: this.parakeetManager,
-          whisperManager: this.whisperManager,
-        })
-      ) {
+      const missingModel = this._checkLocalMeetingModel?.(meetingLocalProvider, meetingLocalModel);
+      if (missingModel) {
         if (!meetingLocalModelMissingReported) {
           meetingLocalModelMissingReported = true;
           debugLogger.error("Local meeting model missing; keeping audio buffered", {
             model: meetingLocalModel,
           });
           if (meetingLocalWin && !meetingLocalWin.isDestroyed()) {
-            meetingLocalWin.webContents.send(
-              "meeting-transcription-error",
-              LOCAL_MODEL_NOT_DOWNLOADED
-            );
+            meetingLocalWin.webContents.send("meeting-transcription-error", missingModel.code);
           }
         }
         return;
@@ -10502,12 +10501,10 @@ class IPCHandlers {
         if (options.provider === "local") {
           // Refuse before any capture starts: with no model every chunk would fail
           // and the audio recorded so far would be thrown away.
-          const missingModel = checkLocalMeetingStart({
-            provider: options.localProvider || "whisper",
-            model: options.localModel || null,
-            parakeetManager: this.parakeetManager,
-            whisperManager: this.whisperManager,
-          });
+          const missingModel = this._checkLocalMeetingModel?.(
+            options.localProvider || "whisper",
+            options.localModel || null
+          );
           if (missingModel) {
             debugLogger.warn("Local meeting start refused: model not downloaded", {
               provider: options.localProvider,
