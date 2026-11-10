@@ -47,3 +47,14 @@ test("the IPC prefix is stripped from a handler's message", async () => {
     "Refused host"
   );
 });
+
+test("a failed connection test points at the field it concerns", async () => {
+  const { fieldForTestFailure } = await load();
+  assert.equal(fieldForTestFailure("PROVIDER_AUTH_FAILED"), "apiKey");
+  assert.equal(fieldForTestFailure("API_KEY_MISSING"), "apiKey");
+  assert.equal(fieldForTestFailure("PROVIDER_MODEL_NOT_FOUND"), "model");
+  assert.equal(fieldForTestFailure("PROVIDER_UNREACHABLE"), "baseUrl");
+  assert.equal(fieldForTestFailure("PROVIDER_TIMEOUT"), "baseUrl");
+  assert.equal(fieldForTestFailure("PROVIDER_RATE_LIMITED"), null);
+  assert.equal(fieldForTestFailure(undefined), null);
+});

@@ -10,6 +10,7 @@ import { getCloudModel, isProviderValidForMode } from "../models/ModelRegistry";
 import { getManagedScopeResolution } from "../stores/enterpriseIdentityStore";
 import { selectIsCloudDictationAgentMode, selectResolvedLLMConfig } from "../stores/settingsStore";
 import { inheritsFallbackEndpoint } from "./reasoningRouting.js";
+import { isLocalOnly } from "../config/localOnly.js";
 
 // The dictation agent's inference scope, shared by the dictation route in
 // audioManager and the Prompt Studio test tab so a prompt test hits the same
@@ -18,7 +19,38 @@ import { inheritsFallbackEndpoint } from "./reasoningRouting.js";
 // Callers must add `systemPrompt` to the config: ReasoningService treats a
 // missing one as its cleanup path, which echoes the input back instead of
 // running the instruction.
+// Local-only has one LLM provider for every scope, whatever an older profile stored
+// in the raw scope fields.
+function foundryScopeInference(settings, scope, extra = {}) {
+  const resolved = selectResolvedLLMConfig(settings, scope);
+  return {
+    model: resolved.model?.trim() || "",
+    displayProvider: "foundry",
+    config: {
+      inferenceScope: scope,
+      provider: "foundry",
+      ...extra,
+      disableThinking: resolved.disableThinking,
+      reasoningEffort: resolved.reasoningEffort,
+    },
+  };
+}
+
+/** The provider an implicit cleanup request (no provider in its config) dispatches to. */
+export function resolveImplicitCleanupProvider(settings) {
+  if (isLocalOnly()) return "foundry";
+  return settings.cleanupMode === "openwhispr"
+    ? "openwhispr"
+    : settings.cleanupMode === "self-hosted"
+      ? "lan"
+      : settings.cleanupProvider || undefined;
+}
+
 export function resolveDictationAgentInference(settings, { isCloudAgent = false } = {}) {
+  if (isLocalOnly()) {
+    const route = foundryScopeInference(settings, "dictationAgent");
+    return { ...route, reachable: !!settings.useDictationAgent && !!route.model };
+  }
   const managed = getManagedScopeResolution("dictationAgent", settings.enterpriseSetupMode);
   if (managed.kind === "managed") {
     return {

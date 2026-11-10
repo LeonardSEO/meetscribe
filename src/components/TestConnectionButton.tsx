@@ -8,9 +8,18 @@ import type { TechnicalErrorDetailsData } from "./ui/useToast";
 interface TestConnectionButtonProps {
   provider: string;
   getConfig: () => Record<string, unknown>;
+  /**
+   * Told of each failure (null when a test starts or passes). Returning true means the
+   * caller shows the message next to the field it concerns, so the box below is skipped.
+   */
+  onFailure?: (failure: { code?: string; message: string } | null) => boolean | void;
 }
 
-export default function TestConnectionButton({ provider, getConfig }: TestConnectionButtonProps) {
+export default function TestConnectionButton({
+  provider,
+  getConfig,
+  onFailure,
+}: TestConnectionButtonProps) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [errorInfo, setErrorInfo] = useState<{
@@ -19,6 +28,7 @@ export default function TestConnectionButton({ provider, getConfig }: TestConnec
     copyCommand?: string;
     technicalDetails?: TechnicalErrorDetailsData;
   } | null>(null);
+  const [shownElsewhere, setShownElsewhere] = useState(false);
   const requestIdRef = useRef(0);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,6 +43,8 @@ export default function TestConnectionButton({ provider, getConfig }: TestConnec
     const requestId = ++requestIdRef.current;
     setStatus("testing");
     setErrorInfo(null);
+    setShownElsewhere(false);
+    onFailure?.(null);
     try {
       const result = await window.electronAPI?.testEnterpriseConnection?.(provider, getConfig());
       if (requestId !== requestIdRef.current) return;
@@ -43,10 +55,12 @@ export default function TestConnectionButton({ provider, getConfig }: TestConnec
         }, 8000);
       } else {
         setStatus("error");
+        const message = result?.messageKey
+          ? t(result.messageKey, result.messageParams)
+          : result?.error || t("reasoning.enterprise.testFailed");
+        setShownElsewhere(onFailure?.({ code: result?.code, message }) === true);
         setErrorInfo({
-          message: result?.messageKey
-            ? t(result.messageKey, result.messageParams)
-            : result?.error || t("reasoning.enterprise.testFailed"),
+          message,
           action: result?.actionKey ? t(result.actionKey) : result?.action,
           copyCommand: result?.copyCommand,
           technicalDetails: result?.technicalDetails,
@@ -83,7 +97,7 @@ export default function TestConnectionButton({ provider, getConfig }: TestConnec
             : t("reasoning.enterprise.testConnection", { defaultValue: "Test Connection" })}
       </Button>
 
-      {status === "error" && errorInfo && (
+      {status === "error" && errorInfo && !shownElsewhere && (
         <div className="rounded-md bg-destructive/10 border border-destructive/20 p-2.5 space-y-1.5">
           <p dir="auto" className="text-xs text-destructive font-medium">
             {errorInfo.message}

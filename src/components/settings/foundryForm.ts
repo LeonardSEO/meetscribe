@@ -36,3 +36,24 @@ export function ipcErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error ?? "");
   return message.replace(/^Error invoking remote method '[^']*':\s*(?:Error:\s*)?/, "").trim();
 }
+
+/** Which field a failed connection test concerns, from the provider error code. */
+export function fieldForTestFailure(
+  code: string | undefined
+): "apiKey" | "model" | "baseUrl" | null {
+  switch (code) {
+    case "PROVIDER_AUTH_FAILED":
+    case "PROVIDER_ACCESS_DENIED":
+    case "API_KEY_MISSING":
+      return "apiKey";
+    case "PROVIDER_MODEL_NOT_FOUND":
+      return "model";
+    case "PROVIDER_UNREACHABLE":
+    case "PROVIDER_TIMEOUT":
+    case "PROVIDER_NO_RESPONSE":
+    case "PROVIDER_UNAVAILABLE":
+      return "baseUrl";
+    default:
+      return null;
+  }
+}

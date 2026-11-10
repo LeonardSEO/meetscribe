@@ -3092,7 +3092,10 @@ if (isBrowser) {
 // Route cleanup to Cloud on this, never on cleanupCloudMode alone: picking a local
 // model or the notes onboarding mode toggle sets cleanupMode and leaves that field stale.
 export const selectIsCloudCleanupMode = (state: SettingsState) =>
-  state.isSignedIn && state.cleanupMode === "openwhispr" && state.cleanupCloudMode === "openwhispr";
+  !isLocalOnly() &&
+  state.isSignedIn &&
+  state.cleanupMode === "openwhispr" &&
+  state.cleanupCloudMode === "openwhispr";
 
 // The calendar tools read the shared provider-deduped events table, so any
 // connected provider enables them.
@@ -3100,7 +3103,11 @@ export const selectCalendarConnected = (state: SettingsState) =>
   state.gcalConnected || state.mcalConnected || state.appleCalendarConnected;
 
 export const selectEffectiveCleanupProvider = (state: SettingsState) =>
-  selectIsCloudCleanupMode(state) ? "openwhispr" : state.cleanupProvider;
+  selectIsCloudCleanupMode(state)
+    ? "openwhispr"
+    : isLocalOnly()
+      ? "foundry"
+      : state.cleanupProvider;
 
 export const selectIsCloudChatAgentMode = (state: SettingsState) =>
   state.isSignedIn &&
@@ -3108,11 +3115,13 @@ export const selectIsCloudChatAgentMode = (state: SettingsState) =>
   state.chatAgentCloudMode === "openwhispr";
 
 export const selectIsCloudDictationAgentMode = (state: SettingsState) =>
+  !isLocalOnly() &&
   state.isSignedIn &&
   state.dictationAgentMode === "openwhispr" &&
   state.dictationAgentCloudMode === "openwhispr";
 
 export const selectIsCloudTranslationMode = (state: SettingsState) =>
+  !isLocalOnly() &&
   state.isSignedIn &&
   state.translationMode === "openwhispr" &&
   state.translationCloudMode === "openwhispr";

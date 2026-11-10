@@ -1,10 +1,7 @@
 import i18n from "../../i18n";
 import { chatSupportsTools, isLocalChatProvider } from "./chatToolSupport";
 import ReasoningService, { type AgentStreamChunk } from "../../services/ReasoningService";
-import {
-  getCloudModel,
-  getProviderDisplayName,
-} from "../../models/ModelRegistry";
+import { getCloudModel, getProviderDisplayName } from "../../models/ModelRegistry";
 import { providerSupportsImages } from "../../services/ai/inferenceProviders";
 import { getSettings, selectCalendarConnected, useSettingsStore } from "../../stores/settingsStore";
 import { resolveChatStreamingInference } from "../../helpers/dictationAgentInference.js";

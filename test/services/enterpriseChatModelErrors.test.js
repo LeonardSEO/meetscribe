@@ -5,7 +5,10 @@ const Module = require("node:module");
 const originalLoad = Module._load;
 Module._load = function (request, parent, isMain) {
   if (request === "./enterpriseSettings") {
-    return { getEnterpriseCallSettings: () => ({}) };
+    return {
+      getEnterpriseCallSettings: () => ({}),
+      capFoundryOutputTokens: (_provider, requested) => requested,
+    };
   }
   return originalLoad.call(this, request, parent, isMain);
 };

@@ -1,3 +1,5 @@
+import { isLocalOnly } from "../config/localOnly.js";
+import { resolveImplicitCleanupProvider } from "../helpers/dictationAgentInference.js";
 import {
   resolveInferenceProvider,
   getCloudModel,
@@ -615,14 +617,12 @@ class ReasoningService extends BaseReasoningService {
       !settings.customPrompts.cleanup;
     const isImplicitCleanup =
       config.provider === undefined && config.baseUrl === undefined && config.lanUrl === undefined;
-    const implicitProvider =
-      settings.cleanupMode === "openwhispr"
-        ? "openwhispr"
-        : settings.cleanupMode === "self-hosted"
-          ? "lan"
-          : settings.cleanupProvider || undefined;
+    const implicitProvider = resolveImplicitCleanupProvider(settings);
     const isImplicitCustomCleanup =
-      isImplicitCleanup && settings.cleanupMode === "providers" && implicitProvider === "custom";
+      isImplicitCleanup &&
+      !isLocalOnly() &&
+      settings.cleanupMode === "providers" &&
+      implicitProvider === "custom";
     const dispatchConfig: ReasoningConfig = isImplicitCleanup
       ? {
           ...config,

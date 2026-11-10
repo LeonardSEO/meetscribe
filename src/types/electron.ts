@@ -2833,6 +2833,7 @@ declare global {
       ) => Promise<{
         success: boolean;
         error?: string;
+        code?: string;
         messageKey?: string;
         messageParams?: Record<string, string | number>;
         action?: string;

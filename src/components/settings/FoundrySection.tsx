@@ -7,6 +7,7 @@ import TestConnectionButton from "../TestConnectionButton";
 import { SectionHeader, SettingsPanel, SettingsPanelRow } from "../ui/SettingsSection";
 import { useSettingsStore } from "../../stores/settingsStore";
 import {
+  fieldForTestFailure,
   ipcErrorMessage,
   parseTokenLimit,
   validateFoundryForm,
@@ -65,6 +66,10 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
   const [errors, setErrors] = useState<FoundryFormErrors>({});
   const [keyError, setKeyError] = useState<string | null>(null);
   const [keyCleared, setKeyCleared] = useState(false);
+  const [testFailure, setTestFailure] = useState<{
+    field: "apiKey" | "model" | "baseUrl";
+    message: string;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -80,9 +85,6 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
         if (config) {
           setBaseUrl(config.baseUrl);
           setWireApi(config.wireApi);
-          useSettingsStore
-            .getState()
-            .setFoundryConfig({ foundryBaseUrl: config.baseUrl, foundryWireApi: config.wireApi });
         }
         setHasKey(Boolean(key));
       } finally {
@@ -102,6 +104,7 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
   const touch = useCallback(() => {
     setDirty(true);
     setSaved(false);
+    setTestFailure(null);
   }, []);
 
   const handleSave = async () => {
@@ -203,7 +206,9 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
         />
         <FieldMessage
           id="foundry-baseUrl-msg"
-          error={errors.baseUrl}
+          error={
+            errors.baseUrl ?? (testFailure?.field === "baseUrl" ? testFailure.message : undefined)
+          }
           hint={t("foundry.baseUrl.help")}
         />
       </div>
@@ -222,7 +227,11 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
           className="text-sm font-mono"
           {...fieldProps("model")}
         />
-        <FieldMessage id="foundry-model-msg" error={errors.model} hint={t("foundry.model.help")} />
+        <FieldMessage
+          id="foundry-model-msg"
+          error={errors.model ?? (testFailure?.field === "model" ? testFailure.message : undefined)}
+          hint={t("foundry.model.help")}
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -253,7 +262,7 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
         </div>
         <FieldMessage
           id="foundry-apiKey-msg"
-          error={keyError ?? undefined}
+          error={keyError ?? (testFailure?.field === "apiKey" ? testFailure.message : undefined)}
           hint={t("foundry.apiKey.help")}
         />
       </div>
@@ -335,7 +344,15 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
       </div>
 
       {!dirty && hasKey && baseUrl && model ? (
-        <TestConnectionButton provider="foundry" getConfig={() => ({ model: model.trim() })} />
+        <TestConnectionButton
+          provider="foundry"
+          getConfig={() => ({ model: model.trim() })}
+          onFailure={(failure) => {
+            const field = failure ? fieldForTestFailure(failure.code) : null;
+            setTestFailure(failure && field ? { field, message: failure.message } : null);
+            return field !== null;
+          }}
+        />
       ) : (
         <p dir="auto" className="text-xs text-muted-foreground/70">
           {t("foundry.testNeedsSave")}

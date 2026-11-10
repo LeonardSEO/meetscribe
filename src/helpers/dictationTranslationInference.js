@@ -3,6 +3,8 @@ import {
   resolveTranslationDisplayProvider,
   resolveTranslationProviderId,
 } from "./dictationRouting.js";
+import { isLocalOnly } from "../config/localOnly.js";
+import { selectResolvedLLMConfig } from "../stores/settingsStore";
 import { isProviderValidForMode } from "../models/ModelRegistry";
 import { getManagedScopeResolution } from "../stores/enterpriseIdentityStore";
 
@@ -26,6 +28,27 @@ export function resolveDictationTranslationInference(
         language: settings.translationTargetLanguage,
         disableThinking: settings.translationDisableThinking,
         reasoningEffort: settings.translationReasoningEffort,
+      },
+    };
+  }
+
+  if (isLocalOnly()) {
+    const resolved = selectResolvedLLMConfig(settings, "dictationTranslation");
+    const foundryModel = resolved.model?.trim() || "";
+    return {
+      reachable: Boolean(
+        settings.useDictationTranslation &&
+        settings.translationTargetLanguage?.trim() &&
+        foundryModel
+      ),
+      model: foundryModel,
+      displayProvider: "foundry",
+      config: {
+        inferenceScope: /** @type {const} */ ("dictationTranslation"),
+        provider: "foundry",
+        language: settings.translationTargetLanguage,
+        disableThinking: resolved.disableThinking,
+        reasoningEffort: resolved.reasoningEffort,
       },
     };
   }
