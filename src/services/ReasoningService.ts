@@ -15,7 +15,7 @@ import { API_ENDPOINTS, TOKEN_LIMITS, buildApiUrl, ensureV1Suffix } from "../con
 import { resolveRetiredCloudModel } from "../config/retiredCloudModelPolicy.js";
 import logger from "../utils/logger";
 import { assertValidCleanupOutput } from "../utils/cleanupOutput";
-import { getSettings, isCloudCleanupMode } from "../stores/settingsStore";
+import { getSettings, isCloudCleanupMode, selectResolvedLLMConfig } from "../stores/settingsStore";
 import { CLAIM_CHECK_NOTE, STEP_LIMIT_NOTE, wrapCleanupTranscript } from "../config/prompts";
 import { stripThinkingTags } from "../helpers/stripThinking.js";
 import {
@@ -1749,6 +1749,17 @@ class ReasoningService extends BaseReasoningService {
       ) {
         logger.logReasoning("API_KEY_CHECK", { managedEnterprise: true });
         return true;
+      }
+
+      // Local-only has one provider. Whether it can answer depends on its model and on
+      // the key main holds, never on the raw scope fields or other providers' keys.
+      if (isLocalOnly()) {
+        const model = selectResolvedLLMConfig(settings, "dictationCleanup").model?.trim();
+        const hasKey = await window.electronAPI?.hasFoundryApiKey?.();
+        // An older main without the channel can't say, so the provider's own error will.
+        const available = !!model && hasKey !== false;
+        logger.logReasoning("API_KEY_CHECK", { foundry: true, hasModel: !!model, hasKey });
+        return available;
       }
 
       if (isCloudCleanupMode()) {
