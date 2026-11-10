@@ -1,6 +1,8 @@
 // Pure decision logic for sync passes, kept out of SyncService so the
 // node --test suite can cover it (the cloudSyncGuards.js precedent, #1290).
 
+import { isLocalOnly } from "../config/localOnly.js";
+
 export interface SyncConsent {
   /** Backup of everything the user has NOT explicitly shared. */
   backup: boolean;
@@ -32,6 +34,8 @@ export function resolveSyncConsent(state: {
   dataRetentionEnabled: boolean;
   insightsSyncEnabled: boolean;
 }): SyncConsent {
+  // Local-only builds have no account and never leave the device.
+  if (isLocalOnly()) return { shared: false, backup: false, analytics: false };
   const shared = state.authValidated && state.signedIn;
   return {
     shared,

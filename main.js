@@ -1,6 +1,7 @@
 // Chromium picks the display backend before JS runs, so appendSwitch is too
 // late — the flag has to come from a relaunch.
 const { XWAYLAND_FLAG, shouldForceXWayland } = require("./src/helpers/xwayland");
+const { isLocalOnly } = require("./src/config/localOnly");
 const { createHotkeyRepeatGate } = require("./src/helpers/hotkeyRepeatGate");
 const { shouldDisableGpuCompositing } = require("./src/helpers/linuxGpuCompositing");
 
@@ -988,6 +989,8 @@ function getOauthCookieName() {
 // Older website builds send the signed cookie value as `?token=`; trade it
 // for the raw session.token the bearer plugin expects.
 async function exchangeSignedTokenForRawBearer(signedToken) {
+  // Local-only has no account: never ask an auth server for a session.
+  if (isLocalOnly()) return null;
   try {
     const res = await net.fetch(`${resolveAuthUrl()}/api/auth/get-session`, {
       headers: { Cookie: `${getOauthCookieName()}=${signedToken}` },
@@ -1012,6 +1015,7 @@ async function exchangeSignedTokenForRawBearer(signedToken) {
 // token, store it, and remove the cookie. Non-fatal — failures fall through
 // to the normal sign-in flow.
 async function migrateCookieToBearerToken() {
+  if (isLocalOnly()) return;
   const tokenStore = require("./src/helpers/tokenStore");
   if (tokenStore.get()) return;
 

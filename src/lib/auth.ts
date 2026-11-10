@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { isLocalOnly } from "../config/localOnly.js";
 import { ssoClient } from "@better-auth/sso/client";
 import { openExternalLink } from "../utils/externalLinks";
 import {
@@ -19,35 +20,43 @@ export const AUTH_URL = import.meta.env.VITE_AUTH_URL || "https://auth.openwhisp
 const REGISTRATION_OS: string | undefined = (
   { darwin: "macos", win32: "windows", linux: "linux" } as Record<string, string>
 )[window.electronAPI?.getPlatform?.() ?? ""];
-export const authClient = createAuthClient({
-  baseURL: AUTH_URL,
-  plugins: [ssoClient()],
-  fetchOptions: {
-    credentials: "omit",
-    customFetchImpl: authContextFetch,
-    headers: {
-      "x-openwhispr-source": "desktop",
-      ...(REGISTRATION_OS ? { "x-openwhispr-os": REGISTRATION_OS } : {}),
+function buildAuthClient() {
+  return createAuthClient({
+    baseURL: AUTH_URL,
+    plugins: [ssoClient()],
+    fetchOptions: {
+      credentials: "omit",
+      customFetchImpl: authContextFetch,
+      headers: {
+        "x-openwhispr-source": "desktop",
+        ...(REGISTRATION_OS ? { "x-openwhispr-os": REGISTRATION_OS } : {}),
+      },
+      onRequest: prepareAuthRequest,
+      onResponse: handleAuthRequestResponse,
+      onSuccess: handleAuthRequestSuccess,
+      onError: handleAuthRequestError,
     },
-    onRequest: prepareAuthRequest,
-    onResponse: handleAuthRequestResponse,
-    onSuccess: handleAuthRequestSuccess,
-    onError: handleAuthRequestError,
-  },
-});
+  });
+}
+
+// Local-only builds have no account: no client exists, so nothing can reach an auth server.
+export const authClient: ReturnType<typeof buildAuthClient> | null = isLocalOnly()
+  ? null
+  : buildAuthClient();
 
 let authRefetchTimer: ReturnType<typeof setTimeout> | null = null;
-window.electronAPI?.onAuthTokenStateChanged?.((state) => {
-  observeAuthTokenStateEvent(state);
-  // Main broadcasts a successful compare-and-set rotation before the IPC
-  // invocation resolves. Deferring avoids aborting the exact session request
-  // that is about to bind the new generation.
-  if (authRefetchTimer) clearTimeout(authRefetchTimer);
-  authRefetchTimer = setTimeout(() => {
-    authRefetchTimer = null;
-    authClient.$store.notify("$sessionSignal");
-  }, 0);
-});
+if (authClient)
+  window.electronAPI?.onAuthTokenStateChanged?.((state) => {
+    observeAuthTokenStateEvent(state);
+    // Main broadcasts a successful compare-and-set rotation before the IPC
+    // invocation resolves. Deferring avoids aborting the exact session request
+    // that is about to bind the new generation.
+    if (authRefetchTimer) clearTimeout(authRefetchTimer);
+    authRefetchTimer = setTimeout(() => {
+      authRefetchTimer = null;
+      authClient?.$store.notify("$sessionSignal");
+    }, 0);
+  });
 
 // Better Auth refetches the session only when the window becomes visible or
 // the OS reports `online`. Neither fires when the auth server recovers while
@@ -68,8 +77,8 @@ function syncSessionVerdictRetry(): void {
     return;
   }
   const retry = (): void => {
-    if (!authClient.$store.atoms.session.value?.isRefetching) {
-      authClient.$store.notify("$sessionSignal");
+    if (!authClient?.$store.atoms.session.value?.isRefetching) {
+      authClient?.$store.notify("$sessionSignal");
     }
   };
   window.addEventListener("focus", retry);
@@ -180,7 +189,7 @@ export async function signOut(): Promise<void> {
   credentialAccountCache = null;
   await window.electronAPI?.closeActivationStream?.().catch(() => undefined);
   try {
-    await authClient.signOut({});
+    await authClient?.signOut({});
   } catch {
     // Local sign-out must still cross a credential generation boundary when
     // the server is offline; the remote session can expire independently.
@@ -242,6 +251,7 @@ export async function signInWithSocial(provider: SocialProvider): Promise<{ erro
     }
 
     const callbackURL = `${window.location.href.split("?")[0].split("#")[0]}?panel=true`;
+    if (!authClient) return { error: new Error("Accounts are not available") };
     await authClient.signIn.social({ provider, callbackURL, newUserCallbackURL: callbackURL });
     return {};
   } catch (error) {
@@ -266,6 +276,7 @@ export async function signInWithSSO(email: string): Promise<{ error?: Error }> {
     }
 
     const callbackURL = `${window.location.href.split("?")[0].split("#")[0]}?panel=true`;
+    if (!authClient) return { error: new Error("Accounts are not available") };
     await authClient.signIn.sso({ email, callbackURL });
     return {};
   } catch (error) {
@@ -275,6 +286,7 @@ export async function signInWithSSO(email: string): Promise<{ error?: Error }> {
 
 export async function requestPasswordReset(email: string): Promise<{ error?: Error }> {
   try {
+    if (!authClient) return { error: new Error("Accounts are not available") };
     const { error } = await authClient.requestPasswordReset({
       email: email.trim(),
       redirectTo: "https://openwhispr.com/reset-password",
@@ -305,6 +317,7 @@ function toAuthActionError(source: unknown, fallbackMessage: string): AuthAction
 
 export async function updateDisplayName(name: string): Promise<{ error?: AuthActionError }> {
   try {
+    if (!authClient) return { error: toAuthActionError(null, "Accounts are not available") };
     const { error } = await authClient.updateUser({ name });
     if (error) return { error: toAuthActionError(error, "Failed to update name") };
     return {};
@@ -319,6 +332,7 @@ export async function changePassword(params: {
   revokeOtherSessions: boolean;
 }): Promise<{ error?: AuthActionError }> {
   try {
+    if (!authClient) return { error: toAuthActionError(null, "Accounts are not available") };
     const { error } = await authClient.changePassword({
       currentPassword: params.currentPassword,
       newPassword: params.newPassword,
@@ -343,6 +357,7 @@ export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "https://admin.openwh
 export async function openAdminConsole(): Promise<void> {
   let url = ADMIN_URL;
   try {
+    if (!authClient) throw new Error("Accounts are not available");
     // The generated $fetch types don't discriminate on `throw`, and the
     // payload arrives bare or under `data` depending on the client version.
     const result = (await authClient.$fetch("/one-time-token/generate", { throw: true })) as {
@@ -367,6 +382,7 @@ let credentialAccountCache: boolean | null = null;
 
 export async function hasCredentialAccount(): Promise<boolean> {
   if (credentialAccountCache !== null) return credentialAccountCache;
+  if (!authClient) return true;
   try {
     const { data, error } = await authClient.listAccounts({ query: {} });
     if (error || !data) return true;

@@ -1,3 +1,5 @@
+import { isLocalOnly } from "../config/localOnly.js";
+
 // Stored rather than kept in memory: signing in always crosses a reload, both here
 // and again for Google, Microsoft, Apple and SSO (applySessionTokenAndRefresh in main.js).
 export const SIGN_IN_PROMPTED_AT_KEY = "signInPromptedAt";
@@ -12,6 +14,7 @@ export const SIGN_IN_PROMPTED_AT_KEY = "signInPromptedAt";
  * Its "Continue without an account" writes the flag back.
  */
 export function requestSignIn(): void {
+  if (isLocalOnly()) return;
   localStorage.setItem(SIGN_IN_PROMPTED_AT_KEY, String(Date.now()));
   localStorage.removeItem("authenticationSkipped");
   localStorage.removeItem("skipAuth");

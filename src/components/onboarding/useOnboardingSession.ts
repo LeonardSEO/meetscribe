@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { isLocalOnly } from "../../config/localOnly.js";
 import type { PermissionGuideId } from "../../types/permissionGuide";
 import {
   LEGACY_ONBOARDING_STEP_KEY,
@@ -16,6 +17,13 @@ function readInitialSession(): OnboardingSession {
   if (typeof window === "undefined") return createOnboardingSession();
 
   const stored = parseOnboardingSession(localStorage.getItem(ONBOARDING_SESSION_KEY));
+  if (isLocalOnly()) {
+    // No account and no setup choice: a saved session resumes as a local guest,
+    // and the legacy step migration (which lands on "auth") does not apply.
+    return stored
+      ? { ...stored, authPath: "guest", setupMode: "local" }
+      : createOnboardingSession();
+  }
   if (stored) return stored;
 
   const session = createOnboardingSession();

@@ -1,3 +1,4 @@
+import { isLocalOnly } from "./config/localOnly.js";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import App from "./App.jsx";
@@ -99,7 +100,8 @@ function MainApp() {
     // the previous account's rows while validation is still running. A failed
     // (guest/offline) resolution also counts as settled: canSync() then no-ops
     // because no validated auth context exists.
-    if (autoSyncReady) {
+    // Local-only never syncs: SyncService is not even loaded.
+    if (autoSyncReady && !isLocalOnly()) {
       import("./services/SyncService.js")
         .then(({ syncService }) => syncService.startAutoSync())
         .catch(() => {});
@@ -133,7 +135,7 @@ function MainApp() {
     if (isControlPanel) {
       if (!resolved) {
         setShowOnboarding(true);
-      } else if (!isSignedIn && !authSkipped) {
+      } else if (!isLocalOnly() && !isSignedIn && !authSkipped) {
         setNeedsReauth(true);
       }
     }

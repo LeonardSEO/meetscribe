@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../../config/localOnly.js";
 import { SIGN_IN_PROMPTED_AT_KEY } from "../../utils/requestSignIn";
 import { PENDING_GRAPHICS_PACK_KEY, PENDING_LOCAL_MODELS_KEY } from "./pendingLocalModels";
 import type { PermissionGuideId } from "../../types/permissionGuide";
@@ -208,12 +209,14 @@ export function createOnboardingResumeState(): OnboardingResumeState {
 }
 
 export function createOnboardingSession(): OnboardingSession {
+  // Local-only has no account and no cloud: start as a guest on the local setup path.
+  const localOnly = isLocalOnly();
   return {
     version: ONBOARDING_FLOW_VERSION,
-    currentStepId: "auth",
+    currentStepId: localOnly ? "permissions" : "auth",
     history: [],
-    authPath: null,
-    setupMode: null,
+    authPath: localOnly ? "guest" : null,
+    setupMode: localOnly ? "local" : null,
     selfHostedRequested: false,
     screenContextRequested: false,
     permissionGuide: null,
@@ -237,6 +240,11 @@ export function resetOnboardingProgress(storage: OnboardingStorage): void {
 }
 
 export function getOnboardingRoute(context: OnboardingRouteContext): OnboardingStepId[] {
+  if (isLocalOnly()) {
+    // No account step and no setup choice: the permission grants and a seen
+    // hotkey (as for guests), then the local model setup.
+    return ["permissions", "dictation-hotkey", ...SETUP_ROUTES.local];
+  }
   if (context.authPath === null) return ["auth"];
 
   const setupChoice = context.skipSetupChoice ? [] : (["setup-choice"] as OnboardingStepId[]);

@@ -1,3 +1,4 @@
+import { isLocalOnly } from "../config/localOnly.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CompactAuthenticationFlow } from "./CompactAuthenticationFlow";
@@ -712,7 +713,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         discardPendingLocalSetup();
         beforeComplete?.();
 
-        const skippedAuth = session.authPath === "guest";
+        const skippedAuth = session.authPath === "guest" || isLocalOnly();
         localStorage.setItem("authenticationSkipped", String(skippedAuth));
         localStorage.setItem("skipAuth", String(skippedAuth));
         clearSession();
