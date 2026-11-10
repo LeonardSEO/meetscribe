@@ -1,3 +1,6 @@
+import { isLocalOnly } from "../config/localOnly.js";
+import { DEFAULT_LOCAL_SPEECH_MODEL } from "../config/localOnlyDefaults.js";
+
 // Note recording only offers providers the main process will actually run:
 // meeting prepare/start check ALLOWED_MEETING_PROVIDERS (derived from the
 // streaming client table in meetingStreamingProviders.js) and reject anything
@@ -28,7 +31,7 @@ const resolveModel = (provider, selectedModel) =>
   provider.models[0]?.id;
 
 export function resolveMeetingTranscriptionOptions({
-  transcriptionMode,
+  transcriptionMode: requestedMode,
   language,
   localProvider,
   whisperModel,
@@ -42,13 +45,15 @@ export function resolveMeetingTranscriptionOptions({
   cortiTenant,
   keyterms,
 }) {
+  // Local-only has no cloud route: whatever mode was stored, the meeting runs locally.
+  const transcriptionMode = isLocalOnly() ? "local" : requestedMode;
   if (transcriptionMode === "local") {
     return {
       provider: "local",
       localProvider,
       localModel:
         localProvider === "nvidia"
-          ? parakeetModel || "parakeet-tdt-0.6b-v3"
+          ? parakeetModel || (isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : "parakeet-tdt-0.6b-v3")
           : localProvider === "cohere"
             ? cohereModel || "cohere-transcribe-03-2026"
             : whisperModel || "base",

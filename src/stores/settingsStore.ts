@@ -1,4 +1,5 @@
 import "../models/registryBootstrap.js";
+import { localOnlyDefault } from "../config/localOnlyDefaults.js";
 import { RETIRED_TINFOIL_MODEL_NAMES } from "../config/retiredCloudModelPolicy.js";
 import { create } from "zustand";
 import { GENERATE_NOTES_KEY } from "../helpers/builtinActions";
@@ -258,7 +259,7 @@ function readString(key: string, fallback: string): string {
 const DEFAULT_COHERE_MODEL = "cohere-transcribe-03-2026";
 
 function readLocalProvider(key: string): LocalTranscriptionProvider {
-  const stored = readString(key, "whisper");
+  const stored = readString(key, localOnlyDefault("localTranscriptionProvider", "whisper"));
   return stored === "nvidia" || stored === "cohere" ? stored : "whisper";
 }
 
@@ -1704,13 +1705,19 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   uiLanguage: normalizeUiLanguage(
     isBrowser ? localStorage.getItem("uiLanguage") || i18n.language : null
   ),
-  useLocalWhisper: readBoolean("useLocalWhisper", false),
+  useLocalWhisper: readBoolean("useLocalWhisper", localOnlyDefault("useLocalWhisper", false)),
   whisperModel: readString("whisperModel", "base"),
   localTranscriptionProvider: readLocalProvider("localTranscriptionProvider"),
-  parakeetModel: readString("parakeetModel", ""),
+  parakeetModel: readString("parakeetModel", localOnlyDefault("parakeetModel", "")),
   cohereModel: readString("cohereModel", DEFAULT_COHERE_MODEL),
-  allowOpenAIFallback: readBoolean("allowOpenAIFallback", false),
-  allowLocalFallback: readBoolean("allowLocalFallback", false),
+  allowOpenAIFallback: readBoolean(
+    "allowOpenAIFallback",
+    localOnlyDefault("allowOpenAIFallback", false)
+  ),
+  allowLocalFallback: readBoolean(
+    "allowLocalFallback",
+    localOnlyDefault("allowLocalFallback", false)
+  ),
   fallbackWhisperModel: readString("fallbackWhisperModel", "base"),
   preferredLanguage: readString("preferredLanguage", "auto"),
   chineseScriptPreference: normalizeChineseScriptPreference(
@@ -1747,7 +1754,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   assemblyAiStreaming: readBoolean("assemblyAiStreaming", true),
 
   autoGenerateNoteTitle: readBoolean("autoGenerateNoteTitle", true),
-  useCleanupModel: readBoolean("useCleanupModel", true),
+  useCleanupModel: readBoolean("useCleanupModel", localOnlyDefault("useCleanupModel", true)),
   useDictationAgent: readBoolean("useDictationAgent", true),
   cleanupModel: readString("cleanupModel", ""),
   cleanupProvider: readString("cleanupProvider", "openai"),
@@ -1911,7 +1918,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   isSignedIn: readBoolean("isSignedIn", false),
 
   transcriptionMode: (() => {
-    const v = readString("transcriptionMode", "openwhispr");
+    const v = readString("transcriptionMode", localOnlyDefault("transcriptionMode", "openwhispr"));
     if (v === "openwhispr" || v === "providers" || v === "local" || v === "self-hosted") return v;
     return "openwhispr" as InferenceMode;
   })(),
@@ -1922,7 +1929,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   remoteTranscriptionUrl: readString("remoteTranscriptionUrl", ""),
   remoteTranscriptionModel: readString("remoteTranscriptionModel", ""),
   cleanupMode: (() => {
-    const v = readString("cleanupMode", "openwhispr");
+    const v = readString("cleanupMode", localOnlyDefault("cleanupMode", "openwhispr"));
     if (
       v === "openwhispr" ||
       v === "providers" ||
@@ -1937,14 +1944,23 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   keepLocalModelLoaded: readBoolean("keepLocalModelLoaded", false),
 
   meetingTranscriptionMode: (() => {
-    const v = readString("meetingTranscriptionMode", "openwhispr");
+    const v = readString(
+      "meetingTranscriptionMode",
+      localOnlyDefault("meetingTranscriptionMode", "openwhispr")
+    );
     if (v === "openwhispr" || v === "providers" || v === "local" || v === "self-hosted") return v;
     return "openwhispr" as InferenceMode;
   })(),
-  meetingUseLocalWhisper: readBoolean("meetingUseLocalWhisper", false),
+  meetingUseLocalWhisper: readBoolean(
+    "meetingUseLocalWhisper",
+    localOnlyDefault("meetingUseLocalWhisper", false)
+  ),
   meetingWhisperModel: readString("meetingWhisperModel", ""),
   meetingLocalTranscriptionProvider: readScopedLocalProvider("meetingLocalTranscriptionProvider"),
-  meetingParakeetModel: readString("meetingParakeetModel", ""),
+  meetingParakeetModel: readString(
+    "meetingParakeetModel",
+    localOnlyDefault("meetingParakeetModel", "")
+  ),
   meetingCohereModel: readString("meetingCohereModel", ""),
   meetingCloudTranscriptionProvider: readString("meetingCloudTranscriptionProvider", ""),
   meetingCloudTranscriptionModel: readString("meetingCloudTranscriptionModel", ""),
@@ -1957,14 +1973,23 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   meetingRemoteTranscriptionUrl: readString("meetingRemoteTranscriptionUrl", ""),
 
   uploadTranscriptionMode: (() => {
-    const v = readString("uploadTranscriptionMode", "openwhispr");
+    const v = readString(
+      "uploadTranscriptionMode",
+      localOnlyDefault("uploadTranscriptionMode", "openwhispr")
+    );
     if (v === "openwhispr" || v === "providers" || v === "local" || v === "self-hosted") return v;
     return "openwhispr" as InferenceMode;
   })(),
-  uploadUseLocalWhisper: readBoolean("uploadUseLocalWhisper", false),
+  uploadUseLocalWhisper: readBoolean(
+    "uploadUseLocalWhisper",
+    localOnlyDefault("uploadUseLocalWhisper", false)
+  ),
   uploadWhisperModel: readString("uploadWhisperModel", ""),
   uploadLocalTranscriptionProvider: readScopedLocalProvider("uploadLocalTranscriptionProvider"),
-  uploadParakeetModel: readString("uploadParakeetModel", ""),
+  uploadParakeetModel: readString(
+    "uploadParakeetModel",
+    localOnlyDefault("uploadParakeetModel", "")
+  ),
   uploadCohereModel: readString("uploadCohereModel", ""),
   uploadCloudTranscriptionProvider: readString("uploadCloudTranscriptionProvider", ""),
   uploadCloudTranscriptionModel: readString("uploadCloudTranscriptionModel", ""),
@@ -1974,7 +1999,10 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   uploadRemoteTranscriptionModel: readString("uploadRemoteTranscriptionModel", ""),
 
   noteFormattingMode: (() => {
-    const v = readString("noteFormattingMode", "openwhispr");
+    const v = readString(
+      "noteFormattingMode",
+      localOnlyDefault("noteFormattingMode", "openwhispr")
+    );
     if (
       v === "openwhispr" ||
       v === "providers" ||

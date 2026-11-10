@@ -40,6 +40,10 @@ const {
 } = require("./parakeetModelInfo");
 
 // Room a download reserves: the archive plus its unpacked model while both exist.
+const { isLocalOnly } = require("../config/localOnly");
+const { DEFAULT_LOCAL_SPEECH_MODEL } = require("../config/localOnlyDefaults");
+const { pinnedSha256 } = require("../config/pinnedModelHashes");
+
 const PARAKEET_DISK_SPACE_FACTOR = 2.5;
 
 function getParakeetModelConfig(modelName) {
@@ -47,7 +51,8 @@ function getParakeetModelConfig(modelName) {
   if (!modelInfo) return null;
   return {
     url: modelInfo.downloadUrl,
-    sha256: modelInfo.sha256,
+    // The app pins its own hash for models the vendored registry carries none for.
+    sha256: (isLocalOnly() ? pinnedSha256(modelName) : undefined) ?? modelInfo.sha256,
     manifestUrl: modelInfo.manifestUrl,
     size: modelInfo.expectedSizeBytes || modelInfo.sizeMb * 1_000_000,
     expectedSizeBytes: modelInfo.expectedSizeBytes,
@@ -314,7 +319,8 @@ class ParakeetManager {
   }
 
   async _policyAllowedTranscribeLocalParakeet(audioBlob, options = {}) {
-    const model = options.model || "parakeet-tdt-0.6b-v3";
+    const model =
+      options.model || (isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : "parakeet-tdt-0.6b-v3");
     assertParakeetSupported();
     // An unknown model has no engine metadata; guessing one could run the wrong decoder.
     this.validateModelName(model);
@@ -891,3 +897,4 @@ class ParakeetManager {
 
 module.exports = ParakeetManager;
 module.exports.PARAKEET_DISK_SPACE_FACTOR = PARAKEET_DISK_SPACE_FACTOR;
+module.exports.getParakeetModelConfig = getParakeetModelConfig;

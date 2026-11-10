@@ -15,6 +15,8 @@ const {
 const { getSafeTempDir } = require("./safeTempDir");
 const { createAbortError } = require("./abortError");
 const ParakeetWsServer = require("./parakeetWsServer");
+const { isLocalOnly } = require("../config/localOnly");
+const { DEFAULT_LOCAL_SPEECH_MODEL } = require("../config/localOnlyDefaults");
 const { splitAtPauses } = require("./parakeetSegmentation");
 const {
   getModelRuntime,
@@ -128,7 +130,11 @@ class ParakeetServerManager {
   async _policyAllowedTranscribe(audioBuffer, options = {}) {
     // signal is optional; only cancellable uploads pass one. Aborting stops
     // scheduling further segments — the in-flight one finishes server-side.
-    const { modelName = "parakeet-tdt-0.6b-v3", language, signal } = options;
+    const {
+      modelName = isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : "parakeet-tdt-0.6b-v3",
+      language,
+      signal,
+    } = options;
     const throwIfAborted = () => {
       if (signal?.aborted) throw createAbortError("Parakeet transcription cancelled");
     };

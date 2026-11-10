@@ -1,4 +1,6 @@
 import i18n from "../i18n";
+import { isLocalOnly } from "../config/localOnly.js";
+import { DEFAULT_LOCAL_SPEECH_MODEL, cloudFallbackAllowed } from "../config/localOnlyDefaults.js";
 import ReasoningService from "../services/ReasoningService";
 import {
   EMPTY_OUTPUT_MESSAGE_KEY,
@@ -2297,10 +2299,13 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
     }
 
     try {
-      const useLocalWhisper = settings.useLocalWhisper;
+      // Local-only never leaves the device, whatever the stored toggle says.
+      const useLocalWhisper = isLocalOnly() || settings.useLocalWhisper;
       const localProvider = settings.localTranscriptionProvider;
       const whisperModel = settings.whisperModel;
-      const parakeetModel = settings.parakeetModel || "parakeet-tdt-0.6b-v3";
+      const parakeetModel =
+        settings.parakeetModel ||
+        (isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : "parakeet-tdt-0.6b-v3");
 
       const cloudTranscriptionMode = settings.cloudTranscriptionMode;
       const isSignedIn = settings.isSignedIn;
@@ -2319,7 +2324,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
       // matching the LLM scopes; users opt out via "Use personal setup" when
       // the administrator allows it. Error resolutions fail closed inside
       // processWithOpenAIAPI with their own code.
-      const managedTranscription = getManagedTranscriptionResolution();
+      const managedTranscription = isLocalOnly() ? null : getManagedTranscriptionResolution();
       if (managedTranscription) {
         activeModel =
           managedTranscription.kind === "managed" ? managedTranscription.deployment : null;
@@ -2664,7 +2669,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
       });
 
       if (
-        allowOpenAIFallback &&
+        cloudFallbackAllowed(allowOpenAIFallback) &&
         isLocalMode &&
         fallbackAllowedByPolicy &&
         !isUnknownLocalModelError(error)
@@ -2689,7 +2694,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
 
   async processWithLocalParakeet(
     audioBlob,
-    model = "parakeet-tdt-0.6b-v3",
+    model = isLocalOnly() ? DEFAULT_LOCAL_SPEECH_MODEL : "parakeet-tdt-0.6b-v3",
     metadata = {},
     wasCancelled = neverCancelled
   ) {
@@ -2783,7 +2788,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
       });
 
       if (
-        allowOpenAIFallback &&
+        cloudFallbackAllowed(allowOpenAIFallback) &&
         isLocalMode &&
         fallbackAllowedByPolicy &&
         !isUnknownLocalModelError(error)

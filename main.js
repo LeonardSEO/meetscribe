@@ -2,6 +2,7 @@
 // late — the flag has to come from a relaunch.
 const { XWAYLAND_FLAG, shouldForceXWayland } = require("./src/helpers/xwayland");
 const { isLocalOnly } = require("./src/config/localOnly");
+const { startupSpeechEnv } = require("./src/config/localOnlyDefaults");
 const { createHotkeyRepeatGate } = require("./src/helpers/hotkeyRepeatGate");
 const { shouldDisableGpuCompositing } = require("./src/helpers/linuxGpuCompositing");
 
@@ -1523,9 +1524,9 @@ async function startApp() {
     debugLogger.debug("Whisper startup init error (non-fatal)", { error: err.message });
   });
 
+  // A fresh local-only install has no .env yet: pre-warm Orukeet (only once its files exist).
   const parakeetSettings = {
-    localTranscriptionProvider: process.env.LOCAL_TRANSCRIPTION_PROVIDER || "",
-    parakeetModel: process.env.PARAKEET_MODEL,
+    ...startupSpeechEnv(process.env),
     language: process.env.DICTATION_LANGUAGE,
   };
   parakeetManager.initializeAtStartup(parakeetSettings).catch((err) => {
