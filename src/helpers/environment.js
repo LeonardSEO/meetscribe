@@ -18,6 +18,7 @@ const SECRET_KEYS = [
   "BEDROCK_SESSION_TOKEN",
   "AZURE_OPENAI_API_KEY",
   "VERTEX_API_KEY",
+  "FOUNDRY_API_KEY",
 ];
 
 const SECRET_KEY_SET = new Set(SECRET_KEYS);
@@ -341,6 +342,12 @@ class EnvironmentManager {
   }
   saveAzureEndpoint(value) {
     return this._saveKey("AZURE_OPENAI_ENDPOINT", value);
+  }
+  getFoundryApiKey() {
+    return this._getKey("FOUNDRY_API_KEY");
+  }
+  saveFoundryApiKey(key) {
+    return this._saveKey("FOUNDRY_API_KEY", key);
   }
   getAzureApiKey() {
     return this._getKey("AZURE_OPENAI_API_KEY");

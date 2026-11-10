@@ -18,6 +18,8 @@ async function getEnterpriseAIModel(provider, model, apiKey, enterprise) {
       return createAzureModel(model, apiKey, enterprise);
     case "vertex":
       return createVertexModel(model, apiKey, enterprise);
+    case "foundry":
+      return require("./foundryProvider").createFoundryModel(model, apiKey, enterprise);
     default:
       throw new Error(`Unsupported enterprise provider: ${provider}`);
   }

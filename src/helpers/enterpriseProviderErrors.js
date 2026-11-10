@@ -495,12 +495,45 @@ function mapEnterpriseError(provider, error, config = {}) {
       return mapAzureError(error);
     case "vertex":
       return mapVertexError(error, config);
+    case "foundry":
+      return mapFoundryError(error, config);
     default:
       return { message: error?.message || String(error) };
   }
 }
 
-const ENTERPRISE_PROVIDERS = ["bedrock", "azure", "vertex"];
+// Foundry and OpenAI-compatible servers speak plain HTTP status codes, so the
+// shared classifier reads them as they are (mapAzureError's wording heuristics
+// are for the classic Azure resource). Codes: PROVIDER_*, CONTEXT_TOO_LARGE.
+function mapFoundryError(error, config = {}) {
+  const { asProviderError } = require("./providerHttpErrors");
+  let azure = false;
+  try {
+    azure = /\.(openai|services\.ai|cognitiveservices)\.azure\.com$/i.test(
+      new URL(config?.foundryBaseUrl).hostname
+    );
+  } catch {
+    // No usable base URL: describe it as a server.
+  }
+  const classified = asProviderError(error, {
+    provider: "Azure AI Foundry",
+    surface: "llm",
+    selfHosted: !azure,
+  });
+  if (!classified?.messageKey) return { message: error?.message || String(error) };
+  return {
+    message: classified.message,
+    code: classified.code,
+    messageKey: classified.messageKey,
+    messageParams: classified.messageParams,
+    retryable: ["PROVIDER_RATE_LIMITED", "PROVIDER_UNAVAILABLE", "PROVIDER_TIMEOUT"].includes(
+      classified.code
+    ),
+    technicalDetails: classified.technicalDetails,
+  };
+}
+
+const ENTERPRISE_PROVIDERS = ["bedrock", "azure", "vertex", "foundry"];
 
 function isEnterpriseProvider(value) {
   return typeof value === "string" && ENTERPRISE_PROVIDERS.includes(value);
@@ -583,6 +616,8 @@ function pickEnterpriseConfig(config = {}) {
     azureApiVersion: config.azureApiVersion,
     vertexProject: config.vertexProject,
     vertexLocation: config.vertexLocation,
+    foundryBaseUrl: config.foundryBaseUrl,
+    foundryWireApi: config.foundryWireApi,
   };
 }
 
@@ -595,4 +630,6 @@ module.exports = {
   runBedrockRequest,
   unwrapRetryError,
   validateEnterpriseEndpoint,
+  isPrivateIPv4,
+  isPrivateIPv6,
 };

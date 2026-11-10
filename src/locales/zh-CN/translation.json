@@ -6231,7 +6231,9 @@
       "timeout": "你的服务器响应超时。",
       "unreachable": "无法连接到你的服务器。请检查它是否正在运行。",
       "noResponse": "未能收到你的服务器的响应。请检查它的 API 密钥以及它是否正在运行。",
-      "unknown": "你的服务器返回了一个意外错误。"
+      "unknown": "你的服务器返回了一个意外错误。",
+      "contextTooLarge": "此请求对您服务器的模型来说太长。",
+      "contentFiltered": "您的服务器的内容过滤器拦截了此请求。"
     },
     "openSettings": "打开设置",
     "copyDetails": "复制详情",
@@ -6242,7 +6244,9 @@
     "details": {
       "provider": "服务商",
       "requestId": "请求 ID"
-    }
+    },
+    "contextTooLarge": "此请求对 {{provider}} 的模型来说太长。",
+    "contentFiltered": "{{provider}} 的内容过滤器拦截了此请求。"
   },
   "toneStyle": {
     "title": "语气与风格",

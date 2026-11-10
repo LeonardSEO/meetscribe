@@ -17,6 +17,11 @@ export const PROVIDER_ERROR_CODES = Object.freeze({
   UNREACHABLE: "PROVIDER_UNREACHABLE",
   NO_RESPONSE: "PROVIDER_NO_RESPONSE",
   ERROR: "PROVIDER_ERROR",
+  // Same string as the local refusal note actions raise for oversize input
+  // (actionProcessingStore), so a provider's context-length 400 takes the same
+  // split-into-parts path.
+  CONTEXT_TOO_LARGE: "CONTEXT_TOO_LARGE",
+  CONTENT_FILTERED: "PROVIDER_CONTENT_FILTERED",
   KEY_MISSING: "API_KEY_MISSING",
 });
 
@@ -57,6 +62,8 @@ const MESSAGE_KEYS = {
   [C.TIMEOUT]: "providerErrors.timeout",
   [C.UNREACHABLE]: "providerErrors.unreachable",
   [C.NO_RESPONSE]: "providerErrors.noResponse",
+  [C.CONTEXT_TOO_LARGE]: "providerErrors.contextTooLarge",
+  [C.CONTENT_FILTERED]: "providerErrors.contentFiltered",
   [C.ERROR]: "providerErrors.unknown",
 };
 
@@ -81,6 +88,8 @@ const ENGLISH = {
   "providerErrors.noResponse":
     "Couldn't get a response from {{provider}}. Check your API key and connection.",
   "providerErrors.unknown": "{{provider}} returned an unexpected error.",
+  "providerErrors.contextTooLarge": "This request is too long for the {{provider}} model.",
+  "providerErrors.contentFiltered": "{{provider}} blocked this request with its content filter.",
   "providerErrors.keyMissing":
     "No API key is set for {{provider}}. Add it in Settings → Language Model.",
   "providerErrors.selfHosted.authFailed": "Your server rejected the API key.",
@@ -102,6 +111,9 @@ const ENGLISH = {
   "providerErrors.selfHosted.noResponse":
     "Couldn't get a response from your server. Check its API key and that it's running.",
   "providerErrors.selfHosted.unknown": "Your server returned an unexpected error.",
+  "providerErrors.selfHosted.contextTooLarge": "This request is too long for your server's model.",
+  "providerErrors.selfHosted.contentFiltered":
+    "Your server blocked this request with its content filter.",
   "hooks.audioRecording.errorDescriptions.providerRateLimited":
     "{{provider}} rate-limited the request. Wait a moment and try again.",
   "hooks.audioRecording.errorDescriptions.providerKeyMissing":
@@ -119,6 +131,10 @@ const QUOTA_SIGNAL =
   /insufficient_quota|credit balance|insufficient (credits|balance|funds)|out of credits|payment required/i;
 const MODEL_SIGNAL =
   /model_not_found|model[^.\n]{0,80}(not found|does not exist|not available|is not supported)|(unknown|invalid|unsupported) model/i;
+// OpenAI-compatible servers (Azure included) answer an oversize prompt with a 400
+// carrying this code, and a filtered prompt with `content_filter`.
+const CONTEXT_LENGTH_SIGNAL = /context_length_exceeded|maximum context length/i;
+const CONTENT_FILTER_SIGNAL = /content_filter|ResponsibleAIPolicyViolation/i;
 const MISSING_ITEM_SIGNAL = /\bitem with id\b[^.\n]{0,80}\bnot found\b/i;
 
 const NETWORK_CODES = new Set([
@@ -186,6 +202,8 @@ function requestIdFrom(headers) {
 }
 
 function codeForStatus(status, text, selfHosted) {
+  if (status === 400 && CONTEXT_LENGTH_SIGNAL.test(text)) return C.CONTEXT_TOO_LARGE;
+  if (status === 400 && CONTENT_FILTER_SIGNAL.test(text)) return C.CONTENT_FILTERED;
   if (status === 401) return C.AUTH_FAILED;
   if ((status === 400 || status === 403) && INVALID_KEY_SIGNAL.test(text)) return C.AUTH_FAILED;
   if (status === 402) return C.QUOTA_EXHAUSTED;

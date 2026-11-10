@@ -6231,7 +6231,9 @@
       "timeout": "Your server took too long to respond.",
       "unreachable": "Couldn't reach your server. Check that it's running.",
       "noResponse": "Couldn't get a response from your server. Check its API key and that it's running.",
-      "unknown": "Your server returned an unexpected error."
+      "unknown": "Your server returned an unexpected error.",
+      "contextTooLarge": "This request is too long for your server's model.",
+      "contentFiltered": "Your server blocked this request with its content filter."
     },
     "openSettings": "Open Settings",
     "copyDetails": "Copy details",
@@ -6242,7 +6244,9 @@
     "details": {
       "provider": "Provider",
       "requestId": "Request ID"
-    }
+    },
+    "contextTooLarge": "This request is too long for the {{provider}} model.",
+    "contentFiltered": "{{provider}} blocked this request with its content filter."
   },
   "toneStyle": {
     "title": "Tone & Style",

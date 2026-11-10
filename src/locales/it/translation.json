@@ -6252,7 +6252,9 @@
       "timeout": "Il tuo server ha impiegato troppo tempo a rispondere.",
       "unreachable": "Impossibile contattare il tuo server. Verifica che sia in esecuzione.",
       "noResponse": "Nessuna risposta dal tuo server. Verifica la sua chiave API e che sia in esecuzione.",
-      "unknown": "Il tuo server ha restituito un errore imprevisto."
+      "unknown": "Il tuo server ha restituito un errore imprevisto.",
+      "contextTooLarge": "Questa richiesta è troppo lunga per il modello del tuo server.",
+      "contentFiltered": "Il tuo server ha bloccato questa richiesta con il suo filtro dei contenuti."
     },
     "openSettings": "Apri Impostazioni",
     "copyDetails": "Copia dettagli",
@@ -6263,7 +6265,9 @@
     "details": {
       "provider": "Provider",
       "requestId": "ID richiesta"
-    }
+    },
+    "contextTooLarge": "Questa richiesta è troppo lunga per il modello di {{provider}}.",
+    "contentFiltered": "{{provider}} ha bloccato questa richiesta con il suo filtro dei contenuti."
   },
   "toneStyle": {
     "title": "Tono e stile",

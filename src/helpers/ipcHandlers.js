@@ -5711,6 +5711,14 @@ class IPCHandlers {
     ipcMain.handle("save-azure-api-version", async (event, value) => {
       return this.environmentManager.saveAzureApiVersion(value);
     });
+    // The Foundry key never goes back to the renderer: only whether one is set.
+    ipcMain.handle(
+      "save-foundry-api-key",
+      saveSecretKey("getFoundryApiKey", "saveFoundryApiKey", "foundryApiKey")
+    );
+    ipcMain.handle("has-foundry-api-key", async () =>
+      Boolean(this.environmentManager.getFoundryApiKey())
+    );
     ipcMain.handle("get-vertex-project", async () => {
       return this.environmentManager.getVertexProject();
     });
@@ -6000,7 +6008,7 @@ class IPCHandlers {
             ? { ...(config || {}), bedrockRegion: runtime.enterprise.bedrockRegion }
             : config || {};
         const mapped = mapEnterpriseError(provider, err, mappingConfig);
-        send({ error: mapped.message });
+        send({ error: mapped.message, messageKey: mapped.messageKey, code: mapped.code });
         return { success: false, error: mapped.message };
       } finally {
         this.enterpriseStreamAborts.delete(streamId);
@@ -7459,6 +7467,14 @@ class IPCHandlers {
       },
     });
     const resolveEnterpriseRuntime = async (event, provider, model, config = {}) => {
+      // Foundry is never managed and never takes its key from the renderer.
+      if (provider === "foundry") {
+        return require("./foundryProvider").resolveFoundryRuntime(
+          this.environmentManager,
+          model,
+          config
+        );
+      }
       const manual = {
         provider,
         model,

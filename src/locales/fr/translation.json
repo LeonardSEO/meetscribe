@@ -6259,7 +6259,9 @@
       "timeout": "Votre serveur a pris trop de temps à répondre.",
       "unreachable": "Impossible de contacter votre serveur. Vérifiez qu’il est en cours d’exécution.",
       "noResponse": "Aucune réponse de votre serveur. Vérifiez sa clé API et qu’il est en cours d’exécution.",
-      "unknown": "Votre serveur a renvoyé une erreur inattendue."
+      "unknown": "Votre serveur a renvoyé une erreur inattendue.",
+      "contextTooLarge": "Cette requête est trop longue pour le modèle de votre serveur.",
+      "contentFiltered": "Votre serveur a bloqué cette requête avec son filtre de contenu."
     },
     "openSettings": "Ouvrir les réglages",
     "copyDetails": "Copier les détails",
@@ -6270,7 +6272,9 @@
     "details": {
       "provider": "Fournisseur",
       "requestId": "ID de requête"
-    }
+    },
+    "contextTooLarge": "Cette requête est trop longue pour le modèle de {{provider}}.",
+    "contentFiltered": "{{provider}} a bloqué cette requête avec son filtre de contenu."
   },
   "toneStyle": {
     "title": "Ton et style",

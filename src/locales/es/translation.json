@@ -6252,7 +6252,9 @@
       "timeout": "Tu servidor tardó demasiado en responder.",
       "unreachable": "No se pudo conectar con tu servidor. Comprueba que esté en funcionamiento.",
       "noResponse": "No se recibió respuesta de tu servidor. Comprueba su clave de API y que esté en funcionamiento.",
-      "unknown": "Tu servidor devolvió un error inesperado."
+      "unknown": "Tu servidor devolvió un error inesperado.",
+      "contextTooLarge": "Esta solicitud es demasiado larga para el modelo de tu servidor.",
+      "contentFiltered": "Tu servidor bloqueó esta solicitud con su filtro de contenido."
     },
     "openSettings": "Abrir Ajustes",
     "copyDetails": "Copiar detalles",
@@ -6263,7 +6265,9 @@
     "details": {
       "provider": "Proveedor",
       "requestId": "ID de solicitud"
-    }
+    },
+    "contextTooLarge": "Esta solicitud es demasiado larga para el modelo de {{provider}}.",
+    "contentFiltered": "{{provider}} bloqueó esta solicitud con su filtro de contenido."
   },
   "toneStyle": {
     "title": "Tono y estilo",

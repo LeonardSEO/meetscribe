@@ -6231,7 +6231,9 @@
       "timeout": "Ihr Server hat zu lange zum Antworten gebraucht.",
       "unreachable": "Ihr Server konnte nicht erreicht werden. Überprüfen Sie, ob er läuft.",
       "noResponse": "Keine Antwort von Ihrem Server erhalten. Überprüfen Sie seinen API-Schlüssel und ob er läuft.",
-      "unknown": "Ihr Server hat einen unerwarteten Fehler zurückgegeben."
+      "unknown": "Ihr Server hat einen unerwarteten Fehler zurückgegeben.",
+      "contextTooLarge": "Diese Anfrage ist für das Modell Ihres Servers zu lang.",
+      "contentFiltered": "Ihr Server hat diese Anfrage mit seinem Inhaltsfilter blockiert."
     },
     "openSettings": "Einstellungen öffnen",
     "copyDetails": "Details kopieren",
@@ -6242,7 +6244,9 @@
     "details": {
       "provider": "Anbieter",
       "requestId": "Anfrage-ID"
-    }
+    },
+    "contextTooLarge": "Diese Anfrage ist für das Modell von {{provider}} zu lang.",
+    "contentFiltered": "{{provider}} hat diese Anfrage mit seinem Inhaltsfilter blockiert."
   },
   "toneStyle": {
     "title": "Ton & Stil",

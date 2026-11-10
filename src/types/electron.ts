@@ -2800,6 +2800,8 @@ declare global {
       saveAzureEndpoint?: (value: string) => Promise<void>;
       getAzureApiKey?: () => Promise<string | null>;
       saveAzureApiKey?: (key: string) => Promise<void>;
+      saveFoundryApiKey?: (key: string) => Promise<void>;
+      hasFoundryApiKey?: () => Promise<boolean>;
       getAzureDeployment?: () => Promise<string | null>;
       saveAzureDeployment?: (value: string) => Promise<void>;
       getAzureApiVersion?: () => Promise<string | null>;

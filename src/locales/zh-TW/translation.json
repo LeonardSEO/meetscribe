@@ -6231,7 +6231,9 @@
       "timeout": "你的伺服器回應逾時。",
       "unreachable": "無法連線到你的伺服器。請確認它正在執行。",
       "noResponse": "未能收到你的伺服器的回應。請檢查它的 API 金鑰，並確認它正在執行。",
-      "unknown": "你的伺服器回傳了意外的錯誤。"
+      "unknown": "你的伺服器回傳了意外的錯誤。",
+      "contextTooLarge": "此請求對您伺服器的模型來說太長。",
+      "contentFiltered": "您的伺服器的內容過濾器攔截了此請求。"
     },
     "openSettings": "開啟設定",
     "copyDetails": "複製詳細資訊",
@@ -6242,7 +6244,9 @@
     "details": {
       "provider": "服務商",
       "requestId": "請求 ID"
-    }
+    },
+    "contextTooLarge": "此請求對 {{provider}} 的模型來說太長。",
+    "contentFiltered": "{{provider}} 的內容過濾器攔截了此請求。"
   },
   "toneStyle": {
     "title": "語氣與風格",

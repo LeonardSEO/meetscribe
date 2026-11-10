@@ -698,6 +698,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveAzureEndpoint: (value) => ipcRenderer.invoke("save-azure-endpoint", value),
   getAzureApiKey: () => ipcRenderer.invoke("get-azure-api-key"),
   saveAzureApiKey: (key) => ipcRenderer.invoke("save-azure-api-key", key),
+  // The Foundry key is write-only from the renderer; it can only learn whether one is set.
+  saveFoundryApiKey: (key) => ipcRenderer.invoke("save-foundry-api-key", key),
+  hasFoundryApiKey: () => ipcRenderer.invoke("has-foundry-api-key"),
   getAzureDeployment: () => ipcRenderer.invoke("get-azure-deployment"),
   saveAzureDeployment: (value) => ipcRenderer.invoke("save-azure-deployment", value),
   getAzureApiVersion: () => ipcRenderer.invoke("get-azure-api-version"),
