@@ -41,3 +41,37 @@ test("upstream mode keeps the cloud fallback toggle", async () => {
     delete globalThis.__OW_UPSTREAM_MODE;
   }
 });
+
+test("main refuses every non-local speech provider in local-only", async () => {
+  const { localOnlySpeechRefusal } = await import("../../src/helpers/localOnlyEngine.js");
+  assert.equal(localOnlySpeechRefusal("meeting", { provider: "local" }), null);
+  for (const provider of ["openai-realtime", "deepgram", "assemblyai", "orukeet", undefined]) {
+    for (const mode of ["byok", "openwhispr"]) {
+      const m = localOnlySpeechRefusal("meeting", { provider, mode });
+      assert.equal(m?.code, "LOCAL_ONLY_BLOCKED", `meeting ${provider} ${mode}`);
+      const d = localOnlySpeechRefusal("dictation", { provider, mode });
+      assert.equal(d?.code, "LOCAL_ONLY_BLOCKED", `dictation ${provider} ${mode}`);
+    }
+  }
+});
+
+test("upstream mode refuses nothing", async () => {
+  globalThis.__OW_UPSTREAM_MODE = true;
+  try {
+    const { localOnlySpeechRefusal } = await import("../../src/helpers/localOnlyEngine.js");
+    assert.equal(localOnlySpeechRefusal("meeting", { provider: "deepgram" }), null);
+    assert.equal(localOnlySpeechRefusal("dictation", { provider: "orukeet", mode: "byok" }), null);
+  } finally {
+    delete globalThis.__OW_UPSTREAM_MODE;
+  }
+});
+
+test("ipcHandlers routes meeting connect, meeting start and dictation connect through the guard", () => {
+  const src = require("node:fs").readFileSync(
+    require("node:path").join(__dirname, "../../src/helpers/ipcHandlers.js"),
+    "utf8"
+  );
+  assert.equal(src.match(/localOnlySpeechRefusal\("meeting"/g).length, 2);
+  // dictation realtime connect plus warmup and start of assemblyai, deepgram, gemini and corti
+  assert.equal(src.match(/localOnlySpeechRefusal\("dictation"/g).length, 9);
+});

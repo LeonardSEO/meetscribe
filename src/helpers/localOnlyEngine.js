@@ -25,3 +25,16 @@ export function localOnlyOrganizations(organizations) {
 // CommonJS and cannot be imported by the renderer (test/components/localOnlyPicker.test.js
 // pins that they agree).
 export const ORUKEET_MINIMUM_MACOS_VERSION = "15.5";
+
+// Main's last line of defence: whatever the renderer asks for, the only streaming
+// speech session in local-only is the local meeting engine. Dictation realtime
+// sessions dial a remote service (cloud, BYOK or a custom Orukeet server) and are
+// refused; local dictation decodes on this computer through other channels.
+// Returns an Error with code LOCAL_ONLY_BLOCKED to refuse, else null.
+export function localOnlySpeechRefusal(surface, options = {}) {
+  if (!isLocalOnly()) return null;
+  if (surface === "meeting" && options.provider === "local") return null;
+  return Object.assign(new Error("Cloud speech engines are disabled in local-only mode"), {
+    code: "LOCAL_ONLY_BLOCKED",
+  });
+}

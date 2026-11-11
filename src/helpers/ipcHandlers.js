@@ -275,6 +275,7 @@ const { createUploadCancelRegistry } = require("./uploadCancelRegistry");
 const { applyOpenWhisprOriginHeader } = require("./sessionHeaders");
 const { blockDisabledHosts } = require("./blockedHosts");
 const { isLocalOnly } = require("../config/localOnly");
+const { localOnlySpeechRefusal } = require("./localOnlyEngine");
 const {
   CLOUD_UPLOAD_TIMEOUT_MS,
   CLOUD_CHUNK_MAX_ATTEMPTS,
@@ -9009,6 +9010,8 @@ class IPCHandlers {
     // `signal` ends a prepare whose account went away: it must not leave warm
     // connections minted for that account behind for the next one to reuse.
     const connectRealtimeStreaming = async (event, options, signal) => {
+      const refusal = localOnlySpeechRefusal("meeting", options);
+      if (refusal) throw refusal;
       // Read before the key is, so a save during the token fetch marks these connections stale.
       const connectionKey = getMeetingConnectionKey(options, credentialGeneration);
       const StreamingClass = getMeetingStreamingClient(options.provider);
@@ -10275,11 +10278,8 @@ class IPCHandlers {
 
       const connectInner = async () => {
         const isCloud = options.mode !== "byok";
-        if (isCloud && isLocalOnly()) {
-          throw Object.assign(new Error("Cloud dictation is disabled in local-only mode"), {
-            code: "LOCAL_ONLY_BLOCKED",
-          });
-        }
+        const refusal = localOnlySpeechRefusal("dictation", options);
+        if (refusal) throw refusal;
         // Dictation renderers before 1.8.4 omit `provider` and mean OpenAI; the
         // default lives here, at the boundary, so the token allowlist stays
         // fail-closed for genuinely unknown providers (#1624).
@@ -10369,6 +10369,10 @@ class IPCHandlers {
 
       if (!ALLOWED_MEETING_PROVIDERS.has(options.provider)) {
         return { success: false, error: `Unsupported provider: ${options.provider}` };
+      }
+      const speechRefusal = localOnlySpeechRefusal("meeting", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
       }
 
       if (options.provider === "local") {
@@ -12779,6 +12783,10 @@ class IPCHandlers {
     };
 
     ipcMain.handle("assemblyai-streaming-warmup", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       try {
         const byok = options.mode === "byok";
         if (!byok && !getApiUrl()) {
@@ -12821,6 +12829,10 @@ class IPCHandlers {
     let streamingStartInProgress = false;
 
     ipcMain.handle("assemblyai-streaming-start", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       if (streamingStartInProgress) {
         debugLogger.debug("Streaming start already in progress, ignoring", {}, "streaming");
         return { success: false, error: "Operation in progress" };
@@ -13045,6 +13057,10 @@ class IPCHandlers {
     };
 
     ipcMain.handle("deepgram-streaming-warmup", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       try {
         const byok = options.mode === "byok";
         if (!byok && !getApiUrl()) {
@@ -13098,6 +13114,10 @@ class IPCHandlers {
     let sendDropCount = 0;
 
     ipcMain.handle("deepgram-streaming-start", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       if (deepgramStreamingStartInProgress) {
         debugLogger.debug(
           "Deepgram streaming start already in progress, ignoring",
@@ -13329,6 +13349,10 @@ class IPCHandlers {
     };
 
     ipcMain.handle("gemini-streaming-warmup", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       try {
         if (this.geminiStreaming?.isConnected) {
           ensureGeminiStreaming(event);
@@ -13344,6 +13368,10 @@ class IPCHandlers {
     });
 
     ipcMain.handle("gemini-streaming-start", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       if (geminiStreamingStartInProgress) {
         debugLogger.debug("Gemini streaming start already in progress, ignoring", {}, "streaming");
         return { success: false, error: "Operation in progress" };
@@ -13455,6 +13483,10 @@ class IPCHandlers {
     });
 
     ipcMain.handle("corti-streaming-warmup", async (_event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       try {
         if (!this.cortiStreaming) {
           this.cortiStreaming = new CortiStreaming();
@@ -13480,6 +13512,10 @@ class IPCHandlers {
     });
 
     ipcMain.handle("corti-streaming-start", async (event, options = {}) => {
+      const speechRefusal = localOnlySpeechRefusal("dictation", options);
+      if (speechRefusal) {
+        return { success: false, error: speechRefusal.message, code: speechRefusal.code };
+      }
       try {
         if (!this.cortiStreaming) {
           this.cortiStreaming = new CortiStreaming();
