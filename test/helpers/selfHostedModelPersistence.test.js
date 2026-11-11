@@ -106,7 +106,7 @@ test("a Self-Hosted Chat model survives the app's startup with the default provi
     storage.clear();
     storage.setItem("_llmScopeKeysMigrated", "1");
     // Already holds the agent name, so startup starts no cloud dictionary sync.
-    storage.setItem("customDictionary", '["OpenWhispr"]');
+    storage.setItem("customDictionary", '["Meetscribe"]');
     storage.setItem("chatAgentMode", mode);
     storage.setItem("chatAgentModel", "my-hosted-model");
     vite.moduleGraph.invalidateAll();

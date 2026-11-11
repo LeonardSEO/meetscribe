@@ -3707,7 +3707,7 @@ class IPCHandlers {
         const resolved = path.resolve(filePath);
         const basename = path.basename(resolved);
         if (!basename.startsWith("ow-url-") && !basename.startsWith("ow-diarize-")) {
-          return { success: false, error: "Not an OpenWhispr temp file" };
+          return { success: false, error: "Not a Meetscribe temp file" };
         }
         const real = fs.realpathSync(resolved);
         let tempDir = getSafeTempDir();
@@ -3716,7 +3716,7 @@ class IPCHandlers {
         } catch {}
         const rel = path.relative(tempDir, real);
         if (rel.startsWith("..") || path.isAbsolute(rel)) {
-          return { success: false, error: "Not an OpenWhispr temp file" };
+          return { success: false, error: "Not a Meetscribe temp file" };
         }
         fs.unlinkSync(real);
         return { success: true };

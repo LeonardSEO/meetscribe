@@ -19,7 +19,7 @@ async function loadStore(t, { initialStorage, cachePrefix, electronAPI = {} }) {
   const { storage } = installBrowserGlobals(t, {
     // The agent name already in the dictionary keeps initializeSettings from
     // writing it, which would start a cloud sync after the test ends.
-    initialStorage: { customDictionary: '["OpenWhispr"]', ...initialStorage },
+    initialStorage: { customDictionary: '["Meetscribe"]', ...initialStorage },
     window: {
       addEventListener: (type, listener) => {
         if (type === "storage") listeners.push(listener);
@@ -300,7 +300,7 @@ test("main gets only the shared words that fit the transcription prompt", async 
   // As another window's edit lands (setCustomDictionary would also start a sync).
   loaded.useSettingsStore.setState({
     customDictionary: [
-      "OpenWhispr",
+      "Meetscribe",
       ...Array.from({ length: 30 }, (_, index) => `Personalword${index}`),
     ],
   });

@@ -34,6 +34,13 @@ function runStartup({ lockAvailable, hidden }) {
     dotenv: { config: () => ({}) },
     // Loaded before the lock; it must stay dependency-free (see the test below).
     "./src/config/localOnly": { isLocalOnly: () => true },
+    // Moves the pre-rename user data folder before anything reads userData.
+    "./src/helpers/legacyUserDataMigration": {
+      migrateLegacyUserData: () => {
+        events.push(["migrate"]);
+        return "skipped-target-exists";
+      },
+    },
     "./src/helpers/xwayland": {
       XWAYLAND_FLAG: "--ozone-platform=x11",
       shouldForceXWayland: () => false,
@@ -79,18 +86,31 @@ for (const hidden of [false, true]) {
     const events = runStartup({ lockAvailable: false, hidden });
     assert.deepEqual(
       events.map(([event]) => event),
-      ["lock", "warn", "exit"]
+      ["migrate", "lock", "warn", "exit"]
     );
-    assert.match(events[1][1], /single-instance lock/i);
-    assert.match(events[1][1], /another.*instance.*may/i);
-    assert.equal(events[2][1], 0);
+    assert.match(events[2][1], /single-instance lock/i);
+    assert.match(events[2][1], /another.*instance.*may/i);
+    assert.equal(events[3][1], 0);
     assert.ok(!JSON.stringify(events).includes("fixture-private-arg"));
     assert.ok(!JSON.stringify(events).includes("/fixture/user-data"));
   });
 }
 
 test("successful single-instance lock continues startup without failure logging", () => {
-  assert.deepEqual(runStartup({ lockAvailable: true, hidden: true }), [["lock"], ["continue"]]);
+  assert.deepEqual(runStartup({ lockAvailable: true, hidden: true }), [
+    ["migrate"],
+    ["lock"],
+    ["continue"],
+  ]);
+});
+
+test("the user data migration stays light enough to load before the single-instance lock", () => {
+  const source = fs.readFileSync(
+    path.resolve(__dirname, "../../src/helpers/legacyUserDataMigration.js"),
+    "utf8"
+  );
+  const required = [...source.matchAll(/require\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1]);
+  assert.deepEqual(required.sort(), ["fs", "path"]);
 });
 
 test("the localOnly switch stays light enough to load before the single-instance lock", () => {

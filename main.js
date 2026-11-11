@@ -96,19 +96,18 @@ function configureChannelUserDataPath() {
 configureChannelUserDataPath();
 
 // The app was called OpenWhispr before; move its user data folder once, before
-// anything below reads userData (the .env, the database, localStorage).
+// anything below reads userData (the .env, the database, localStorage). Runs
+// before the single-instance lock, so it loads nothing but fs and path; the
+// outcome is logged once the logger is up (app ready).
+const userDataMigration = { result: null, problems: [] };
 function migrateUserDataFromOpenWhispr() {
   const { migrateLegacyUserData } = require("./src/helpers/legacyUserDataMigration");
-  const logger = require("./src/helpers/debugLogger");
-  const result = migrateLegacyUserData({
+  userDataMigration.result = migrateLegacyUserData({
     appDataDir: app.getPath("appData"),
     targetName: path.basename(app.getPath("userData")),
     legacyName: APP_CHANNEL === "production" ? "OpenWhispr" : `OpenWhispr-${APP_CHANNEL}`,
-    log: (message, meta) => logger.warn(message, meta),
+    log: (message, meta) => userDataMigration.problems.push({ message, meta }),
   });
-  if (result !== "skipped-target-exists" && result !== "skipped-no-legacy") {
-    logger.info("Legacy user data migration", { result });
-  }
 }
 
 migrateUserDataFromOpenWhispr();
@@ -281,7 +280,7 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 
 if (!gotSingleInstanceLock) {
   console.warn(
-    "[Startup] Could not acquire the single-instance lock; another OpenWhispr instance may already be running. Exiting."
+    "[Startup] Could not acquire the single-instance lock; another Meetscribe instance may already be running. Exiting."
   );
   app.exit(0);
 }
@@ -1254,6 +1253,10 @@ async function startApp() {
   // logger starts first. Requiring it again in initializeCoreManagers is a no-op.
   debugLogger = require("./src/helpers/debugLogger");
   debugLogger.ensureFileLogging();
+  for (const { message, meta } of userDataMigration.problems) debugLogger.warn(message, meta);
+  if (!["skipped-target-exists", "skipped-no-legacy"].includes(userDataMigration.result)) {
+    debugLogger.info("Legacy user data migration", { result: userDataMigration.result });
+  }
 
   // Only local signature/cache verification is awaited. Remote refresh starts
   // later, so offline startup and settings migrations see a usable catalog.

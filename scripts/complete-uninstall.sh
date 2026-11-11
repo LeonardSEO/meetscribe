@@ -4,7 +4,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "This script will stop OpenWhispr, remove the installed app, and delete caches, databases, and preferences."
+echo "This script will stop Meetscribe (and an older OpenWhispr install), remove the installed app, and delete caches, databases, and preferences."
 read -r -p "Continue with the full uninstall? [y/N]: " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
   echo "Aborted."
@@ -19,15 +19,20 @@ remove_target() {
   fi
 }
 
-echo "Stopping running OpenWhispr/Electron processes..."
+echo "Stopping running Meetscribe/OpenWhispr/Electron processes..."
+pkill -f "Meetscribe" 2>/dev/null || true
 pkill -f "OpenWhispr" 2>/dev/null || true
 pkill -f "open-whispr" 2>/dev/null || true
 pkill -f "Electron Helper.*OpenWhispr" 2>/dev/null || true
 
-echo "Removing /Applications/OpenWhispr.app (requires admin)..."
+echo "Removing /Applications/Meetscribe.app and OpenWhispr.app (requires admin)..."
+remove_target "/Applications/Meetscribe.app"
 remove_target "/Applications/OpenWhispr.app"
 
 echo "Purging Application Support data..."
+remove_target "$HOME/Library/Application Support/Meetscribe"
+remove_target "$HOME/Library/Application Support/Meetscribe-development"
+remove_target "$HOME/Library/Application Support/Meetscribe-staging"
 remove_target "$HOME/Library/Application Support/OpenWhispr"
 remove_target "$HOME/Library/Application Support/open-whispr"
 remove_target "$HOME/Library/Application Support/OpenWhispr-development"
@@ -40,7 +45,7 @@ echo "Removing caches, logs, and saved state..."
 remove_target "$HOME/Library/Caches/open-whispr"
 remove_target "$HOME/Library/Caches/open-whispr-updater"
 # Current bundle ID first, then the ones older releases used
-for bundle_id in com.gizmolabs.openwhispr com.herotools.openwispr com.openwhispr.OpenWhispr; do
+for bundle_id in com.meetscribe.app com.gizmolabs.openwhispr com.herotools.openwispr com.openwhispr.OpenWhispr; do
   remove_target "$HOME/Library/Caches/$bundle_id"
   remove_target "$HOME/Library/Caches/$bundle_id.ShipIt"
   remove_target "$HOME/Library/HTTPStorages/$bundle_id"
@@ -48,6 +53,7 @@ for bundle_id in com.gizmolabs.openwhispr com.herotools.openwispr com.openwhispr
   remove_target "$HOME/Library/Saved Application State/$bundle_id.savedState"
 done
 remove_target "$HOME/Library/Preferences/com.openwhispr.helper.plist"
+remove_target "$HOME/Library/Logs/Meetscribe"
 remove_target "$HOME/Library/Logs/OpenWhispr"
 
 echo "Cleaning temporary files..."
@@ -55,7 +61,7 @@ shopt -s nullglob
 for tmp in /tmp/openwhispr*; do
   remove_target "$tmp"
 done
-for crash in "$HOME/Library/Application Support/CrashReporter"/OpenWhispr_*; do
+for crash in "$HOME/Library/Application Support/CrashReporter"/Meetscribe_* "$HOME/Library/Application Support/CrashReporter"/OpenWhispr_*; do
   remove_target "$crash"
 done
 shopt -u nullglob
@@ -79,9 +85,11 @@ fi
 cat <<'EOF'
 macOS keeps microphone, screen recording, and accessibility approvals even after files are removed.
 Reset them if you want a truly fresh start:
-  tccutil reset Microphone com.gizmolabs.openwhispr
-  tccutil reset Accessibility com.gizmolabs.openwhispr
-  tccutil reset ScreenCapture com.gizmolabs.openwhispr
+  tccutil reset Microphone com.meetscribe.app
+  tccutil reset Accessibility com.meetscribe.app
+  tccutil reset ScreenCapture com.meetscribe.app
+  tccutil reset Calendar com.meetscribe.calendar-listener
+For an older OpenWhispr install, repeat with com.gizmolabs.openwhispr.
 
 Full uninstall complete. Reboot if you removed permissions, then reinstall or run npm scripts on a clean tree.
 EOF
