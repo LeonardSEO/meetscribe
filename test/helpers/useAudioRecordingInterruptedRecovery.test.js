@@ -68,6 +68,6 @@ test("the mount effect recovers interrupted recordings with the translated messa
   });
 
   assert.deepEqual(recoveries, [
-    "Recovered after OpenWhispr closed before this dictation finished.",
+    "Recovered after Meetscribe closed before this dictation finished.",
   ]);
 });
