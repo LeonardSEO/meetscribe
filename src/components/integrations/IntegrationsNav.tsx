@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { BookOpen } from "../icons";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { Badge } from "../ui/badge";
 import { cn } from "../lib/utils";
 import {
@@ -104,14 +105,17 @@ export function IntegrationsNav({
       ))}
 
       <div className="flex-1" />
-      <button
-        type="button"
-        onClick={() => window.electronAPI?.openExternal?.(INTEGRATIONS_DOCS_URL)}
-        className="flex items-center gap-2 h-7 px-2.5 rounded-md text-xs text-muted-foreground outline-none transition-colors hover:text-foreground hover:bg-foreground/4 dark:hover:bg-white/4 focus-visible:ring-1 focus-visible:ring-primary/30"
-      >
-        <BookOpen size={14} className="shrink-0" />
-        {t("integrations.nav.docs")}
-      </button>
+      {/* The docs are OpenWhispr's site, which the local-only app never contacts. */}
+      {!isLocalOnly() && (
+        <button
+          type="button"
+          onClick={() => window.electronAPI?.openExternal?.(INTEGRATIONS_DOCS_URL)}
+          className="flex items-center gap-2 h-7 px-2.5 rounded-md text-xs text-muted-foreground outline-none transition-colors hover:text-foreground hover:bg-foreground/4 dark:hover:bg-white/4 focus-visible:ring-1 focus-visible:ring-primary/30"
+        >
+          <BookOpen size={14} className="shrink-0" />
+          {t("integrations.nav.docs")}
+        </button>
+      )}
     </nav>
   );
 }
