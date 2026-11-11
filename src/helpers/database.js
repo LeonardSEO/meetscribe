@@ -5412,21 +5412,32 @@ class DatabaseManager {
       "INSERT INTO transcript_passages (note_id, seq, speaker, start_seconds, end_seconds, text) VALUES (?, ?, ?, ?, ?, ?)"
     );
     const clearPending = this.db.prepare("DELETE FROM pending_transcript_index WHERE note_id = ?");
-    const indexBatch = (ids) =>
+    const indexNote = (noteId) =>
       this.db.transaction(() => {
-        for (const noteId of ids) {
-          deletePassages.run(noteId);
-          const note = selectNote.get(noteId);
-          if (note && note.deleted_at == null && note.transcript) {
-            const names = {};
-            for (const row of selectNames.all(noteId)) names[row.speaker_id] = row.display_name;
-            for (const p of buildPassages(note.transcript, names)) {
-              insertPassage.run(noteId, p.seq, p.speaker, p.startSeconds, p.endSeconds, p.text);
-            }
+        deletePassages.run(noteId);
+        const note = selectNote.get(noteId);
+        if (note && note.deleted_at == null && note.transcript) {
+          const names = {};
+          for (const row of selectNames.all(noteId)) names[row.speaker_id] = row.display_name;
+          for (const p of buildPassages(note.transcript, names)) {
+            insertPassage.run(noteId, p.seq, p.speaker, p.startSeconds, p.endSeconds, p.text);
           }
+        }
+        clearPending.run(noteId);
+      })();
+    const indexBatch = (ids) => {
+      for (const noteId of ids) {
+        try {
+          indexNote(noteId);
+        } catch (error) {
+          // One note must not block the rest, and its row must not be retried on
+          // every search. The transaction rolled back; clear the row (a later
+          // edit journals the note again). Log the id only, never transcript text.
+          debugLogger.error("Failed to index transcript passages", { noteId }, "database");
           clearPending.run(noteId);
         }
-      })();
+      }
+    };
     for (;;) {
       const ids = selectPending.all(batchSize).map((row) => row.note_id);
       if (!ids.length) return;
@@ -5453,9 +5464,10 @@ class DatabaseManager {
         filters += " AND date(n.created_at) <= date(?)";
         params.push(dateTo);
       }
-      if (noteId != null) {
+      const onlyNote = typeof noteId === "boolean" ? NaN : Number(noteId);
+      if (noteId != null && Number.isInteger(onlyNote) && onlyNote > 0) {
         filters += " AND p.note_id = ?";
-        params.push(noteId);
+        params.push(onlyNote);
       }
       params.push(max);
       return this.db

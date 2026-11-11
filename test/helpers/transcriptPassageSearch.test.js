@@ -238,3 +238,46 @@ test("notes outside the active account scope are not returned", (t) => {
     .run(segments(["lambda secret", "speaker_0", 1]));
   assert.equal(m.searchTranscriptPassages({ query: "lambda" }).length, 0);
 });
+
+test("one note that fails to index does not roll back the rest of the drain", (t) => {
+  const m = createManager(t);
+  m.db.exec(`
+    CREATE TRIGGER fail_on_boom BEFORE INSERT ON transcript_passages
+    WHEN NEW.text LIKE '%kaboomsecret%'
+    BEGIN SELECT RAISE(ABORT, 'boom'); END;
+  `);
+  const bad = addNote(m, {
+    title: "Bad",
+    transcript: segments(["first fine line", "speaker_0", 1], ["kaboomsecret line", "speaker_0", 2]),
+  });
+  addNote(m, { title: "Good", transcript: segments(["omega fine line", "speaker_0", 1]) });
+  const logged = [];
+  const original = console.error;
+  console.error = (...args) => logged.push(args.map(String).join(" "));
+  t.after(() => {
+    console.error = original;
+  });
+  assert.doesNotThrow(() => m._drainTranscriptIndex());
+  // The healthy note is indexed, the failing one has no half-written passages
+  // and its journal row is cleared so every later search doesn't retry it.
+  assert.equal(m.searchTranscriptPassages({ query: "omega" }).length, 1);
+  assert.equal(
+    m.db.prepare("SELECT COUNT(*) AS n FROM transcript_passages WHERE note_id = ?").get(bad).n,
+    0
+  );
+  assert.equal(m.db.prepare("SELECT COUNT(*) AS n FROM pending_transcript_index").get().n, 0);
+  assert.ok(!logged.some((line) => line.includes("kaboomsecret")));
+});
+
+test("an invalid noteId is ignored and a numeric string is accepted", (t) => {
+  const m = createManager(t);
+  const a = addNote(m, { title: "A", transcript: segments(["sigma topic", "speaker_0", 1]) });
+  addNote(m, { title: "B", transcript: segments(["sigma topic", "speaker_0", 1]) });
+  const count = (noteId) => m.searchTranscriptPassages({ query: "sigma", noteId }).length;
+  assert.equal(count(a), 1);
+  assert.equal(count(String(a)), 1);
+  for (const bad of ["abc", "1 OR 1=1", 1.5, NaN, {}, [], -3, 0, true]) {
+    assert.doesNotThrow(() => count(bad), String(bad));
+    assert.equal(count(bad), 2, String(bad));
+  }
+});
