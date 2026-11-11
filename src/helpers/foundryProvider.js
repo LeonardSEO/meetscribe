@@ -198,8 +198,10 @@ const includeUnsupported = new Set();
 
 // Azure's chat completions reject `max_tokens` for newer deployments; the SDK
 // only renames it for models it recognises as reasoning models.
+// Redirects are refused: a followed redirect would hand the API key to another host.
 function createFoundryFetch(azure, baseURL) {
-  return async (input, init) => {
+  return async (input, rawInit) => {
+    const init = { ...rawInit, redirect: "error" };
     let body = null;
     if (typeof init?.body === "string") {
       try {

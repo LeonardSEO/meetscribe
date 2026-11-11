@@ -496,3 +496,12 @@ test("shared classifier: BYOK status handling is unchanged outside the new 400 c
   assert.equal(code(500, "context_length_exceeded"), "PROVIDER_UNAVAILABLE");
   assert.equal(code(429, "content_filter"), "PROVIDER_RATE_LIMITED");
 });
+
+test("requests never follow redirects, so the key cannot reach another host", async () => {
+  stubFetch();
+  const request = await call(createFoundryModel("m", "k", { foundryBaseUrl: "https://x.openai.azure.com" }));
+  assert.equal(request.init.redirect, "error");
+  stubFetch();
+  const responses = await call(responsesModel("redirect-dep"));
+  assert.equal(responses.init.redirect, "error");
+});
