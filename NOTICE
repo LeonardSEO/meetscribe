@@ -10,6 +10,6 @@ Software
 --------
 This software is based on OpenWhispr (MIT License).
 
-OpenWhispr is copyright its authors and released under the MIT License
-(https://github.com/OpenWhispr/openwhispr). The MIT copyright notice and
-permission notice apply to all code taken from OpenWhispr.
+OpenWhispr (https://github.com/OpenWhispr/openwhispr) is released under the
+MIT License. Its copyright and permission notice are in the LICENSE file at the
+repository root and apply to all code taken from OpenWhispr.

@@ -11,10 +11,10 @@
 Deze app is een fork van [OpenWhispr](https://github.com/OpenWhispr/openwhispr) (MIT), omgebouwd tot een lokale vergaderassistent zonder account.
 
 - **Local-only.** Er is geen account, geen synchronisatie, geen team- of betaalfunctie en geen verkeer naar OpenWhispr-diensten; die hosts worden geblokkeerd. Opnames, transcripten en notulen blijven in een lokale database op je computer.
-- **Spraakherkenning: Orukeet.** Dit is de enige spraakengine. Het model wordt bij de eerste start gedownload en gecontroleerd met een SHA-256-checksum. Transcriptie werkt offline. Orukeet vereist macOS 15.5 of nieuwer. Ontbreekt het model of is de download corrupt, dan krijg je een melding en blijft de opname bewaard; er is nooit een terugval op een clouddienst.
+- **Spraakherkenning: Orukeet.** Dit is de enige spraakengine. Het model wordt bij de eerste start gedownload en gecontroleerd met een SHA-256-checksum. Transcriptie is bedoeld om offline te werken; dat is nog niet handmatig geverifieerd. Op macOS vereist Orukeet macOS 15.5 of nieuwer. Ontbreekt het model of is de download corrupt, dan krijg je een melding en blijft de opname bewaard; er is nooit een terugval op een clouddienst.
 - **Notulen.** Het ingebouwde sjabloon Minutes maakt samenvatting, onderwerpen, besluiten en actiepunten. Je kunt ze bewerken, opnieuw laten genereren en als Markdown exporteren.
 - **Chat over vergaderingen.** Transcripten worden lokaal in passages geïndexeerd (FTS5, geen vectorzoekopdracht). Vraag bijvoorbeeld "Wat hebben we vorige week besloten over project X?" en het antwoord noemt genummerde bronpassages die je kunt controleren. Als er niets gevonden wordt, zegt de assistent dat.
-- **Alleen het AI-endpoint gebruikt het netwerk.** Samenvattingen, notulen en chat gaan naar het LLM-endpoint dat jij instelt. Alles daarvoor (opnemen, transcriberen, zoeken) werkt zonder netwerk.
+- **Alleen het AI-endpoint gebruikt het netwerk.** Samenvattingen, notulen en chat gaan naar het LLM-endpoint dat jij instelt. Opnemen, transcriberen en zoeken zijn bedoeld om zonder netwerk te werken; dat is nog niet handmatig geverifieerd (zie [docs/manual-acceptance.md](docs/manual-acceptance.md)).
 
 ## AI-endpoint instellen (Azure AI Foundry)
 
@@ -23,7 +23,8 @@ Alle AI-functies gebruiken één provider, `foundry`: Azure AI Foundry via de Op
 1. Open Instellingen en ga naar het Foundry-onderdeel (of vul het in tijdens de eerste start).
 2. Plak het endpoint. Elke gangbare Azure-vorm werkt (resource-URL, projectendpoint, met of zonder `/openai/deployments/...?api-version=...` of slash aan het eind); de app maakt er `/openai/v1` van.
 3. Kies de wire-API en vul de modelnaam (deployment) en je API-key in.
-4. De key wordt versleuteld opgeslagen via de sleutelhanger van het besturingssysteem (macOS Keychain, Windows DPAPI), nooit in de database, een `.env`-bestand of localStorage. Het endpoint staat in het hoofdproces.
+4. De key wordt versleuteld opgeslagen via de sleutelhanger van het besturingssysteem (macOS Keychain, Windows DPAPI), nooit in de database, een `.env`-bestand of localStorage. Het endpoint en de wire-API staan (niet geheim) in het `.env`-bestand van het hoofdproces.
+5. Wijzig je het endpoint naar een andere herkomst (origin), dan wordt de opgeslagen key gewist en moet je de key opnieuw invoeren, zodat een key nooit naar een nieuwe host gaat.
 
 Zonder geldige configuratie blijven transcript en bestaande notulen ongemoeid; de melding wijst naar Instellingen. Entra ID wordt in deze versie niet ondersteund, alleen een API-key.
 
@@ -44,7 +45,7 @@ De lokale builds zijn niet ondertekend en niet genotarieerd; ondertekende instal
 
 ## Licenties en toeschrijving
 
-- **Software:** gebaseerd op OpenWhispr, MIT-licentie. De MIT-licentietekst en het copyright van OpenWhispr blijven van toepassing op de overgenomen code.
+- **Software:** gebaseerd op OpenWhispr, MIT-licentie. De MIT-licentietekst en het copyright van OpenWhispr staan in [LICENSE](LICENSE) en blijven van toepassing op de overgenomen code.
 - **Spraakmodel Orukeet** door Oruk AI ([huggingface.co/oruk/orukeet](https://huggingface.co/oruk/orukeet)), afgeleid van NVIDIA Parakeet TDT 0.6B v3, onder **CC BY-SA 4.0**. Het model wordt gedownload, niet in de broncode meegeleverd. Wijzigingen aan het model vallen onder dezelfde licentie. Zie [NOTICE](NOTICE).
 
 ---

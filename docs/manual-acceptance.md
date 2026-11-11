@@ -1,23 +1,23 @@
 # Handmatige acceptatie
 
-Deze controles vragen een persoon met echte vergaderingen en echte accounts. Ze zijn **niet uitgevoerd** door de geautomatiseerde eindcontrole (zie `.superpowers/sdd/2026-11-10-meeting-assistant/task-13-report.md`). Vink af wat je gedaan hebt en noteer datum, platform en build.
+Deze controles vragen een persoon met echte vergaderingen en echte accounts. Ze zijn **niet uitgevoerd** door de geautomatiseerde eindcontrole. Vink af wat je gedaan hebt en noteer datum, platform en build.
 
 Platformen: macOS Apple Silicon (macOS 15.5 of nieuwer) en Windows x64. Gebruik een schone gebruikersmap per installatie.
 
 ## Matrix
 
-| # | Scenario | macOS arm64 | Windows x64 |
-|---|---|---|---|
-| 1 | Schone installatie vraagt geen account; Orukeet wordt gedownload met SHA-256-controle | [ ] | [ ] |
-| 2 | Vergadering met meerdere sprekers: sprekers worden na afloop onderscheiden | [ ] | [ ] |
-| 3 | Opname van minstens 60 minuten blijft stabiel (geheugen, geen verlies van tekst) | [ ] | [ ] |
-| 4 | Geweigerde microfoonrechten: duidelijke melding, geen crash, rechtenuitleg werkt | [ ] | [ ] |
-| 5 | Transcriptie offline (netwerk uit): opnemen, transcriberen en lokaal terugvinden lukt | [ ] | [ ] |
-| 6 | Nederlands en Engels door elkaar in één vergadering | [ ] | [ ] |
-| 7 | App geforceerd afsluiten tijdens opname, daarna herstellen: opname en tekst tot dat punt zijn terug | [ ] | [ ] |
-| 8 | Opname-tot-chat van begin tot eind: opnemen, transcript, notulen, vraag stellen, bronnen controleren | [ ] | [ ] |
-| 9 | Met netwerk aan gaat alleen verkeer naar het ingestelde LLM-endpoint (controle met een proxy of netwerkmonitor) | [ ] | [ ] |
-| 10 | Model ontbreekt of download is corrupt: melding, opname blijft bewaard, geen terugval op cloud | [ ] | [ ] |
+| #   | Scenario                                                                                                        | macOS arm64 | Windows x64 |
+| --- | --------------------------------------------------------------------------------------------------------------- | ----------- | ----------- |
+| 1   | Schone installatie vraagt geen account; Orukeet wordt gedownload met SHA-256-controle                           | [ ]         | [ ]         |
+| 2   | Vergadering met meerdere sprekers: sprekers worden na afloop onderscheiden                                      | [ ]         | [ ]         |
+| 3   | Opname van minstens 60 minuten blijft stabiel (geheugen, geen verlies van tekst)                                | [ ]         | [ ]         |
+| 4   | Geweigerde microfoonrechten: duidelijke melding, geen crash, rechtenuitleg werkt                                | [ ]         | [ ]         |
+| 5   | Transcriptie offline (netwerk uit): opnemen, transcriberen en lokaal terugvinden lukt                           | [ ]         | [ ]         |
+| 6   | Nederlands en Engels door elkaar in één vergadering                                                             | [ ]         | [ ]         |
+| 7   | App geforceerd afsluiten tijdens opname, daarna herstellen: opname en tekst tot dat punt zijn terug             | [ ]         | [ ]         |
+| 8   | Opname-tot-chat van begin tot eind: opnemen, transcript, notulen, vraag stellen, bronnen controleren            | [ ]         | [ ]         |
+| 9   | Met netwerk aan gaat alleen verkeer naar het ingestelde LLM-endpoint (controle met een proxy of netwerkmonitor) | [ ]         | [ ]         |
+| 10  | Model ontbreekt of download is corrupt: melding, opname blijft bewaard, geen terugval op cloud                  | [ ]         | [ ]         |
 
 ## Bekende punten om in de matrix te beoordelen
 
