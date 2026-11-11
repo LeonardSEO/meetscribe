@@ -12,6 +12,7 @@ import type {
   LocalSetupRowId,
   LocalSetupSwitches,
 } from "../../config/localSetup";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { modelRegistry } from "../../models/ModelRegistry";
 import { usePolicyStore } from "../../stores/policyStore";
 import {
@@ -83,6 +84,11 @@ export function applyLocalSetupSettings(plan: LocalSetupPlan, switches: LocalSet
   if (dictation) writeDictation(dictation);
 
   const s = useSettingsStore.getState();
+  if (isLocalOnly()) {
+    // Every AI task goes to Foundry; cleanup stays off until the user turns it on in Settings.
+    s.setUseCleanupModel(false);
+    return;
+  }
   const cleanup = row("cleanup");
   if (isOn(cleanup, switches.cleanup)) {
     writeScopes(CLEANUP_SCOPES, cleanup.modelId);

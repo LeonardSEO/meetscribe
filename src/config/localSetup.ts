@@ -398,7 +398,8 @@ export function buildLocalSetupPlan(input: {
           }
     );
   }
-  const localTextAllowed = isModeAllowedByPolicy(policy, "llm", "local");
+  // Local-only sends every AI task to Foundry, so no local text model is offered or downloaded.
+  const localTextAllowed = !isLocalOnly() && isModeAllowedByPolicy(policy, "llm", "local");
   const textModelApproved = (id: "cleanup" | "assistant"): boolean =>
     isLocalModelAllowedByPolicy(policy, "llm", table.models[id]);
   if (localTextAllowed) {
@@ -410,14 +411,14 @@ export function buildLocalSetupPlan(input: {
 
   const packBytes = table.graphicsPackBytes[`${profile.platform}-${profile.arch}`];
   const graphicsPack: LocalSetupDownload | null =
-    machineType === "pc-nvidia" && packBytes
+    !isLocalOnly() && machineType === "pc-nvidia" && packBytes
       ? { kind: "llamaVulkan", id: "llama-vulkan", bytes: packBytes }
       : null;
 
   const cloudAllowed = TEXT_MODES_OFF_DEVICE.some((mode) =>
     isModeAllowedByPolicy(policy, "llm", mode)
   );
-  const organizationRunsText = !localTextAllowed && cloudAllowed;
+  const organizationRunsText = !isLocalOnly() && !localTextAllowed && cloudAllowed;
 
   return {
     machineType,
