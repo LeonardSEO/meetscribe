@@ -1,5 +1,5 @@
 import i18n from "../../i18n";
-import type { ToolDefinition, ToolResult } from "./ToolRegistry";
+import type { ToolDefinition, ToolExecutionContext, ToolResult } from "./ToolRegistry";
 import { withoutAttendeesFence } from "../../utils/noteAttendees";
 
 import { MAX_MEETING_SOURCES, MAX_PASSAGE_CHARS } from "./meetingSearchLimits";
@@ -67,7 +67,7 @@ export const searchMeetingsTool: ToolDefinition = {
   readOnly: true,
   promptInstruction: INSTRUCTION,
 
-  async execute(args: Record<string, unknown>): Promise<ToolResult> {
+  async execute(args: Record<string, unknown>, context?: ToolExecutionContext): Promise<ToolResult> {
     const query = typeof args.query === "string" ? args.query.trim() : "";
     if (!query) {
       return { success: false, data: null, displayText: "A search query is required" };
@@ -86,8 +86,11 @@ export const searchMeetingsTool: ToolDefinition = {
         ...(dateTo ? { dateTo } : {}),
         limit,
       });
-      const results: MeetingPassageResult[] = rows.slice(0, limit).map((row, index) => ({
-        ref: index + 1,
+      const kept = rows.slice(0, limit);
+      // Numbers continue across this turn's searches, so a citation names one passage.
+      const offset = context?.reserveSequence?.("meeting_ref", kept.length) ?? 0;
+      const results: MeetingPassageResult[] = kept.map((row, index) => ({
+        ref: offset + index + 1,
         noteId: row.noteId,
         title: withoutAttendeesFence(row.noteTitle ?? ""),
         date: row.noteDate,

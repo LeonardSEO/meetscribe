@@ -417,14 +417,23 @@ function hasTurnInProgress(conversation: {
   });
 }
 
-function conversationMessageMetadata(metadata: unknown): Record<string, unknown> | null {
+export function conversationMessageMetadata(metadata: unknown): Record<string, unknown> | null {
   if (!metadata) return null;
   const parsed = typeof metadata === "string" ? JSON.parse(metadata) : metadata;
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-  const { turn, ...rest } = parsed as Record<string, unknown>;
-  if (!turn || typeof turn !== "object" || Array.isArray(turn)) return parsed;
+  const { turn, toolCalls, ...rest } = parsed as Record<string, unknown>;
+  // Meeting passages are transcript text from this computer; they never leave it.
+  const safeCalls = Array.isArray(toolCalls)
+    ? toolCalls.map((call) =>
+        call && typeof call === "object" && (call as { name?: unknown }).name === "search_meetings"
+          ? { ...(call as Record<string, unknown>), metadata: undefined }
+          : call
+      )
+    : toolCalls;
+  const withCalls = toolCalls === undefined ? rest : { ...rest, toolCalls: safeCalls };
+  if (!turn || typeof turn !== "object" || Array.isArray(turn)) return withCalls;
   const { reasoning: _reasoning, ...savedTurn } = turn as Record<string, unknown>;
-  return { ...rest, turn: savedTurn };
+  return { ...withCalls, turn: savedTurn };
 }
 
 // Messages carry no shared id. The cloud copy holds this device's messages in

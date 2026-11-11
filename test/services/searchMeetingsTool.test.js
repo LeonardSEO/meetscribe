@@ -140,3 +140,38 @@ test("a note chat may search other meetings only when asked", async () => {
   const prompt = getAgentSystemPrompt(["search_meetings"], { openNote: "NOTE BODY" });
   assert.match(prompt, /search_meetings only when the user asks/);
 });
+
+test("refs continue across the searches of one turn", async () => {
+  const { searchMeetingsTool } = await loadTool();
+  const { createToolExecutionScope } = await import("../../src/components/chat/toolExecutionScope.ts");
+  installApi([row(), row({ passageId: 2 })]);
+  const scope = createToolExecutionScope();
+  const ctx = (id) => scope.createContext({ messageId: "m", toolCallId: id });
+  const first = await searchMeetingsTool.execute({ query: "a" }, ctx("c1"));
+  const second = await searchMeetingsTool.execute({ query: "b" }, ctx("c2"));
+  assert.deepEqual(first.data.map((d) => d.ref), [1, 2]);
+  assert.deepEqual(second.data.map((d) => d.ref), [3, 4]);
+  // Another turn starts again at 1.
+  const other = await searchMeetingsTool.execute(
+    { query: "c" },
+    createToolExecutionScope().createContext({ messageId: "m2", toolCallId: "c3" })
+  );
+  assert.equal(other.data[0].ref, 1);
+});
+
+test("cloud sync never carries meeting passages", async () => {
+  const { conversationMessageMetadata } = await import("../../src/services/SyncService.ts");
+  const metadata = JSON.stringify({
+    turn: { status: "complete", startedAt: 1, reasoning: "r" },
+    toolCalls: [
+      { id: "1", name: "search_meetings", status: "completed", metadata: [{ ref: 1, text: "SECRET PASSAGE" }] },
+      { id: "2", name: "search_notes", status: "completed", metadata: [{ id: 3 }] },
+    ],
+  });
+  const out = conversationMessageMetadata(metadata);
+  assert.ok(!JSON.stringify(out).includes("SECRET PASSAGE"));
+  assert.equal(out.toolCalls[0].name, "search_meetings");
+  assert.deepEqual(out.toolCalls[1].metadata, [{ id: 3 }]);
+  assert.equal(out.turn.reasoning, undefined);
+  assert.equal(conversationMessageMetadata(null), null);
+});

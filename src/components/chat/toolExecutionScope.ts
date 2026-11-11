@@ -60,6 +60,12 @@ export function createToolExecutionScope(handlers: ToolExecutionHandlers = {}): 
     turnSlots.set(key, used + 1);
     return true;
   };
+  const sequences = new Map<string, number>();
+  const reserveSequence = (key: string, count: number): number => {
+    const before = sequences.get(key) ?? 0;
+    sequences.set(key, before + count);
+    return before;
+  };
   const releaseTurnSlot = (key: string): void => {
     const used = turnSlots.get(key) ?? 0;
     if (used > 0) turnSlots.set(key, used - 1);
@@ -76,6 +82,7 @@ export function createToolExecutionScope(handlers: ToolExecutionHandlers = {}): 
       onApprovalRequested: notify(handlers.onApprovalRequested),
       claimTurnSlot,
       releaseTurnSlot,
+      reserveSequence,
       onInteraction: (record) => interaction({ toolCallId, record }),
       attachImage: notify(handlers.onImageAttached),
       claimAction: (actionKey) => {

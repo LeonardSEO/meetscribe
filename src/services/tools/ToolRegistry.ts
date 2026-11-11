@@ -32,6 +32,11 @@ export interface ToolExecutionContext {
    * writes). Synchronous, so tool calls running in parallel can't overshoot.
    */
   claimTurnSlot: (key: string, limit: number) => boolean;
+  /**
+   * Reserves `count` consecutive numbers under `key` for this turn and returns
+   * how many were reserved before, so numbers stay unique across the turn's calls.
+   */
+  reserveSequence: (key: string, count: number) => number;
   /** Gives back a claimed use of `key` whose action never happened. */
   releaseTurnSlot: (key: string) => void;
   /** Tells the chat this call now waits on the user (pending), or no longer does (settled). */

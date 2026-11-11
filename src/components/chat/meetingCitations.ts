@@ -32,28 +32,34 @@ function asSource(raw: unknown): MeetingSource | null {
 }
 
 /**
- * The sources under a reply: the passages its latest meeting search returned
- * (a later search renumbers from 1, so the answer cites the last one). They
- * come from the saved tool call, so they survive reopening the conversation.
+ * The sources under a reply: the passages of all its meeting searches, each
+ * keyed by its number, which is unique across the reply's searches. A number
+ * that two passages share (a saved reply from before numbers were shared, or
+ * a malformed one) is ambiguous and has no source, so its citation stays plain.
+ * They come from the saved tool calls, so they survive reopening the conversation.
  */
 export function extractMeetingSources(toolCalls: ToolCallInfo[] | undefined): MeetingSource[] {
   if (!toolCalls) return [];
-  let latest: unknown[] | null = null;
+  const byRef = new Map<number, MeetingSource>();
+  const ambiguous = new Set<number>();
   for (const call of toolCalls) {
-    if (call.name === "search_meetings" && call.status === "completed" && Array.isArray(call.metadata)) {
-      latest = call.metadata;
+    if (call.name !== "search_meetings" || call.status !== "completed") continue;
+    if (!Array.isArray(call.metadata)) continue;
+    const ownRefs = new Set<number>();
+    let taken = 0;
+    for (const raw of call.metadata) {
+      if (taken >= MAX_MEETING_SOURCES) break;
+      const source = asSource(raw);
+      if (!source) continue;
+      taken++;
+      if (ownRefs.has(source.ref) || byRef.has(source.ref)) ambiguous.add(source.ref);
+      ownRefs.add(source.ref);
+      byRef.set(source.ref, source);
     }
   }
-  const seen = new Set<number>();
-  const sources: MeetingSource[] = [];
-  for (const raw of latest ?? []) {
-    const source = asSource(raw);
-    if (!source || seen.has(source.ref)) continue;
-    seen.add(source.ref);
-    sources.push(source);
-    if (sources.length >= MAX_MEETING_SOURCES) break;
-  }
-  return sources;
+  return [...byRef.values()]
+    .filter((source) => !ambiguous.has(source.ref))
+    .sort((a, b) => a.ref - b.ref);
 }
 
 // Code is left alone; the capture group of the split keeps the code spans in order.

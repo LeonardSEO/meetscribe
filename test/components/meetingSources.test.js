@@ -43,12 +43,11 @@ test("parseCitations handles groups and leaves code and existing links alone", a
   assert.equal(parseCitations("nothing [1]", []), "nothing [1]");
 });
 
-test("extractMeetingSources reads the latest completed search, capped and validated", async () => {
+test("extractMeetingSources collects all completed searches, capped per search and validated", async () => {
   const { extractMeetingSources } = await load();
   const many = Array.from({ length: 12 }, (_, i) => item(i + 1, { text: "y".repeat(1000) }));
   const sources = extractMeetingSources([
-    call([item(1)]),
-    call(many, { id: "c2" }),
+    call(many),
     call([item(1)], { id: "c3", status: "error" }),
     { id: "c4", name: "search_notes", arguments: "{}", status: "completed", metadata: [item(1)] },
   ]);
@@ -60,6 +59,34 @@ test("extractMeetingSources reads the latest completed search, capped and valida
     extractMeetingSources([call([{ ref: "x" }, null, item(2, { noteId: -4 })])]),
     []
   );
+});
+
+test("two searches in one reply map each citation to its own call's source", async () => {
+  const { extractMeetingSources, parseCitations } = await load();
+  const sources = extractMeetingSources([
+    call([item(1, { title: "First" }), item(2, { title: "Second" })], { id: "a" }),
+    call([item(3, { title: "Third", speaker: "Bram" })], { id: "b" }),
+  ]);
+  assert.deepEqual(sources.map((s) => [s.ref, s.title]), [[1, "First"], [2, "Second"], [3, "Third"]]);
+  assert.equal(sources[2].speaker, "Bram");
+  assert.match(parseCitations("A [1] B [3]", sources), /\[\[3\]\]\(#meeting-source-3\)/);
+});
+
+test("a ref shared by two passages, or with no source, stays plain", async () => {
+  const { extractMeetingSources, parseCitations } = await load();
+  // A saved reply from before refs were shared: both calls number from 1.
+  const sources = extractMeetingSources([
+    call([item(1, { title: "Old A" }), item(2, { title: "Only" })], { id: "a" }),
+    call([item(1, { title: "Old B" })], { id: "b" }),
+  ]);
+  assert.deepEqual(sources.map((s) => s.ref), [2]);
+  const out = parseCitations("x [1] y [2] z [9]", sources);
+  assert.ok(!out.includes("#meeting-source-1") && !out.includes("#meeting-source-9"));
+  assert.ok(out.includes("#meeting-source-2"));
+  // One call repeating a ref is ambiguous too.
+  assert.deepEqual(extractMeetingSources([call([item(1), item(1)])]), []);
+  // A single call numbered from 1, as saved before this change, still works.
+  assert.equal(extractMeetingSources([call([item(1), item(2)])]).length, 2);
 });
 
 test("sources survive saving and reopening the conversation", async () => {
