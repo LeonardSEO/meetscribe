@@ -607,6 +607,9 @@ test("a run hands Undo the summary fields it overwrote, and the title when it re
     enhancement_prompt: STORED_NOTE.enhancement_prompt,
     enhancement_template_id: STORED_NOTE.enhancement_template_id,
     enhanced_at_content_hash: STORED_NOTE.enhanced_at_content_hash,
+    // Undo also puts back the stored minutes, which this note never had.
+    minutes_json: null,
+    minutes_model: null,
   };
   const shorten = {
     id: 7,

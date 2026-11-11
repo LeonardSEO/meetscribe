@@ -26,6 +26,7 @@ test("fresh settings route every scope to local Orukeet", async () => {
   assert.equal(LOCAL_ONLY_DEFAULTS.useCleanupModel, false);
   assert.equal(LOCAL_ONLY_DEFAULTS.cleanupMode, "enterprise");
   assert.equal(LOCAL_ONLY_DEFAULTS.noteFormattingMode, "enterprise");
+  assert.equal(LOCAL_ONLY_DEFAULTS.defaultSummaryTemplateId, "notes.actions.builtin.minutes");
 });
 
 test("localOnlyDefault replaces only the fallback in local-only mode", async () => {

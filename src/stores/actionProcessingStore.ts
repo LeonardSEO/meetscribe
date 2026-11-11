@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { NOTE_OUTPUT_MAX_TOKENS, NOTHING_TO_SUMMARIZE } from "../helpers/builtinActions";
+import {
+  NOTE_OUTPUT_MAX_TOKENS,
+  NOTHING_TO_SUMMARIZE,
+  isMinutesTemplate,
+} from "../helpers/builtinActions";
+import { parseMinutes, renderMinutesMarkdown } from "../utils/meetingMinutes";
 import { stripThinkingTags } from "../helpers/stripThinking";
 import { compileSummaryActionPrompt, compileTemplatePrompt } from "../helpers/templatePrompts";
 import reasoningService from "../services/ReasoningService";
@@ -88,7 +93,12 @@ export interface NoteMaterial {
 /** What a run overwrote, so Undo can put it back. */
 export type NoteSummarySnapshot = Pick<
   NoteItem,
-  "enhanced_content" | "enhancement_prompt" | "enhancement_template_id" | "enhanced_at_content_hash"
+  | "enhanced_content"
+  | "enhancement_prompt"
+  | "enhancement_template_id"
+  | "enhanced_at_content_hash"
+  | "minutes_json"
+  | "minutes_model"
 > & { title?: string; clear_fields?: Array<"enhanced_content"> };
 
 export interface ActionAppliedEvent {
@@ -267,6 +277,16 @@ const nothingToSummarizeError = () =>
     messageKey: "notes.actions.errors.nothingToSummarize",
     notice: true,
   });
+
+const minutesInvalidError = () =>
+  Object.assign(new Error("The model did not return valid minutes"), {
+    messageKey: "notes.actions.errors.minutesInvalid",
+  });
+
+// Appended to the system prompt of the one corrective request, so it also reaches
+// the merge step of a recording that is split into parts.
+const minutesRetryNote = (reason: string) =>
+  `\n\nYour previous answer was rejected: ${reason}. Answer again with only the JSON object described above.`;
 
 /**
  * Whether the reply is the marker itself, as models wrap it: in a fence or
@@ -629,24 +649,39 @@ export function runBackgroundAction(
         requestId: runId,
         ...providerOverrides,
       };
-      const enhanced = await runEnhancement({
-        noteId,
-        noteContent,
-        modelId,
-        systemPrompt,
-        requestConfig,
-        options,
-        isCancelled,
-      });
-
+      const enhance = (run: { systemPrompt: string; requestConfig: ReasoningConfig }) =>
+        runEnhancement({ noteId, noteContent, modelId, options, isCancelled, ...run });
       // IPC-bridged providers relay whatever the model returned; a blank
       // result must not be saved as the enhanced note.
-      if (!enhanced.trim()) {
-        throw emptyReplyError();
-      }
-      // Only greetings or filler: say so rather than save that as the summary.
-      if (isNothingToSummarizeReply(enhanced)) {
-        throw nothingToSummarizeError();
+      const checkedReply = (reply: string) => {
+        if (!reply.trim()) throw emptyReplyError();
+        // Only greetings or filler: say so rather than save that as the summary.
+        if (isNothingToSummarizeReply(reply)) throw nothingToSummarizeError();
+        return reply;
+      };
+
+      // The minutes template asks for JSON: validate it, and give a model that
+      // answered with prose one more request that says what was wrong.
+      const structured = !editsSummary && isMinutesTemplate(action);
+      let enhanced = checkedReply(await enhance({ systemPrompt, requestConfig }));
+      let minutesJson: string | null = null;
+      if (structured) {
+        let parsed = parseMinutes(stripThinkingTags(enhanced));
+        if (!("minutes" in parsed)) {
+          const reason = parsed.reason;
+          if (isCancelled()) throw new Error("cancelled");
+          const retryPrompt = systemPrompt + minutesRetryNote(reason);
+          enhanced = checkedReply(
+            await enhance({
+              systemPrompt: retryPrompt,
+              requestConfig: { ...requestConfig, systemPrompt: retryPrompt },
+            })
+          );
+          parsed = parseMinutes(stripThinkingTags(enhanced));
+          if (!("minutes" in parsed)) throw minutesInvalidError();
+        }
+        minutesJson = JSON.stringify(parsed.minutes);
+        enhanced = renderMinutesMarkdown(parsed.minutes);
       }
 
       if (isCancelled()) return;
@@ -672,12 +707,15 @@ export function runBackgroundAction(
       // A summary action keeps the template the summary was built from. Editing
       // a summary also keeps its material hash; writing one from the material
       // records that material, so later edits to it mark the summary stale.
-      const updates: Record<string, string> = !editsSummary
+      const updates: Record<string, string | null> = !editsSummary
         ? {
             enhanced_content: enhancedContent,
             enhancement_prompt: instructions,
             enhancement_template_id: action.client_id,
             enhanced_at_content_hash: contentHash,
+            // Another template's summary no longer matches the stored minutes.
+            minutes_json: minutesJson,
+            minutes_model: structured ? modelId : null,
           }
         : options.fromSummary
           ? { enhanced_content: enhancedContent }
@@ -694,6 +732,8 @@ export function runBackgroundAction(
           enhancement_prompt: before?.enhancement_prompt ?? null,
           enhancement_template_id: before?.enhancement_template_id ?? null,
           enhanced_at_content_hash: before?.enhanced_at_content_hash ?? null,
+          minutes_json: before?.minutes_json ?? null,
+          minutes_model: before?.minutes_model ?? null,
           ...(title && before && { title: before.title }),
           // Undoing a first summary is a deliberate clear, so it syncs to every
           // device; a bare blank stays local and the summary would come back.

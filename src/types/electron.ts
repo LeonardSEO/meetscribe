@@ -460,6 +460,10 @@ export interface NoteItem {
   /** The client_id of the template that produced enhanced_content. */
   enhancement_template_id: string | null;
   enhanced_at_content_hash: string | null;
+  /** The validated structured minutes (JSON) the summary was rendered from; local only. */
+  minutes_json?: string | null;
+  /** The model deployment that wrote minutes_json; local only. */
+  minutes_model?: string | null;
   note_type: "personal" | "meeting" | "upload";
   source_file: string | null;
   audio_duration_seconds: number | null;
@@ -2035,6 +2039,8 @@ declare global {
           enhancement_prompt?: string | null;
           enhancement_template_id?: string | null;
           enhanced_at_content_hash?: string | null;
+          minutes_json?: string | null;
+          minutes_model?: string | null;
           folder_id?: number | null;
           space_id?: number;
           transcript?: string | null;

@@ -178,3 +178,39 @@ test("summary starting with markdown markers does not become a heading or list",
   const md = minutesModule.renderMinutesMarkdown({ ...valid, summary: "# Title" });
   assert.ok(!md.split("\n").some((l) => l === "# Title"));
 });
+
+test("language null is treated as English", () => {
+  const r = minutesModule.parseMinutes(JSON.stringify({ ...valid, language: null }));
+  assert.equal(r.ok, true);
+  assert.equal(r.minutes.language, "en");
+});
+
+test("rendered text cannot open a fence, rule, table or checkbox", () => {
+  const hostile = ["```js", "~~~", "---", "***", "===", "| a | b |", "[ ] sneaky", "[x] done"];
+  for (const text of hostile) {
+    const md = minutesModule.renderMinutesMarkdown({
+      language: "en",
+      summary: text,
+      topics: [{ title: "T", points: [text] }],
+      decisions: [text],
+      actionItems: [],
+    });
+    const lines = md.split("\n");
+    assert.equal(lines[1].startsWith("\\"), true, `summary ${text}`);
+    const bullets = lines.filter((line) => line.startsWith("- "));
+    assert.equal(bullets.length, 2, text);
+    for (const bullet of bullets) {
+      assert.equal(bullet.startsWith("- \\"), true, `${text} -> ${bullet}`);
+    }
+  }
+});
+
+test("ordinary text is not escaped", () => {
+  const md = minutesModule.renderMinutesMarkdown({
+    ...valid,
+    summary: "Budget | scope is fine",
+    decisions: ["Use [ticket] 12"],
+  });
+  assert.match(md, /\nBudget \| scope is fine\n/);
+  assert.match(md, /- Use \[ticket\] 12/);
+});

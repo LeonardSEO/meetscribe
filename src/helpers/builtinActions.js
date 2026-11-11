@@ -8,6 +8,11 @@
 export const GENERATE_NOTES_KEY = "notes.actions.builtin.generateNotes";
 export const DETAILED_NOTES_KEY = "notes.actions.builtin.detailedNotes";
 export const FOLLOW_UP_EMAIL_KEY = "notes.actions.builtin.followUpEmail";
+export const MINUTES_KEY = "notes.actions.builtin.minutes";
+
+/** Whether an action row is the built-in minutes template (fixed by its identity, never its name). */
+export const isMinutesTemplate = (action) =>
+  action?.translation_key === MINUTES_KEY || action?.translationKey === MINUTES_KEY;
 
 // Caps on a template's or action's fields, enforced when a row is saved. Keep
 // them in step with the API's schemas once custom rows sync.
@@ -464,6 +469,25 @@ export const CHAT_ACTION_ON_MATERIAL_PREAMBLE = `The note I'm viewing has no AI 
  */
 export const NOTE_OUTPUT_MAX_TOKENS = 4096;
 
+// The minutes template's context. The JSON contract that follows it is fixed in
+// MINUTES_JSON_CONTRACT, so editing this text can never break the validation.
+const MINUTES_PROMPT = `Write structured minutes of the meeting. Answer in the language the meeting was held in. Include only what was actually said or written in the material: never add topics, decisions, owners or deadlines that are not there. Keep each point short and specific, and keep names, numbers and dates exactly as given.`;
+
+export const MINUTES_JSON_CONTRACT = `Return only the JSON object, with no text before or after it, no Markdown and no code fence. It must match this model:
+{
+  "language": string,            // the language of the meeting as a two-letter code, such as "nl" or "en"
+  "summary": string,             // two to four sentences
+  "topics": [ { "title": string, "points": [string] } ],
+  "decisions": [string],         // decisions that were made; an empty list when there were none
+  "actionItems": [ { "task": string, "owner": string | null, "deadline": string | null } ]
+}
+Rules:
+- Write every text value in the language of the meeting.
+- Use null for an action item's owner and deadline when they were not mentioned. Never guess an owner or a deadline.
+- Use an empty list for topics, decisions or actionItems when the material has none.
+- Every string is a single line of plain text.
+- For material with no substantive discussion or notes (for example, only greetings, filler, or recording checks), reply with exactly ${NOTHING_TO_SUMMARIZE} and nothing else, instead of the object.`;
+
 // Built-ins added once templates had sections; none has an older default to upgrade.
 const builtinTemplate = ({ key, name, description, prompt, sections, sortOrder }) => ({
   translationKey: `notes.actions.builtin.${key}`,
@@ -638,6 +662,18 @@ export const BUILTIN_ACTIONS = [
     sections: SALES_CALL_SECTIONS,
     sortOrder: 11,
   }),
+  {
+    ...builtinTemplate({
+      key: "minutes",
+      name: "Meeting minutes",
+      description: "Summary, topics, decisions and action items, checked before they are saved",
+      prompt: MINUTES_PROMPT,
+      sections: null,
+      sortOrder: 13,
+    }),
+    // The model answers with JSON that is validated and rendered into the summary.
+    structured: true,
+  },
   builtinTemplate({
     key: "userInterview",
     name: "User interview",

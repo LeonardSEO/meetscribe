@@ -26,7 +26,10 @@ const optionalText = z
 const textList = z.array(z.string()).transform((items) => items.map(oneLine).filter(Boolean));
 
 const minutesSchema = z.object({
-  language: z.string().default("en").transform(oneLine),
+  language: z
+    .string()
+    .nullish()
+    .transform((value) => oneLine(value ?? "") || "en"),
   summary: text,
   topics: z
     .array(z.object({ title: text, points: textList }))
@@ -132,9 +135,12 @@ function headingsFor(language: string) {
   return language.trim().toLowerCase().split(/[-_]/)[0] === "nl" ? HEADINGS.nl : HEADINGS.en;
 }
 
-// A summary paragraph that starts with a block marker would turn into a heading,
-// quote or list; a leading backslash keeps it literal text.
-const literalStart = (value: string) => value.replace(/^(#|[-+*>]|\d+[.)])(?=\s|#|$)/, "\\$1");
+// Text that starts with a block marker would turn into a heading, quote, list,
+// fence, rule, table or checkbox; a leading backslash keeps it literal text.
+const literalStart = (value: string) =>
+  value
+    .replace(/^(#|[-+*>]|\d+[.)])(?=\s|#|$)/, "\\$1")
+    .replace(/^(?=```|~~~|-{3}|\*{3}|_{3}|={3}|\||\[[ xX]\])/, "\\");
 
 // The action line shape must stay compatible with tagActionItemOwners
 // (`- [ ] Task — Owner`): the deadline sits in the task part, the owner is last.
@@ -153,14 +159,14 @@ export function renderMinutesMarkdown(minutes: MeetingMinutes): string {
     .filter((topic) => topic.title);
   if (topics.length) {
     const body = topics
-      .map((t) => [`### ${t.title}`, ...t.points.map((p) => `- ${p}`)].join("\n"))
+      .map((t) => [`### ${t.title}`, ...t.points.map((p) => `- ${literalStart(p)}`)].join("\n"))
       .join("\n\n");
     sections.push(`## ${h.topics}\n${body}`);
   }
 
   const decisions = minutes.decisions.map(line).filter(Boolean);
   if (decisions.length) {
-    sections.push(`## ${h.decisions}\n${decisions.map((d) => `- ${d}`).join("\n")}`);
+    sections.push(`## ${h.decisions}\n${decisions.map((d) => `- ${literalStart(d)}`).join("\n")}`);
   }
 
   const actions = minutes.actionItems

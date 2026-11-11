@@ -8,6 +8,8 @@
 
 import {
   BASE_SYSTEM_PROMPT,
+  MINUTES_JSON_CONTRACT,
+  isMinutesTemplate,
   CHAT_ACTION_ON_MATERIAL_PREAMBLE,
   CHAT_ACTION_ON_SUMMARY_PREAMBLE,
   MEETING_INPUT_PREAMBLE,
@@ -68,6 +70,9 @@ export function compileTemplatePrompt(
 ) {
   const preamble =
     SOURCE_FIDELITY_RULE + "\n\n" + inputPreamble({ isMeetingNote, hasPlainTranscript });
+  if (isMinutesTemplate(template)) {
+    return compileMinutesPrompt(template, preamble);
+  }
   const sections = normalizeSections(template.sections);
   if (sections.length > 0) {
     const context = (template.prompt ?? "").trim();
@@ -96,6 +101,16 @@ export function compileTemplatePrompt(
     flatSystemPrompt({ isMeetingNote, hasPlainTranscript }) +
     template.prompt
   );
+}
+
+/**
+ * The minutes template asks for one JSON object. The template's own text is the
+ * guidance; the contract after it is fixed so an edited template still parses.
+ */
+export function compileMinutesPrompt(template, preamble) {
+  return [preamble.trimEnd(), (template.prompt ?? "").trim(), MINUTES_JSON_CONTRACT]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function compileSummaryActionPrompt(

@@ -1,6 +1,7 @@
 // Settings defaults for the local-only meeting assistant: every scope runs the
 // checked local Orukeet model and nothing falls back to a cloud engine.
 // ESM, shared by the renderer and main (require(esm)).
+import { MINUTES_KEY } from "../helpers/builtinActions.js";
 import { isLocalOnly } from "./localOnly.js";
 
 export const DEFAULT_LOCAL_SPEECH_MODEL = "orukeet-v0.1.0";
@@ -24,6 +25,8 @@ export const LOCAL_ONLY_DEFAULTS = Object.freeze({
   useCleanupModel: false,
   cleanupMode: "enterprise",
   noteFormattingMode: "enterprise",
+  // A meeting note is summarised as structured minutes unless the user picks another template.
+  defaultSummaryTemplateId: MINUTES_KEY,
 });
 
 // The fallback for a setting nothing has stored yet. A stored value always wins

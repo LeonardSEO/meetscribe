@@ -2199,7 +2199,10 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
 
   voiceAgentScreenContext: readBoolean("voiceAgentScreenContext", false),
   emailDraftTarget: normalizeEmailDraftTarget(readString("emailDraftTarget", "auto")),
-  defaultSummaryTemplateId: readString("defaultSummaryTemplateId", GENERATE_NOTES_KEY),
+  defaultSummaryTemplateId: readString(
+    "defaultSummaryTemplateId",
+    localOnlyDefault("defaultSummaryTemplateId", GENERATE_NOTES_KEY)
+  ),
   toneStyleEnabled: readBoolean("toneStyleEnabled", false),
   toneStyles: normalizeToneStyles(readString("toneStyles", "")),
   useDictationAgentVisionModel: readBoolean("useDictationAgentVisionModel", false),

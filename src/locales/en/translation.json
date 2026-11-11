@@ -4413,6 +4413,10 @@
           "name": "Sales call",
           "description": "Needs, objections, budget, and the decision process"
         },
+        "minutes": {
+          "name": "Meeting minutes",
+          "description": "Summary, topics, decisions and action items, checked before they are saved"
+        },
         "userInterview": {
           "name": "User interview",
           "description": "Workflow, pain points, reactions, and quotes from a participant"
@@ -4446,6 +4450,7 @@
         "outputSpentThinking": "The AI model spent its whole output limit thinking and wrote no notes, so the note was left as it was. Turn on \"Disable thinking output\" or choose a model that thinks less in Settings → Language Model → Note Formatting, then try again.",
         "outputSpentThinkingDisabled": "The AI model spent its whole output limit thinking and wrote no notes, even with \"Disable thinking output\" on, so the note was left as it was. Choose another model in Settings → Language Model → Note Formatting.",
         "outputSpentThinkingOtherModel": "The AI model spent its whole output limit thinking and wrote no notes, so the note was left as it was. Choose a model that thinks less in Settings → Language Model → Note Formatting.",
+        "minutesInvalid": "The model's answer could not be read as meeting minutes, even after a second try, so the note was left as it was. Try again or choose another model in Settings → Language Model.",
         "nothingToSummarize": "There's nothing to summarize in this note yet, so the AI summary was left as it was.",
         "saveFailed": "Couldn't save. Check that nothing is too long and try again."
       },

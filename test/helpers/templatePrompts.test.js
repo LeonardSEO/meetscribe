@@ -331,3 +331,25 @@ test("TL;DR is a standalone chat reply and lengthening keeps supported facts", a
   assert.match(longer.prompt, /do not pad with repetition/);
   assert.match(longer.prompt, /keep every name, number, date, decision, and action item/);
 });
+
+test("the minutes template compiles to guidance plus the fixed JSON contract", async () => {
+  const { BUILTIN_ACTIONS, MINUTES_KEY, SOURCE_FIDELITY_RULE, compileTemplatePrompt } =
+    await load();
+  const builtin = BUILTIN_ACTIONS.find((action) => action.translationKey === MINUTES_KEY);
+  assert.equal(builtin.structured, true);
+  const row = seededRow(builtin);
+  for (const options of [{ isMeetingNote: true }, { hasPlainTranscript: true }, {}]) {
+    const prompt = compileTemplatePrompt(row, options);
+    assert.ok(prompt.startsWith(SOURCE_FIDELITY_RULE));
+    assert.match(prompt, /"actionItems"/);
+    assert.match(
+      prompt,
+      /null for an action item's owner and deadline when they were not mentioned/
+    );
+    assert.match(prompt, /Answer in the language the meeting was held in/);
+  }
+  // An edited template keeps the contract, so validation cannot be edited away.
+  const edited = compileTemplatePrompt({ ...row, prompt: "Be brief." }, {});
+  assert.match(edited, /Be brief\./);
+  assert.match(edited, /"actionItems"/);
+});

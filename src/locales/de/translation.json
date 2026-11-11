@@ -4413,6 +4413,10 @@
           "name": "Verkaufsgespräch",
           "description": "Bedarf, Einwände, Budget und Entscheidungsprozess"
         },
+        "minutes": {
+          "name": "Besprechungsprotokoll",
+          "description": "Zusammenfassung, Themen, Beschlüsse und Aufgaben, vor dem Speichern geprüft"
+        },
         "userInterview": {
           "name": "Nutzerinterview",
           "description": "Arbeitsablauf, Probleme, Reaktionen und Zitate einer teilnehmenden Person"
@@ -4446,6 +4450,7 @@
         "outputSpentThinking": "Das KI-Modell hat sein gesamtes Ausgabelimit mit Nachdenken verbraucht und keine Notizen geschrieben. Die Notiz bleibt daher unverändert. Aktivieren Sie unter Einstellungen → Sprachmodell → Notizformatierung „Denkausgabe deaktivieren“ oder wählen Sie ein Modell, das weniger nachdenkt, und versuchen Sie es erneut.",
         "outputSpentThinkingDisabled": "Das KI-Modell hat sein gesamtes Ausgabelimit mit Nachdenken verbraucht und keine Notizen geschrieben, obwohl „Denkausgabe deaktivieren“ aktiv ist. Die Notiz bleibt daher unverändert. Wählen Sie unter Einstellungen → Sprachmodell → Notizformatierung ein anderes Modell.",
         "outputSpentThinkingOtherModel": "Das KI-Modell hat sein gesamtes Ausgabelimit mit Nachdenken verbraucht und keine Notizen geschrieben. Die Notiz bleibt daher unverändert. Wählen Sie unter Einstellungen → Sprachmodell → Notizformatierung ein Modell, das weniger nachdenkt.",
+        "minutesInvalid": "Die Antwort des Modells ließ sich auch nach einem zweiten Versuch nicht als Besprechungsprotokoll lesen, daher blieb die Notiz unverändert. Versuche es erneut oder wähle in den Einstellungen → Sprachmodell ein anderes Modell.",
         "nothingToSummarize": "Diese Notiz enthält noch nichts zum Zusammenfassen, daher bleibt die KI-Zusammenfassung unverändert.",
         "saveFailed": "Speichern nicht möglich. Prüfen Sie, dass nichts zu lang ist, und versuchen Sie es erneut."
       },

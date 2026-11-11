@@ -4420,6 +4420,10 @@
           "name": "Appel commercial",
           "description": "Besoins, objections, budget et processus de décision"
         },
+        "minutes": {
+          "name": "Compte rendu de réunion",
+          "description": "Résumé, sujets, décisions et actions, vérifiés avant l'enregistrement"
+        },
         "userInterview": {
           "name": "Entretien utilisateur",
           "description": "Méthode de travail, difficultés, réactions et citations d'un participant"
@@ -4453,6 +4457,7 @@
         "outputSpentThinking": "Le modèle d'IA a consacré toute sa limite de sortie à la réflexion sans écrire de notes, la note reste donc inchangée. Activez « Désactiver la sortie de raisonnement » ou choisissez un modèle qui réfléchit moins dans Réglages → Modèle de langage → Mise en forme des notes, puis réessayez.",
         "outputSpentThinkingDisabled": "Le modèle d'IA a consacré toute sa limite de sortie à la réflexion sans écrire de notes, même avec « Désactiver la sortie de raisonnement » activé, la note reste donc inchangée. Choisissez un autre modèle dans Réglages → Modèle de langage → Mise en forme des notes.",
         "outputSpentThinkingOtherModel": "Le modèle d'IA a consacré toute sa limite de sortie à la réflexion sans écrire de notes, la note reste donc inchangée. Choisissez un modèle qui réfléchit moins dans Réglages → Modèle de langage → Mise en forme des notes.",
+        "minutesInvalid": "La réponse du modèle n'a pas pu être lue comme un compte rendu de réunion, même après une seconde tentative ; la note a donc été laissée telle quelle. Réessayez ou choisissez un autre modèle dans Paramètres → Modèle de langage.",
         "nothingToSummarize": "Cette note n'a encore rien à résumer, donc le résumé IA est resté tel quel.",
         "saveFailed": "Enregistrement impossible. Vérifiez que rien n'est trop long, puis réessayez."
       },

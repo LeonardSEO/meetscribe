@@ -3852,6 +3852,10 @@
           "name": "Chamada de vendas",
           "description": "Necessidades, objeções, orçamento e processo de decisão"
         },
+        "minutes": {
+          "name": "Ata da reunião",
+          "description": "Resumo, tópicos, decisões e ações, verificados antes de serem guardados"
+        },
         "userInterview": {
           "name": "Entrevista com usuário",
           "description": "Fluxo de trabalho, dificuldades, reações e citações de um participante"
@@ -3885,6 +3889,7 @@
         "outputSpentThinking": "O modelo de IA gastou todo o limite de saída raciocinando e não escreveu notas, então a nota ficou como estava. Ative \"Desativar saída de raciocínio\" ou escolha um modelo que raciocine menos em Configurações → Modelo de linguagem → Formatação de notas e tente novamente.",
         "outputSpentThinkingDisabled": "O modelo de IA gastou todo o limite de saída raciocinando e não escreveu notas, mesmo com \"Desativar saída de raciocínio\" ativado, então a nota ficou como estava. Escolha outro modelo em Configurações → Modelo de linguagem → Formatação de notas.",
         "outputSpentThinkingOtherModel": "O modelo de IA gastou todo o limite de saída raciocinando e não escreveu notas, então a nota ficou como estava. Escolha um modelo que raciocine menos em Configurações → Modelo de linguagem → Formatação de notas.",
+        "minutesInvalid": "Não foi possível ler a resposta do modelo como ata da reunião, nem após uma segunda tentativa, por isso a nota ficou como estava. Tente novamente ou escolha outro modelo em Definições → Modelo de linguagem.",
         "nothingToSummarize": "Esta nota ainda não tem nada para resumir, então o resumo com IA ficou como estava.",
         "saveFailed": "Não foi possível salvar. Verifique se nada está longo demais e tente novamente."
       },

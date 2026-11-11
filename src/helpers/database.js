@@ -511,6 +511,15 @@ class DatabaseManager {
       } catch (err) {
         if (!err.message.includes("duplicate column")) throw err;
       }
+      // Structured minutes and the deployment that wrote them. Local data: they are
+      // not note text fields, so they carry no sync operation or edit generation.
+      for (const definition of ["minutes_json TEXT", "minutes_model TEXT"]) {
+        try {
+          this.db.exec(`ALTER TABLE notes ADD COLUMN ${definition}`);
+        } catch (err) {
+          if (!err.message.includes("duplicate column")) throw err;
+        }
+      }
       let addedSyncOperations = false;
       for (const definition of [
         "cloud_revision INTEGER",
@@ -4409,6 +4418,8 @@ class DatabaseManager {
         "enhancement_prompt",
         "enhancement_template_id",
         "enhanced_at_content_hash",
+        "minutes_json",
+        "minutes_model",
         "folder_id",
         "space_id",
         "transcript",
