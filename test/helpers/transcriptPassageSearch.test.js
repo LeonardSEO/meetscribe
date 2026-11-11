@@ -228,6 +228,43 @@ test("existing notes are queued by the migration and indexed incrementally on se
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM pending_transcript_index").get().n, 0);
 });
 
+// An UPSERT's conflict algorithm overrides OR IGNORE inside the triggers it fires, so a
+// transcript change on a note that is already queued (a cloud pull) must not fail.
+const upsertTranscript = (sqlite, id, transcript) =>
+  sqlite
+    .prepare(
+      "INSERT INTO notes (id, title, content, transcript, space_id) VALUES (?, 't', '', ?, 1) " +
+        "ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript"
+    )
+    .run(id, transcript);
+
+test("a transcript change by an upsert on an already queued note keeps one journal row", (t) => {
+  const sqlite = new DatabaseSync(":memory:");
+  const m = createManager(t, { reuse: sqlite });
+  const id = addNote(m, { transcript: segments(["first", "speaker_0", 1]) });
+  upsertTranscript(sqlite, id, segments(["omega upsert", "speaker_0", 1]));
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM pending_transcript_index").get().n, 1);
+  assert.equal(m.searchTranscriptPassages({ query: "omega" }).length, 1);
+});
+
+test("triggers from an earlier build are replaced when the index opens", (t) => {
+  const sqlite = new DatabaseSync(":memory:");
+  const m = createManager(t, { reuse: sqlite });
+  sqlite.exec(`
+    DROP TRIGGER notes_transcript_index_update;
+    CREATE TRIGGER notes_transcript_index_update
+    AFTER UPDATE OF transcript, deleted_at ON notes
+    WHEN OLD.transcript IS NOT NEW.transcript OR OLD.deleted_at IS NOT NEW.deleted_at
+    BEGIN
+      INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.id);
+    END;
+  `);
+  const id = addNote(m, { transcript: segments(["first", "speaker_0", 1]) });
+  m._initTranscriptPassageIndex();
+  upsertTranscript(sqlite, id, segments(["sigma upsert", "speaker_0", 1]));
+  assert.equal(m.searchTranscriptPassages({ query: "sigma" }).length, 1);
+});
+
 test("notes outside the active account scope are not returned", (t) => {
   const m = createManager(t);
   m.db.exec("INSERT INTO spaces (id, kind) VALUES (2, 'team')");

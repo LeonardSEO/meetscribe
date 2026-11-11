@@ -5369,27 +5369,43 @@ class DatabaseManager {
           VALUES ('delete', old.id, old.text, COALESCE(old.speaker, ''));
         END;
         CREATE TABLE IF NOT EXISTS pending_transcript_index (note_id INTEGER PRIMARY KEY);
-        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_insert AFTER INSERT ON notes BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.id);
+        -- An UPSERT's conflict algorithm (a cloud pull) overrides OR IGNORE inside the
+        -- triggers it fires, so the triggers use ON CONFLICT DO NOTHING. They are dropped and
+        -- recreated on every open so databases from earlier builds get this definition too.
+        DROP TRIGGER IF EXISTS notes_transcript_index_insert;
+        DROP TRIGGER IF EXISTS notes_transcript_index_update;
+        DROP TRIGGER IF EXISTS notes_transcript_index_delete;
+        DROP TRIGGER IF EXISTS speaker_mappings_transcript_index_insert;
+        DROP TRIGGER IF EXISTS speaker_mappings_transcript_index_update;
+        DROP TRIGGER IF EXISTS speaker_mappings_transcript_index_delete;
+        CREATE TRIGGER notes_transcript_index_insert AFTER INSERT ON notes BEGIN
+          INSERT INTO pending_transcript_index (note_id) VALUES (NEW.id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
-        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_update
+        CREATE TRIGGER notes_transcript_index_update
         AFTER UPDATE OF transcript, deleted_at ON notes
         WHEN OLD.transcript IS NOT NEW.transcript OR OLD.deleted_at IS NOT NEW.deleted_at
         BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.id);
+          INSERT INTO pending_transcript_index (note_id) VALUES (NEW.id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
-        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_delete AFTER DELETE ON notes BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.id);
+        CREATE TRIGGER notes_transcript_index_delete AFTER DELETE ON notes BEGIN
+          INSERT INTO pending_transcript_index (note_id) VALUES (OLD.id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
-        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_insert AFTER INSERT ON speaker_mappings BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.note_id);
+        CREATE TRIGGER speaker_mappings_transcript_index_insert AFTER INSERT ON speaker_mappings BEGIN
+          INSERT INTO pending_transcript_index (note_id) VALUES (NEW.note_id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
-        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_update AFTER UPDATE ON speaker_mappings BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.note_id);
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.note_id);
+        CREATE TRIGGER speaker_mappings_transcript_index_update AFTER UPDATE ON speaker_mappings BEGIN
+          INSERT INTO pending_transcript_index (note_id) VALUES (OLD.note_id)
+          ON CONFLICT(note_id) DO NOTHING;
+          INSERT INTO pending_transcript_index (note_id) VALUES (NEW.note_id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
-        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_delete AFTER DELETE ON speaker_mappings BEGIN
-          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.note_id);
+        CREATE TRIGGER speaker_mappings_transcript_index_delete AFTER DELETE ON speaker_mappings BEGIN
+          INSERT INTO pending_transcript_index (note_id) VALUES (OLD.note_id)
+          ON CONFLICT(note_id) DO NOTHING;
         END;
       `);
       if (!journalExists) {
