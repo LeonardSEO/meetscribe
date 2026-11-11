@@ -71,7 +71,10 @@ export function MeetingSources({ sources, focus, onOpenNote }: MeetingSourcesPro
                 {expanded ? (
                   <ChevronDown size={12} className="shrink-0 text-muted-foreground" />
                 ) : (
-                  <ChevronRight size={12} className="shrink-0 text-muted-foreground rtl:rotate-180" />
+                  <ChevronRight
+                    size={12}
+                    className="shrink-0 text-muted-foreground rtl:rotate-180"
+                  />
                 )}
               </button>
               {expanded && (

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Local meeting assistant
+
+- **Account-free, local-only app.** A single switch (`isLocalOnly()`) turns off accounts, sync, teams, billing and every OpenWhispr service, and blocks those hosts. Onboarding asks for no account.
+- **Orukeet is the only speech engine.** The model downloads on first start with a SHA-256 check. A missing or corrupt model gives a clear message and keeps the recording; nothing falls back to a cloud engine.
+- **One AI provider: Azure AI Foundry (OpenAI-compatible).** Every AI scope uses it. Paste any Azure endpoint form and it is normalised to `/openai/v1`; the key is kept in the system keychain.
+- **Structured meeting minutes.** The built-in Minutes template produces summary, decisions, action items and topics as editable data that can be regenerated and exported as Markdown.
+- **Chat over past meetings with sources.** Transcripts are indexed locally in passages; the assistant's `search_meetings` tool answers questions such as what was decided last week and cites numbered, checkable passages. Passages never go to cloud sync.
+- **Not performed yet:** signed installers, the Windows build and the manual acceptance matrix (see `docs/manual-acceptance.md`).
+
 ### Dictionary
 
 - **Import your Dragon vocabulary.** Dictionary → Import → Import from Dragon takes the list Dragon writes from Vocabulary → Export custom word and phrase list (TXT, or the Windows XML) and adds every custom word to your dictionary after a preview of what's new. Words with a spoken form are imported by their written form; words already present are skipped rather than duplicated, and the file's formatting properties are left behind. Words that can't sync (over 100 characters, or garbled by a wrong encoding) are skipped, and an import stops at the dictionary's 5,000-word limit; the preview counts each. (#2190)

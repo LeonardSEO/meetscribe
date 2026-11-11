@@ -9,3 +9,7 @@ Derived from NVIDIA Parakeet TDT 0.6B v3.
 Software
 --------
 This software is based on OpenWhispr (MIT License).
+
+OpenWhispr is copyright its authors and released under the MIT License
+(https://github.com/OpenWhispr/openwhispr). The MIT copyright notice and
+permission notice apply to all code taken from OpenWhispr.

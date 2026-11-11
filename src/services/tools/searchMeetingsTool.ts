@@ -67,13 +67,19 @@ export const searchMeetingsTool: ToolDefinition = {
   readOnly: true,
   promptInstruction: INSTRUCTION,
 
-  async execute(args: Record<string, unknown>, context?: ToolExecutionContext): Promise<ToolResult> {
+  async execute(
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext
+  ): Promise<ToolResult> {
     const query = typeof args.query === "string" ? args.query.trim() : "";
     if (!query) {
       return { success: false, data: null, displayText: "A search query is required" };
     }
     const requested = typeof args.limit === "number" ? Math.floor(args.limit) : MAX_MEETING_SOURCES;
-    const limit = Math.min(Math.max(requested >= 1 ? requested : MAX_MEETING_SOURCES, 1), MAX_MEETING_SOURCES);
+    const limit = Math.min(
+      Math.max(requested >= 1 ? requested : MAX_MEETING_SOURCES, 1),
+      MAX_MEETING_SOURCES
+    );
     const dateFrom = dateArgument(args.date_from);
     const dateTo = dateArgument(args.date_to);
 

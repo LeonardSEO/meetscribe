@@ -1,3 +1,58 @@
+<h1 align="center">Lokale vergaderassistent</h1>
+
+<p align="center">
+  Een desktopapp voor macOS (Apple Silicon) en Windows (x64) die vergaderingen opneemt, lokaal transcribeert, er gestructureerde notulen van maakt en vragen over eerdere vergaderingen beantwoordt, met bronvermelding.
+</p>
+
+---
+
+## Wat is dit
+
+Deze app is een fork van [OpenWhispr](https://github.com/OpenWhispr/openwhispr) (MIT), omgebouwd tot een lokale vergaderassistent zonder account.
+
+- **Local-only.** Er is geen account, geen synchronisatie, geen team- of betaalfunctie en geen verkeer naar OpenWhispr-diensten; die hosts worden geblokkeerd. Opnames, transcripten en notulen blijven in een lokale database op je computer.
+- **Spraakherkenning: Orukeet.** Dit is de enige spraakengine. Het model wordt bij de eerste start gedownload en gecontroleerd met een SHA-256-checksum. Transcriptie werkt offline. Orukeet vereist macOS 15.5 of nieuwer. Ontbreekt het model of is de download corrupt, dan krijg je een melding en blijft de opname bewaard; er is nooit een terugval op een clouddienst.
+- **Notulen.** Het ingebouwde sjabloon Minutes maakt samenvatting, onderwerpen, besluiten en actiepunten. Je kunt ze bewerken, opnieuw laten genereren en als Markdown exporteren.
+- **Chat over vergaderingen.** Transcripten worden lokaal in passages geïndexeerd (FTS5, geen vectorzoekopdracht). Vraag bijvoorbeeld "Wat hebben we vorige week besloten over project X?" en het antwoord noemt genummerde bronpassages die je kunt controleren. Als er niets gevonden wordt, zegt de assistent dat.
+- **Alleen het AI-endpoint gebruikt het netwerk.** Samenvattingen, notulen en chat gaan naar het LLM-endpoint dat jij instelt. Alles daarvoor (opnemen, transcriberen, zoeken) werkt zonder netwerk.
+
+## AI-endpoint instellen (Azure AI Foundry)
+
+Alle AI-functies gebruiken één provider, `foundry`: Azure AI Foundry via de OpenAI-compatibele v1-API, of een andere OpenAI-compatibele server.
+
+1. Open Instellingen en ga naar het Foundry-onderdeel (of vul het in tijdens de eerste start).
+2. Plak het endpoint. Elke gangbare Azure-vorm werkt (resource-URL, projectendpoint, met of zonder `/openai/deployments/...?api-version=...` of slash aan het eind); de app maakt er `/openai/v1` van.
+3. Kies de wire-API en vul de modelnaam (deployment) en je API-key in.
+4. De key wordt versleuteld opgeslagen via de sleutelhanger van het besturingssysteem (macOS Keychain, Windows DPAPI), nooit in de database, een `.env`-bestand of localStorage. Het endpoint staat in het hoofdproces.
+
+Zonder geldige configuratie blijven transcript en bestaande notulen ongemoeid; de melding wijst naar Instellingen. Entra ID wordt in deze versie niet ondersteund, alleen een API-key.
+
+## Bouwen
+
+Vereist Node.js 24 (zie `.nvmrc`; gebruik `npm ci`, regenereer `package-lock.json` niet met een andere major).
+
+```bash
+npm ci
+npm run dev                # ontwikkelen
+npm test                   # testsuite
+npm run quality-check      # registry-controle, formattering, typecheck
+npm run build:local:mac    # macOS Apple Silicon, niet ondertekend
+npm run build:local:win    # Windows x64, op een Windows-machine, niet ondertekend
+```
+
+De lokale builds zijn niet ondertekend en niet genotarieerd; ondertekende installers en een eigen update-feed vragen om eigen certificaten. Wat nog handmatig getest moet worden staat in [docs/manual-acceptance.md](docs/manual-acceptance.md).
+
+## Licenties en toeschrijving
+
+- **Software:** gebaseerd op OpenWhispr, MIT-licentie. De MIT-licentietekst en het copyright van OpenWhispr blijven van toepassing op de overgenomen code.
+- **Spraakmodel Orukeet** door Oruk AI ([huggingface.co/oruk/orukeet](https://huggingface.co/oruk/orukeet)), afgeleid van NVIDIA Parakeet TDT 0.6B v3, onder **CC BY-SA 4.0**. Het model wordt gedownload, niet in de broncode meegeleverd. Wijzigingen aan het model vallen onder dezelfde licentie. Zie [NOTICE](NOTICE).
+
+---
+
+# Oorspronkelijke OpenWhispr-documentatie
+
+De rest van dit bestand is de README van het upstream-project. Functies als accounts, cloudsynchronisatie, teams en cloudproviders zijn in deze fork uitgeschakeld.
+
 <p align="center">
   <img src="src/assets/logo.svg" alt="OpenWhispr" width="120" />
 </p>
