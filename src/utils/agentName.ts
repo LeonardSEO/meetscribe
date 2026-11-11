@@ -30,8 +30,21 @@ export const setAgentName = (name: string): void => {
 };
 
 export const migrateLegacyAgentName = (): void => {
-  if (localStorage.getItem(AGENT_NAME_KEY) === LEGACY_DEFAULT_AGENT_NAME) {
+  const stored = localStorage.getItem(AGENT_NAME_KEY);
+  if (stored === LEGACY_DEFAULT_AGENT_NAME) {
     setAgentName(DEFAULT_AGENT_NAME);
+    return;
+  }
+  // No name was ever stored, but earlier launches added the then-default name to
+  // the dictionary: swap it for the new default.
+  const dictionary = getSettings().customDictionary;
+  const hasLegacyWord =
+    Array.isArray(dictionary) &&
+    dictionary.some(
+      (word) => typeof word === "string" && word.trim().toLowerCase() === "openwhispr"
+    );
+  if (!stored && hasLegacyWord) {
+    syncAgentNameToDictionary(DEFAULT_AGENT_NAME, LEGACY_DEFAULT_AGENT_NAME);
   }
 };
 

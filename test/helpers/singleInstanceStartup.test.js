@@ -7,14 +7,20 @@ const vm = require("node:vm");
 const mainPath = path.resolve(__dirname, "../../main.js");
 const mainSource = fs.readFileSync(mainPath, "utf8");
 
-function runStartup({ lockAvailable, hidden }) {
+const realMigration = require("../../src/helpers/legacyUserDataMigration");
+
+function runStartup({ lockAvailable, hidden, migrationResult = "skipped-target-exists" }) {
   const events = [];
+  const paths = { appData: "/fixture/app-data", userData: "/fixture/user-data" };
   const exited = Symbol("app.exit");
   const continued = Symbol("post-lock startup");
   const app = {
     commandLine: { appendSwitch() {} },
-    getPath: () => "/fixture/user-data",
-    setPath() {},
+    getPath: (name) => paths[name] ?? "/fixture/other",
+    setPath: (name, value) => {
+      events.push(["setPath", name, value]);
+      paths[name] = value;
+    },
     setDesktopName() {},
     requestSingleInstanceLock: () => {
       events.push(["lock"]);
@@ -27,18 +33,29 @@ function runStartup({ lockAvailable, hidden }) {
     },
   };
   const mocks = {
-    electron: { app },
+    electron: {
+      app,
+      dialog: {
+        showErrorBox: (title, message) => events.push(["errorBox", title, message]),
+      },
+    },
     path,
     http: {},
     tls: { getCACertificates: () => [] },
-    dotenv: { config: () => ({}) },
+    dotenv: {
+      config: (options) => {
+        if (options?.path?.startsWith("/fixture/app-data")) events.push(["dotenv"]);
+        return {};
+      },
+    },
     // Loaded before the lock; it must stay dependency-free (see the test below).
     "./src/config/localOnly": { isLocalOnly: () => true },
     // Moves the pre-rename user data folder before anything reads userData.
     "./src/helpers/legacyUserDataMigration": {
-      migrateLegacyUserData: () => {
-        events.push(["migrate"]);
-        return "skipped-target-exists";
+      ...realMigration,
+      migrateLegacyUserData: (options) => {
+        events.push(["migrate", options]);
+        return migrationResult;
       },
     },
     "./src/helpers/xwayland": {
@@ -76,7 +93,11 @@ function runStartup({ lockAvailable, hidden }) {
   };
   assert.throws(
     () => vm.runInNewContext(mainSource, context, { filename: mainPath }),
-    (error) => error === (lockAvailable ? continued : exited)
+    (error) =>
+      error ===
+      (lockAvailable && !realMigration.BLOCKING_MIGRATION_RESULTS.has(migrationResult)
+        ? continued
+        : exited)
   );
   return events;
 }
@@ -86,23 +107,47 @@ for (const hidden of [false, true]) {
     const events = runStartup({ lockAvailable: false, hidden });
     assert.deepEqual(
       events.map(([event]) => event),
-      ["migrate", "lock", "warn", "exit"]
+      ["setPath", "migrate", "dotenv", "lock", "warn", "exit"]
     );
-    assert.match(events[2][1], /single-instance lock/i);
-    assert.match(events[2][1], /another.*instance.*may/i);
-    assert.equal(events[3][1], 0);
+    assert.match(events[4][1], /single-instance lock/i);
+    assert.match(events[4][1], /another.*instance.*may/i);
+    assert.equal(events[5][1], 0);
     assert.ok(!JSON.stringify(events).includes("fixture-private-arg"));
     assert.ok(!JSON.stringify(events).includes("/fixture/user-data"));
   });
 }
 
 test("successful single-instance lock continues startup without failure logging", () => {
-  assert.deepEqual(runStartup({ lockAvailable: true, hidden: true }), [
-    ["migrate"],
-    ["lock"],
-    ["continue"],
-  ]);
+  assert.deepEqual(
+    runStartup({ lockAvailable: true, hidden: true }).map(([event]) => event),
+    ["setPath", "migrate", "dotenv", "lock", "continue"]
+  );
 });
+
+test("production keeps user data in Meetscribe and migrates into it before reading it", () => {
+  const events = runStartup({ lockAvailable: true, hidden: false });
+  assert.deepEqual(events[0], [
+    "setPath",
+    "userData",
+    path.join("/fixture/app-data", "Meetscribe"),
+  ]);
+  const [, options] = events[1];
+  assert.equal(options.appDataDir, "/fixture/app-data");
+  assert.equal(options.targetName, "Meetscribe");
+  assert.deepEqual(options.legacyNames, ["open-whispr", "OpenWhispr"]);
+});
+
+for (const migrationResult of ["skipped-legacy-running", "failed"]) {
+  test(`a ${migrationResult} migration explains and quits before Meetscribe creates its folder`, () => {
+    const events = runStartup({ lockAvailable: true, hidden: false, migrationResult });
+    assert.deepEqual(
+      events.map(([event]) => event),
+      ["setPath", "migrate", "errorBox", "exit"]
+    );
+    assert.match(events[2][2], migrationResult === "failed" ? /couldn't move/ : /close OpenWhispr/);
+    assert.notEqual(events[3][1], 0);
+  });
+}
 
 test("the user data migration stays light enough to load before the single-instance lock", () => {
   const source = fs.readFileSync(

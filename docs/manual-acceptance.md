@@ -35,8 +35,8 @@ Platformen: macOS Apple Silicon (macOS 15.5 of nieuwer) en Windows x64. Gebruik 
 
 ## Rebrand naar Meetscribe
 
-- [ ] **Bestaande data**: start Meetscribe op een computer met een `OpenWhispr`-datamap (macOS: `~/Library/Application Support/OpenWhispr`, Windows: `%APPDATA%\OpenWhispr`). Notities, notulen, instellingen en audio zijn er; de oude map is verplaatst naar `Meetscribe`.
-- [ ] **Oude app draait nog**: met OpenWhispr open start Meetscribe zonder de oude map te verplaatsen; na het sluiten van OpenWhispr verplaatst de volgende start de map alsnog.
+- [ ] **Bestaande data**: start Meetscribe op een computer met de datamap van een eerdere build (macOS: `~/Library/Application Support/open-whispr`, Windows: `%APPDATA%\open-whispr`; oudere builds: `OpenWhispr`). Notities, notulen, instellingen en audio zijn er; de oude map is verplaatst naar `Meetscribe`.
+- [ ] **Oude app draait nog**: met OpenWhispr open toont Meetscribe een melding en sluit af zonder de oude map te verplaatsen; na het sluiten van OpenWhispr verplaatst de volgende start de map alsnog.
 - [ ] **Sleutelhanger**: macOS vraagt eenmalig of Meetscribe de sleutelhanger mag gebruiken. Na weigeren start de app, vraagt Instellingen om de Foundry-key en crasht niets.
 - [ ] **Namen**: Dock, menubalk, venstertitel en de permissiedialogen (microfoon, systeemaudio, agenda, toegankelijkheid) tonen Meetscribe. Audio MIDI Setup toont tijdens een opname "Meetscribe Audio Tap".
 - [ ] **Permissies opnieuw**: door de nieuwe bundle-ID (`com.meetscribe.app`) vraagt macOS microfoon, systeemaudio, agenda en toegankelijkheid opnieuw.

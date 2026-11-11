@@ -64,6 +64,18 @@ test("no stored name reads as Meetscribe and writes nothing", async (t) => {
   assert.deepEqual(globalThis.__dictionary, []);
 });
 
+test("with no stored name, the old default in the dictionary becomes Meetscribe", async (t) => {
+  // Earlier launches added the then-default "OpenWhispr" to the dictionary
+  // without ever storing a name.
+  const { agentName, storage } = await loadAgentName(t, {
+    dictionary: ["Kubernetes", "OpenWhispr"],
+  });
+  agentName.migrateLegacyAgentName();
+  assert.equal(agentName.getAgentName(), "Meetscribe");
+  assert.equal(storage.getItem("agentName"), null);
+  assert.deepEqual(globalThis.__dictionary, ["Kubernetes", "Meetscribe"]);
+});
+
 test("running the migration twice changes nothing more", async (t) => {
   const { agentName } = await loadAgentName(t, {
     stored: "OpenWhispr",

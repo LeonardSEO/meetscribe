@@ -84,13 +84,17 @@ function resolveAppChannel() {
 const APP_CHANNEL = resolveAppChannel();
 process.env.OPENWHISPR_CHANNEL = APP_CHANNEL;
 
-function configureChannelUserDataPath() {
-  if (APP_CHANNEL === "production") {
-    return;
-  }
+const {
+  migrateLegacyUserData,
+  userDataLocation,
+  BLOCKING_MIGRATION_RESULTS,
+} = require("./src/helpers/legacyUserDataMigration");
+const USER_DATA_LOCATION = userDataLocation(APP_CHANNEL);
 
-  const isolatedPath = path.join(app.getPath("appData"), `Meetscribe-${APP_CHANNEL}`);
-  app.setPath("userData", isolatedPath);
+// Set explicitly on every channel: without it a packaged build takes its folder
+// name from package.json's name ("open-whispr"), not from productName.
+function configureChannelUserDataPath() {
+  app.setPath("userData", path.join(app.getPath("appData"), USER_DATA_LOCATION.targetName));
 }
 
 configureChannelUserDataPath();
@@ -101,13 +105,23 @@ configureChannelUserDataPath();
 // outcome is logged once the logger is up (app ready).
 const userDataMigration = { result: null, problems: [] };
 function migrateUserDataFromOpenWhispr() {
-  const { migrateLegacyUserData } = require("./src/helpers/legacyUserDataMigration");
   userDataMigration.result = migrateLegacyUserData({
     appDataDir: app.getPath("appData"),
-    targetName: path.basename(app.getPath("userData")),
-    legacyName: APP_CHANNEL === "production" ? "OpenWhispr" : `OpenWhispr-${APP_CHANNEL}`,
+    targetName: USER_DATA_LOCATION.targetName,
+    legacyNames: USER_DATA_LOCATION.legacyNames,
     log: (message, meta) => userDataMigration.problems.push({ message, meta }),
   });
+  // Starting now would create an empty Meetscribe folder, and every later start
+  // would skip the move. Quit before anything writes to userData instead.
+  if (BLOCKING_MIGRATION_RESULTS.has(userDataMigration.result)) {
+    dialog.showErrorBox(
+      "Meetscribe",
+      userDataMigration.result === "skipped-legacy-running"
+        ? "OpenWhispr is still running. Meetscribe needs to move your notes and settings from it. Please close OpenWhispr and start Meetscribe again."
+        : "Meetscribe couldn't move your notes and settings from OpenWhispr. Please make sure nothing else is using them and start Meetscribe again."
+    );
+    app.exit(1);
+  }
 }
 
 migrateUserDataFromOpenWhispr();
