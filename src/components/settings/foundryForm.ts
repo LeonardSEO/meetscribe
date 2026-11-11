@@ -1,3 +1,5 @@
+import { isAzureHost } from "../../helpers/azureHosts.js";
+
 export type FoundryField = "baseUrl" | "model" | "maxInputTokens" | "maxOutputTokens";
 
 export interface FoundryFormValues {
@@ -55,5 +57,19 @@ export function fieldForTestFailure(
       return "baseUrl";
     default:
       return null;
+  }
+}
+
+/**
+ * Only Azure hosts need an API key; a local or self-hosted OpenAI-compatible
+ * server may run without one. An address that can't be read asks for a key,
+ * as the safe default.
+ */
+export function foundryKeyRequired(baseUrl: string): boolean {
+  try {
+    const hostname = new URL(baseUrl.trim()).hostname.toLowerCase().replace(/\.$/, "");
+    return isAzureHost(hostname);
+  } catch {
+    return true;
   }
 }

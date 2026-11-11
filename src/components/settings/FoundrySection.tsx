@@ -8,6 +8,7 @@ import { SectionHeader, SettingsPanel, SettingsPanelRow } from "../ui/SettingsSe
 import { useSettingsStore } from "../../stores/settingsStore";
 import {
   fieldForTestFailure,
+  foundryKeyRequired,
   ipcErrorMessage,
   parseTokenLimit,
   validateFoundryForm,
@@ -125,7 +126,7 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
       );
       return;
     }
-    if (!hasKey && !typedKey) {
+    if (foundryKeyRequired(baseUrl) && !hasKey && !typedKey) {
       setErrors({});
       setKeyError(t("foundry.apiKey.required"));
       return;
@@ -343,7 +344,7 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
         )}
       </div>
 
-      {!dirty && hasKey && baseUrl && model ? (
+      {!dirty && (hasKey || !foundryKeyRequired(baseUrl)) && baseUrl && model ? (
         <TestConnectionButton
           provider="foundry"
           getConfig={() => ({ model: model.trim() })}

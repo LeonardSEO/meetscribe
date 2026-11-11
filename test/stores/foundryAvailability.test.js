@@ -37,3 +37,30 @@ test("reasoning is unavailable while main holds no Foundry key", async (t) => {
   const service = await load(t, { foundryModel: "gpt-x" }, { hasFoundryApiKey: async () => false });
   assert.equal(await service.isAvailable(), false);
 });
+
+test("a keyless local server is available without a key", async (t) => {
+  const service = await load(
+    t,
+    { foundryModel: "llama3" },
+    {
+      hasFoundryApiKey: async () => false,
+      getFoundryConfig: async () => ({ baseUrl: "http://localhost:11434/v1", wireApi: "chat" }),
+    }
+  );
+  assert.equal(await service.isAvailable(), true);
+});
+
+test("an Azure host still needs its key", async (t) => {
+  const service = await load(
+    t,
+    { foundryModel: "gpt-x" },
+    {
+      hasFoundryApiKey: async () => false,
+      getFoundryConfig: async () => ({
+        baseUrl: "https://x.openai.azure.com/openai/v1",
+        wireApi: "responses",
+      }),
+    }
+  );
+  assert.equal(await service.isAvailable(), false);
+});

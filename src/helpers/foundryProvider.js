@@ -6,11 +6,7 @@
 const { isBlockedUrl } = require("./blockedHosts");
 const { isPrivateIPv4, isPrivateIPv6 } = require("./enterpriseProviderErrors");
 
-const AZURE_HOST_SUFFIXES = [
-  ".openai.azure.com",
-  ".services.ai.azure.com",
-  ".cognitiveservices.azure.com",
-];
+const { isAzureHost } = require("./azureHosts.js");
 
 const METADATA_HOSTS = new Set([
   "169.254.169.254",
@@ -26,11 +22,6 @@ function hostnameOf(url) {
     .toLowerCase()
     .replace(/^\[|\]$/g, "")
     .replace(/\.$/, "");
-}
-
-function isAzureHost(hostname) {
-  const host = String(hostname).toLowerCase();
-  return AZURE_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
 }
 
 function isLoopbackOrPrivateHost(hostname) {

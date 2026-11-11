@@ -58,3 +58,12 @@ test("a failed connection test points at the field it concerns", async () => {
   assert.equal(fieldForTestFailure("PROVIDER_RATE_LIMITED"), null);
   assert.equal(fieldForTestFailure(undefined), null);
 });
+
+test("only Azure hosts require an API key", async () => {
+  const { foundryKeyRequired } = await load();
+  assert.equal(foundryKeyRequired("https://x.openai.azure.com/openai/v1"), true);
+  assert.equal(foundryKeyRequired("https://p.services.ai.azure.com/api/projects/p"), true);
+  assert.equal(foundryKeyRequired("http://localhost:11434/v1"), false);
+  assert.equal(foundryKeyRequired("https://llm.example.com/v1"), false);
+  assert.equal(foundryKeyRequired("not a url"), true);
+});

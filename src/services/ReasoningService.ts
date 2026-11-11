@@ -67,6 +67,7 @@ import { assertAgentAllowedByPolicy, assertReasoningAllowedByPolicy } from "./re
 import type { InferenceMode } from "../types/electron";
 import { usePolicyStore } from "../stores/policyStore";
 import i18n from "../i18n";
+import { foundryKeyRequired } from "../components/settings/foundryForm";
 import type { ChatImageAttachment } from "../components/chat/types";
 
 export type ToolMetadata = Record<string, unknown> | Array<Record<string, unknown>>;
@@ -1757,7 +1758,9 @@ class ReasoningService extends BaseReasoningService {
         const model = selectResolvedLLMConfig(settings, "dictationCleanup").model?.trim();
         const hasKey = await window.electronAPI?.hasFoundryApiKey?.();
         // An older main without the channel can't say, so the provider's own error will.
-        const available = !!model && hasKey !== false;
+        const config = await window.electronAPI?.getFoundryConfig?.().catch(() => null);
+        const keyOptional = !foundryKeyRequired(config?.baseUrl || settings.foundryBaseUrl || "");
+        const available = !!model && (hasKey !== false || keyOptional);
         logger.logReasoning("API_KEY_CHECK", { foundry: true, hasModel: !!model, hasKey });
         return available;
       }
