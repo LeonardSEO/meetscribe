@@ -74,6 +74,18 @@ test("the Foundry output limit caps the requested maxTokens", async (t) => {
   assert.equal(capFoundryOutputTokens("azure", 4096), 4096);
 });
 
+test("the default Foundry output limit does not cap the 25k reasoning retry", async (t) => {
+  const { vite, useSettingsStore } = await load(t);
+  const { capFoundryOutputTokens } = await vite.ssrLoadModule("/services/ai/enterpriseSettings.ts");
+  const state = useSettingsStore.getState();
+  state.setFoundryConfig({ foundryModel: "m", foundryMaxOutputTokens: 8000 });
+  assert.equal(capFoundryOutputTokens("foundry", 25_000), 25_000);
+  assert.equal(capFoundryOutputTokens("foundry", 12_000), 8000, "an ordinary request stays capped");
+  // A limit the user chose still wins.
+  state.setFoundryConfig({ foundryModel: "m", foundryMaxOutputTokens: 4000 });
+  assert.equal(capFoundryOutputTokens("foundry", 25_000), 4000);
+});
+
 test("the onboarding route has the Foundry step after the local setup", async (t) => {
   const { vite } = await load(t);
   const { getOnboardingRoute } = await vite.ssrLoadModule("/components/onboarding/flow.ts");

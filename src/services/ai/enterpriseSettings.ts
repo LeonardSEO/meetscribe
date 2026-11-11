@@ -1,4 +1,5 @@
-import { getSettings } from "../../stores/settingsStore";
+import { DEFAULT_FOUNDRY_MAX_OUTPUT_TOKENS, getSettings } from "../../stores/settingsStore";
+import { REASONING_MODEL_MIN_OUTPUT_TOKENS } from "./chatRequestBody";
 import type { EnterpriseProvider } from "../../models/ModelRegistry";
 import type { InferenceScope } from "../../config/inferenceScopes";
 import type { ManagedEnterpriseRequestContext } from "../../types/enterpriseIdentity";
@@ -77,5 +78,15 @@ export function capFoundryOutputTokens(
   if (provider !== "foundry") return requested;
   const limit = getSettings().foundryMaxOutputTokens;
   if (!(limit > 0)) return requested;
+  // The explicit retry of a reasoning model that spent its budget thinking asks for
+  // the reasoning floor. The untouched default must not silently undo it; a limit
+  // the user chose still applies.
+  if (
+    limit === DEFAULT_FOUNDRY_MAX_OUTPUT_TOKENS &&
+    requested !== undefined &&
+    requested >= REASONING_MODEL_MIN_OUTPUT_TOKENS
+  ) {
+    return requested;
+  }
   return requested && requested > 0 ? Math.min(requested, limit) : limit;
 }
