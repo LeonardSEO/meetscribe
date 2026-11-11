@@ -1,7 +1,7 @@
 {
   "name": "open-whispr",
   "version": "1.11.1",
-  "description": "A desktop dictation application using whisper.cpp for speech-to-text transcription",
+  "description": "Meetscribe: a local meeting assistant that records, transcribes and writes minutes without an account",
   "main": "main.js",
   "private": true,
   "engines": {
@@ -96,8 +96,7 @@
     "desktop-app"
   ],
   "author": {
-    "name": "OpenWhispr Team",
-    "email": "support@openwhispr.com"
+    "name": "Meetscribe"
   },
   "license": "MIT",
   "devDependencies": {

@@ -1,13 +1,13 @@
 {
-  "appId": "com.gizmolabs.openwhispr",
+  "appId": "com.meetscribe.app",
   "afterPack": "scripts/afterPack.js",
   "extraMetadata": {
     "windowsTrayIdentity": true
   },
-  "productName": "OpenWhispr",
+  "productName": "Meetscribe",
   "protocols": {
-    "name": "OpenWhispr Protocol",
-    "schemes": ["openwhispr"]
+    "name": "Meetscribe Protocol",
+    "schemes": ["meetscribe"]
   },
   "directories": {
     "output": "dist"
@@ -170,11 +170,11 @@
     "extendInfo": {
       "LSUIElement": false,
       "CFBundleIconName": "openwhispr",
-      "NSMicrophoneUsageDescription": "OpenWhispr uses the microphone to capture your voice for transcription.",
-      "NSAudioCaptureUsageDescription": "OpenWhispr uses system audio to capture other participants' audio from calls and meetings.",
-      "NSAccessibilityUsageDescription": "OpenWhispr needs accessibility permissions to paste transcribed text into other applications.",
-      "NSCalendarsUsageDescription": "OpenWhispr reads your calendar to detect upcoming meetings and link meeting notes to events.",
-      "NSCalendarsFullAccessUsageDescription": "OpenWhispr reads your calendar to detect upcoming meetings and link meeting notes to events."
+      "NSMicrophoneUsageDescription": "Meetscribe uses the microphone to capture your voice for transcription.",
+      "NSAudioCaptureUsageDescription": "Meetscribe uses system audio to capture other participants' audio from calls and meetings.",
+      "NSAccessibilityUsageDescription": "Meetscribe needs accessibility permissions to paste transcribed text into other applications.",
+      "NSCalendarsUsageDescription": "Meetscribe reads your calendar to detect upcoming meetings and link meeting notes to events.",
+      "NSCalendarsFullAccessUsageDescription": "Meetscribe reads your calendar to detect upcoming meetings and link meeting notes to events."
     }
   },
   "win": {
@@ -268,7 +268,7 @@
     "include": "resources/nsis/installer.nsh"
   },
   "dmg": {
-    "title": "OpenWhispr",
+    "title": "Meetscribe",
     "icon": "src/assets/icon.icns",
     "window": {
       "width": 540,
@@ -277,8 +277,8 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "OpenWhispr",
-    "repo": "openwhispr",
+    "owner": "LeonardSEO",
+    "repo": "meetscribe",
     "private": false,
     "releaseType": "draft"
   }

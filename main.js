@@ -46,11 +46,11 @@ try {
 
 const VALID_CHANNELS = new Set(["development", "staging", "production"]);
 const DEFAULT_OAUTH_PROTOCOL_BY_CHANNEL = {
-  development: "openwhispr-dev",
-  staging: "openwhispr-staging",
-  production: "openwhispr",
+  development: "meetscribe-dev",
+  staging: "meetscribe-staging",
+  production: "meetscribe",
 };
-const BASE_WINDOWS_APP_ID = "com.gizmolabs.openwhispr";
+const BASE_WINDOWS_APP_ID = "com.meetscribe.app";
 const DEFAULT_AUTH_BRIDGE_PORT = 5199;
 
 function isElectronBinaryExec() {
@@ -89,11 +89,29 @@ function configureChannelUserDataPath() {
     return;
   }
 
-  const isolatedPath = path.join(app.getPath("appData"), `OpenWhispr-${APP_CHANNEL}`);
+  const isolatedPath = path.join(app.getPath("appData"), `Meetscribe-${APP_CHANNEL}`);
   app.setPath("userData", isolatedPath);
 }
 
 configureChannelUserDataPath();
+
+// The app was called OpenWhispr before; move its user data folder once, before
+// anything below reads userData (the .env, the database, localStorage).
+function migrateUserDataFromOpenWhispr() {
+  const { migrateLegacyUserData } = require("./src/helpers/legacyUserDataMigration");
+  const logger = require("./src/helpers/debugLogger");
+  const result = migrateLegacyUserData({
+    appDataDir: app.getPath("appData"),
+    targetName: path.basename(app.getPath("userData")),
+    legacyName: APP_CHANNEL === "production" ? "OpenWhispr" : `OpenWhispr-${APP_CHANNEL}`,
+    log: (message, meta) => logger.warn(message, meta),
+  });
+  if (result !== "skipped-target-exists" && result !== "skipped-no-legacy") {
+    logger.info("Legacy user data migration", { result });
+  }
+}
+
+migrateUserDataFromOpenWhispr();
 
 // Load userData .env (contains DICTATION_KEY, API keys, etc.) early — before
 // hotkey registration, which needs DICTATION_KEY before the renderer loads.
@@ -271,8 +289,8 @@ if (!gotSingleInstanceLock) {
 const isLiveWindow = (window) => window && !window.isDestroyed();
 
 // Ensure macOS menus use the proper casing for the app name
-if (process.platform === "darwin" && app.getName() !== "OpenWhispr") {
-  app.setName("OpenWhispr");
+if (process.platform === "darwin" && app.getName() !== "Meetscribe") {
+  app.setName("Meetscribe");
 }
 
 // Add global error handling for uncaught exceptions
@@ -1166,7 +1184,7 @@ function startAuthBridgeServer() {
 
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(
-      "<html><body><h3>OpenWhispr sign-in complete.</h3><p>You can close this tab.</p></body></html>"
+      "<html><body><h3>Meetscribe sign-in complete.</h3><p>You can close this tab.</p></body></html>"
     );
   });
 
