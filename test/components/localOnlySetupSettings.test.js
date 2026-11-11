@@ -22,7 +22,11 @@ const UNMANAGED = { status: "unmanaged", policy: null, appVersion: null };
 
 test("local-only setup offers only the dictation row and no graphics pack", async () => {
   const { buildLocalSetupPlan } = await import("../../src/config/localSetup.ts");
-  const plan = buildLocalSetupPlan({ profile: nvidiaPc, spokenLanguages: ["nl"], policy: UNMANAGED });
+  const plan = buildLocalSetupPlan({
+    profile: nvidiaPc,
+    spokenLanguages: ["nl"],
+    policy: UNMANAGED,
+  });
   assert.deepEqual(
     plan.rows.map((r) => r.id),
     ["dictation"]
@@ -40,7 +44,11 @@ test("applying the local-only plan leaves AI cleanup off even when the switch is
     "/components/onboarding/localSetupSettings.ts"
   );
   const { buildLocalSetupPlan } = await vite.ssrLoadModule("/config/localSetup.ts");
-  const plan = buildLocalSetupPlan({ profile: nvidiaPc, spokenLanguages: ["nl"], policy: UNMANAGED });
+  const plan = buildLocalSetupPlan({
+    profile: nvidiaPc,
+    spokenLanguages: ["nl"],
+    policy: UNMANAGED,
+  });
   applyLocalSetupSettings(plan, { cleanup: true, assistant: true });
   assert.equal(store.useSettingsStore.getState().useCleanupModel, false);
 });

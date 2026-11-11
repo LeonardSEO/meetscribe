@@ -4,8 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 test("capForFoundry takes a share of the configured input limit, never raising a budget", async () => {
-  const { capForFoundry, FOUNDRY_TRANSCRIPT_SHARE, FOUNDRY_HISTORY_SHARE, FULL_TRANSCRIPT_MAX_TOKENS } =
-    await import("../../src/utils/transcriptEvidence.ts");
+  const {
+    capForFoundry,
+    FOUNDRY_TRANSCRIPT_SHARE,
+    FOUNDRY_HISTORY_SHARE,
+    FULL_TRANSCRIPT_MAX_TOKENS,
+  } = await import("../../src/utils/transcriptEvidence.ts");
   const { HISTORY_MAX_TOKENS } = await import("../../src/components/chat/historyMessages.ts");
   assert.equal(capForFoundry(64_000, 8192, FOUNDRY_TRANSCRIPT_SHARE), 4096);
   assert.equal(capForFoundry(16_000, 8192, FOUNDRY_HISTORY_SHARE), 2048);

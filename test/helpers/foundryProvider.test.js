@@ -499,7 +499,9 @@ test("shared classifier: BYOK status handling is unchanged outside the new 400 c
 
 test("requests never follow redirects, so the key cannot reach another host", async () => {
   stubFetch();
-  const request = await call(createFoundryModel("m", "k", { foundryBaseUrl: "https://x.openai.azure.com" }));
+  const request = await call(
+    createFoundryModel("m", "k", { foundryBaseUrl: "https://x.openai.azure.com" })
+  );
   assert.equal(request.init.redirect, "error");
   stubFetch();
   const responses = await call(responsesModel("redirect-dep"));

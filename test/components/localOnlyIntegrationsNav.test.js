@@ -30,7 +30,9 @@ async function render(t, localOnly) {
       interpolation: { escapeValue: false },
     });
   }
-  const { IntegrationsNav } = await vite.ssrLoadModule("/components/integrations/IntegrationsNav.tsx");
+  const { IntegrationsNav } = await vite.ssrLoadModule(
+    "/components/integrations/IntegrationsNav.tsx"
+  );
   const { INTEGRATIONS_SECTION_GROUPS } = await vite.ssrLoadModule(
     "/components/integrations/integrationsSections.ts"
   );

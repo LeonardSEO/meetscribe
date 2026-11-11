@@ -37,6 +37,9 @@ test("local-only settings show the cleanup, assistant and translation switches",
 });
 
 test("Settings renders the switches next to Foundry in local-only", () => {
-  const src = fs.readFileSync(path.join(__dirname, "../../src/components/SettingsPage.tsx"), "utf8");
+  const src = fs.readFileSync(
+    path.join(__dirname, "../../src/components/SettingsPage.tsx"),
+    "utf8"
+  );
   assert.match(src, /<LocalOnlyAiToggles[\s\S]*?<FoundrySection \/>/);
 });

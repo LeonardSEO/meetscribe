@@ -37,7 +37,11 @@ export const FULL_TRANSCRIPT_MAX_TOKENS = { hosted: 64_000, selfHosted: 4_000 } 
 export const FOUNDRY_TRANSCRIPT_SHARE = 0.5;
 export const FOUNDRY_HISTORY_SHARE = 0.25;
 
-export function capForFoundry(tokens: number, foundryMaxInputTokens: number, share: number): number {
+export function capForFoundry(
+  tokens: number,
+  foundryMaxInputTokens: number,
+  share: number
+): number {
   if (!(foundryMaxInputTokens > 0)) return tokens;
   return Math.min(tokens, Math.floor(foundryMaxInputTokens * share));
 }
