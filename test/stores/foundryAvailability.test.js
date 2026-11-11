@@ -18,6 +18,8 @@ async function load(t, storage, electronAPI = {}) {
   });
   await vite.ssrLoadModule("/models/ModelRegistry.ts");
   const mod = await vite.ssrLoadModule("/services/ReasoningService.ts");
+  // The service starts a 60 s cache-cleanup interval that would keep the process alive.
+  t.after(() => mod.default.destroy());
   return mod.default;
 }
 
