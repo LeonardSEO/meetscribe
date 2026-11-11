@@ -251,7 +251,11 @@ test.before(async () => {
     fs.writeFileSync(path.join(archiveRoot, extractDirectory, file), "weights");
   }
   const archivePath = path.join(archiveRoot, "archive.tar.bz2");
-  execFileSync("tar", ["-cjf", archivePath, "-C", archiveRoot, extractDirectory]);
+  // macOS tags new files with xattrs (com.apple.provenance); without COPYFILE_DISABLE its
+  // tar adds AppleDouble "._" entries, which the archive check rightly refuses.
+  execFileSync("tar", ["-cjf", archivePath, "-C", archiveRoot, extractDirectory], {
+    env: { ...process.env, COPYFILE_DISABLE: "1" },
+  });
   parakeetArchive = fs.readFileSync(archivePath);
 });
 
