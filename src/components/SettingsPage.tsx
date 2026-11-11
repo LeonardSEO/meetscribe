@@ -104,6 +104,7 @@ import DictationAgentSettings from "./settings/DictationAgentSettings";
 import DictationTranslationSettings from "./settings/DictationTranslationSettings";
 import InferenceConfigEditor from "./settings/InferenceConfigEditor";
 import FoundrySection from "./settings/FoundrySection";
+import LocalOnlyAiToggles from "./settings/LocalOnlyAiToggles";
 import { MeetingTranscriptionPanel } from "./settings/MeetingSettings";
 import { UploadTranscriptionPanel } from "./settings/UploadSettings";
 import LanguageSelector from "./ui/LanguageSelector";
@@ -5098,7 +5099,15 @@ EOF`,
       {hasMountedLlms && (
         <TabPanel active={activeSection === "llms"}>
           {isLocalOnly() ? (
-            <FoundrySection />
+            <div className="space-y-6">
+              <LocalOnlyAiToggles
+                useCleanupModel={useCleanupModel}
+                setUseCleanupModel={(value) => {
+                  updateCleanupSettings({ useCleanupModel: value });
+                }}
+              />
+              <FoundrySection />
+            </div>
           ) : (
             <LlmsTabs
               initialTab={
