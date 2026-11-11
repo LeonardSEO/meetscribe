@@ -2086,6 +2086,24 @@ declare global {
         spaceId?: number | null,
         folderId?: number | null
       ) => Promise<NoteItem[]>;
+      searchTranscriptPassages: (params: {
+        query: string;
+        limit?: number;
+        dateFrom?: string;
+        dateTo?: string;
+        noteId?: number;
+      }) => Promise<
+        Array<{
+          passageId: number;
+          noteId: number;
+          noteTitle: string;
+          noteDate: string;
+          speaker: string | null;
+          startSeconds: number | null;
+          endSeconds: number | null;
+          text: string;
+        }>
+      >;
       updateNoteCloudId: (id: number, cloudId: string) => Promise<NoteItem>;
       updateNoteShareState: (
         id: number,

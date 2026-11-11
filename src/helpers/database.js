@@ -16,6 +16,7 @@ const { isDeepStrictEqual } = require("util");
 const noteUndo = require("./noteUndo");
 const debugLogger = require("./debugLogger");
 const { buildNoteSearchQuery } = require("./noteSearch");
+const { buildPassages } = require("./transcriptPassages");
 const { normalizeStoredSpeakerCount } = require("./speakerCount");
 const { parseEventTime } = require("./calendarAvailability");
 // An explicit zone marks an instant this app captured at dictation time. A
@@ -1819,6 +1820,7 @@ class DatabaseManager {
         )
       `);
       this._initVectorChangeJournal();
+      this._initTranscriptPassageIndex();
       try {
         noteUndo.initializeNoteUndo(this.db);
         this.noteUndoReady = true;
@@ -5330,6 +5332,156 @@ class DatabaseManager {
       `);
       if (!journalExists) this.enqueueAllVectorChanges();
     })();
+  }
+
+  // Transcript passages for chat-over-meetings retrieval. Same journal pattern as
+  // pending_vector_changes: triggers record which notes changed and the next search
+  // re-indexes just those, so the first-run backfill is incremental, not a startup rebuild.
+  _initTranscriptPassageIndex() {
+    this.db.transaction(() => {
+      const journalExists = this.db
+        .prepare(
+          "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_transcript_index'"
+        )
+        .get();
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS transcript_passages (
+          id INTEGER PRIMARY KEY,
+          note_id INTEGER NOT NULL,
+          seq INTEGER NOT NULL,
+          speaker TEXT,
+          start_seconds REAL,
+          end_seconds REAL,
+          text TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_transcript_passages_note ON transcript_passages(note_id);
+        CREATE VIRTUAL TABLE IF NOT EXISTS transcript_passages_fts USING fts5(
+          text, speaker,
+          content='transcript_passages', content_rowid='id',
+          tokenize="unicode61 remove_diacritics 2"
+        );
+        CREATE TRIGGER IF NOT EXISTS transcript_passages_fts_insert AFTER INSERT ON transcript_passages BEGIN
+          INSERT INTO transcript_passages_fts(rowid, text, speaker)
+          VALUES (new.id, new.text, COALESCE(new.speaker, ''));
+        END;
+        CREATE TRIGGER IF NOT EXISTS transcript_passages_fts_delete AFTER DELETE ON transcript_passages BEGIN
+          INSERT INTO transcript_passages_fts(transcript_passages_fts, rowid, text, speaker)
+          VALUES ('delete', old.id, old.text, COALESCE(old.speaker, ''));
+        END;
+        CREATE TABLE IF NOT EXISTS pending_transcript_index (note_id INTEGER PRIMARY KEY);
+        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_insert AFTER INSERT ON notes BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.id);
+        END;
+        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_update
+        AFTER UPDATE OF transcript, deleted_at ON notes
+        WHEN OLD.transcript IS NOT NEW.transcript OR OLD.deleted_at IS NOT NEW.deleted_at
+        BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.id);
+        END;
+        CREATE TRIGGER IF NOT EXISTS notes_transcript_index_delete AFTER DELETE ON notes BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.id);
+        END;
+        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_insert AFTER INSERT ON speaker_mappings BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.note_id);
+        END;
+        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_update AFTER UPDATE ON speaker_mappings BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.note_id);
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (NEW.note_id);
+        END;
+        CREATE TRIGGER IF NOT EXISTS speaker_mappings_transcript_index_delete AFTER DELETE ON speaker_mappings BEGIN
+          INSERT OR IGNORE INTO pending_transcript_index (note_id) VALUES (OLD.note_id);
+        END;
+      `);
+      if (!journalExists) {
+        this.db.exec(`
+          INSERT OR IGNORE INTO pending_transcript_index (note_id)
+          SELECT id FROM notes WHERE transcript IS NOT NULL AND transcript != ''
+        `);
+      }
+    })();
+  }
+
+  _drainTranscriptIndex(batchSize = 50) {
+    const selectPending = this.db.prepare("SELECT note_id FROM pending_transcript_index LIMIT ?");
+    const selectNote = this.db.prepare("SELECT transcript, deleted_at FROM notes WHERE id = ?");
+    const selectNames = this.db.prepare(
+      "SELECT speaker_id, display_name FROM speaker_mappings WHERE note_id = ?"
+    );
+    const deletePassages = this.db.prepare("DELETE FROM transcript_passages WHERE note_id = ?");
+    const insertPassage = this.db.prepare(
+      "INSERT INTO transcript_passages (note_id, seq, speaker, start_seconds, end_seconds, text) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+    const clearPending = this.db.prepare("DELETE FROM pending_transcript_index WHERE note_id = ?");
+    const indexBatch = (ids) =>
+      this.db.transaction(() => {
+        for (const noteId of ids) {
+          deletePassages.run(noteId);
+          const note = selectNote.get(noteId);
+          if (note && note.deleted_at == null && note.transcript) {
+            const names = {};
+            for (const row of selectNames.all(noteId)) names[row.speaker_id] = row.display_name;
+            for (const p of buildPassages(note.transcript, names)) {
+              insertPassage.run(noteId, p.seq, p.speaker, p.startSeconds, p.endSeconds, p.text);
+            }
+          }
+          clearPending.run(noteId);
+        }
+      })();
+    for (;;) {
+      const ids = selectPending.all(batchSize).map((row) => row.note_id);
+      if (!ids.length) return;
+      indexBatch(ids);
+    }
+  }
+
+  searchTranscriptPassages({ query, limit = 8, dateFrom, dateTo, noteId } = {}) {
+    try {
+      if (!this.db) throw new Error("Database not initialized");
+      const tokens = buildNoteSearchQuery(query).split(" ").filter(Boolean);
+      if (!tokens.length) return [];
+      const requested = Number(limit);
+      const max = Math.min(Math.floor(requested) >= 1 ? Math.floor(requested) : 8, 20);
+      this._drainTranscriptIndex();
+      const accountScope = this._accountScopeCondition("n");
+      const params = [tokens.join(" OR "), ...accountScope.params];
+      let filters = "";
+      if (typeof dateFrom === "string" && dateFrom) {
+        filters += " AND date(n.created_at) >= date(?)";
+        params.push(dateFrom);
+      }
+      if (typeof dateTo === "string" && dateTo) {
+        filters += " AND date(n.created_at) <= date(?)";
+        params.push(dateTo);
+      }
+      if (noteId != null) {
+        filters += " AND p.note_id = ?";
+        params.push(noteId);
+      }
+      params.push(max);
+      return this.db
+        .prepare(
+          `
+        SELECT p.id AS passageId, p.note_id AS noteId, n.title AS noteTitle,
+               n.created_at AS noteDate, p.speaker AS speaker,
+               p.start_seconds AS startSeconds, p.end_seconds AS endSeconds, p.text AS text
+        FROM transcript_passages_fts
+        JOIN transcript_passages p ON p.id = transcript_passages_fts.rowid
+        JOIN notes n ON n.id = p.note_id
+        WHERE transcript_passages_fts MATCH ? AND n.deleted_at IS NULL
+          AND ${accountScope.sql}${filters}
+        ORDER BY bm25(transcript_passages_fts), p.id
+        LIMIT ?
+      `
+        )
+        .all(...params);
+    } catch (error) {
+      debugLogger.error(
+        "Error searching transcript passages",
+        { error: error.message },
+        "database"
+      );
+      throw error;
+    }
   }
 
   getPendingVectorChanges(limit = 50, afterRevision = 0) {

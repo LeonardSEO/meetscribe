@@ -2702,6 +2702,12 @@ class IPCHandlers {
       return this.databaseManager.searchNotes(query, limit, spaceId, folderId, spaceIds);
     });
 
+    ipcMain.handle("db-search-transcript-passages", async (event, params) => {
+      return this.databaseManager.searchTranscriptPassages(
+        params && typeof params === "object" ? params : {}
+      );
+    });
+
     ipcMain.handle(
       "db-semantic-search-notes",
       async (event, query, limit = 5, spaceId, folderId) => {
