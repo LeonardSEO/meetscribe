@@ -11,9 +11,6 @@ OpenWhispr is a dictation and meeting-notes app. This repository holds two clien
   system audio for meetings), transcribes locally (whisper.cpp, sherpa-onnx) or through cloud providers, pastes
   the text into the focused app, keeps notes and history in SQLite, and runs an AI assistant with tools and
   connectors that act on the user's accounts (Gmail send, Slack, Linear, GitHub, calendars).
-- **Mobile** (`openwhispr-mobile/`): an Expo / React Native iOS app with a keyboard extension, a Live Activity,
-  background uploads and on-device models. Only its TypeScript builds and tests on Linux; the Swift sources
-  under `modules/` and `plugins/` are in scope for review.
 
 The server side (the OpenWhispr API and the openwhispr.com website, including its OAuth relay routes) lives in
 other repositories and is out of scope, except where a client sends it something it shouldn't.
@@ -115,7 +112,6 @@ agents), `nix/` packaging.
 - Native helpers are compiled into `resources/bin/` during the image build (`linux-key-listener`,
   `linux-fast-paste`, `linux-text-monitor`, `linux-system-audio-helper`, `meeting-aec-helper-linux-<arch>`).
   FFmpeg is at `node_modules/ffmpeg-static/ffmpeg`, the binary the app decodes imported audio with.
-- Mobile tests: `cd openwhispr-mobile && node_modules/.bin/jest --ci --runInBand <path>`.
 - The full Electron app can't be launched in this image (no display, no Electron binary); prefer unit-level
   reproducers against the real module.
 

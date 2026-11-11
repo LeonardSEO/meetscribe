@@ -37,19 +37,8 @@ RUN npm run compile:linuxkeys \
     && npm run compile:linux-system-audio \
     && node scripts/build-meeting-aec-helper.js
 
-# Mobile app (Expo / React Native). Its iOS native code can't be built on Linux, so only the TypeScript side
-# is installed and tested here; the Swift sources are in the checkout for review.
-RUN cd openwhispr-mobile \
-    && npm ci --ignore-scripts --no-audit --no-fund \
-    && node_modules/.bin/patch-package --error-on-fail \
-    && npm rebuild better-sqlite3
-
 # Run the suites once so a broken image shows up in the build log, but never fail the build on a test.
 # Bounded so a hung test can't eat the scanner's build budget.
 RUN timeout 900 npm test > /tmp/desktop-tests.log 2>&1 \
       || echo "WARNING: desktop tests failed or timed out (see /tmp/desktop-tests.log)"; \
     tail -n 15 /tmp/desktop-tests.log
-RUN cd openwhispr-mobile \
-    && (timeout 900 node_modules/.bin/jest --ci --runInBand > /tmp/mobile-tests.log 2>&1 \
-      || echo "WARNING: mobile tests failed or timed out (see /tmp/mobile-tests.log)"); \
-    tail -n 15 /tmp/mobile-tests.log
