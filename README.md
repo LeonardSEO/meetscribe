@@ -45,7 +45,7 @@ De lokale builds zijn niet ondertekend en niet genotarieerd; ondertekende instal
 
 ## Licenties en toeschrijving
 
-- **Software:** gebaseerd op OpenWhispr, MIT-licentie. De MIT-licentietekst en het copyright van OpenWhispr staan in [LICENSE](LICENSE) en blijven van toepassing op de overgenomen code.
+- **Software:** gebaseerd op OpenWhispr, MIT-licentie. De licentietekst en het copyright van OpenWhispr staan in de [OpenWhispr-repository](https://github.com/OpenWhispr/openwhispr/blob/main/LICENSE).
 - **Spraakmodel Orukeet** door Oruk AI ([huggingface.co/oruk/orukeet](https://huggingface.co/oruk/orukeet)), afgeleid van NVIDIA Parakeet TDT 0.6B v3, onder **CC BY-SA 4.0**. Het model wordt gedownload, niet in de broncode meegeleverd. Wijzigingen aan het model vallen onder dezelfde licentie. Zie [NOTICE](NOTICE).
 
 ---
@@ -172,7 +172,7 @@ We welcome contributions. Fork the repo, create a feature branch, and open a pul
 
 ## License
 
-[MIT](LICENSE) — free for personal and commercial use.
+Based on OpenWhispr, [MIT](https://github.com/OpenWhispr/openwhispr/blob/main/LICENSE).
 
 ## Acknowledgments
 
