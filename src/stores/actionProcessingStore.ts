@@ -242,6 +242,11 @@ const hasTranscript = (material: NoteMaterial | undefined): material is NoteMate
  * The window a refused request is split against: Foundry's own limit from
  * Settings (there is no local runtime to ask), otherwise the local model's.
  */
+function isFoundryNoteRoute(): boolean {
+  const noteFormatting = selectResolvedNoteFormatting(getSettings());
+  return noteFormatting.mode === "enterprise" && noteFormatting.provider === "foundry";
+}
+
 async function readContextBudget(modelId: string): Promise<LocalContextBudget | null> {
   const noteFormatting = selectResolvedNoteFormatting(getSettings());
   if (noteFormatting.mode === "enterprise" && noteFormatting.provider === "foundry") {
@@ -321,6 +326,24 @@ function tooLongForModel(modelName: string): LocalInferenceError {
  */
 async function runEnhancement(run: EnhancementRun): Promise<string> {
   let refusal: unknown;
+  // A Foundry server that truncates silently never refuses, so a prompt that
+  // cannot fit the configured window goes straight to parts.
+  const material = run.options.material;
+  if (isFoundryNoteRoute() && hasTranscript(material)) {
+    const limit = getSettings().foundryMaxInputTokens;
+    const promptTokens =
+      estimateNoteTokens(run.systemPrompt) +
+      estimateNoteTokens(run.noteContent) +
+      NOTE_OUTPUT_MAX_TOKENS +
+      CONTEXT_RESERVE_TOKENS;
+    if (limit > 0 && promptTokens > limit) {
+      const budget = await readContextBudget(run.modelId);
+      if (budget) {
+        if (run.isCancelled()) throw new Error("cancelled");
+        return runInParts(run, budget, material);
+      }
+    }
+  }
   try {
     // The main-process preflight measures the prompt exactly, so a conservative
     // renderer estimate never replaces a request the model can serve.
@@ -363,7 +386,6 @@ async function runEnhancement(run: EnhancementRun): Promise<string> {
   // Only a transcript is split: the action's intent is unknown here, and an
   // edit-style action applied to a condensed plain note would silently replace
   // the user's text with a digest of it.
-  const material = run.options.material;
   if (!hasTranscript(material)) throw refusal;
   // Only a local model or Foundry refuses as CONTEXT_TOO_LARGE, so the refusal
   // identifies the route however note formatting reached it (its own mode or cleanup's).

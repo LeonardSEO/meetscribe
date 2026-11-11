@@ -29,6 +29,19 @@ const MATCH_LEAD_IN = 100;
  */
 export const FULL_TRANSCRIPT_MAX_TOKENS = { hosted: 64_000, selfHosted: 4_000 } as const;
 
+/**
+ * Foundry servers differ in window (and some truncate silently), so the chat's
+ * whole-transcript and history budgets are capped at a share of the configured
+ * input limit; the rest is left for tools, the system prompt and the answer.
+ */
+export const FOUNDRY_TRANSCRIPT_SHARE = 0.5;
+export const FOUNDRY_HISTORY_SHARE = 0.25;
+
+export function capForFoundry(tokens: number, foundryMaxInputTokens: number, share: number): number {
+  if (!(foundryMaxInputTokens > 0)) return tokens;
+  return Math.min(tokens, Math.floor(foundryMaxInputTokens * share));
+}
+
 export interface ReadableTranscript {
   text: string;
   references: Array<{ start: number; end: number; timestamp_seconds?: number }>;

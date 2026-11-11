@@ -9,7 +9,7 @@ const ACTION = { id: 1, name: "Generate Notes", prompt: "Summarize the meeting."
 const LABELS = { noModel: "no model", noEndpoint: "no endpoint", actionFailed: "failed" };
 const LINE = "Alice: we agreed to ship the billing migration on Friday after QA.\n";
 
-async function loadStore(t) {
+async function loadStore(t, { neverRefuse = false } = {}) {
   const updates = [];
   const budgetCalls = [];
   installBrowserGlobals(t, {
@@ -41,7 +41,7 @@ async function loadStore(t) {
           processText: async (text, model, agentName, config) => {
             const calls = globalThis.__processTextCalls;
             calls.push({ text, model, config });
-            if (calls.length === 1) {
+            if (calls.length === 1 && !globalThis.__neverRefuse) {
               throw Object.assign(new Error("too big"), { code: "CONTEXT_TOO_LARGE" });
             }
             return "# Notes " + calls.length;
@@ -52,7 +52,11 @@ async function loadStore(t) {
     },
   });
   globalThis.__processTextCalls = calls;
-  t.after(() => delete globalThis.__processTextCalls);
+  globalThis.__neverRefuse = neverRefuse;
+  t.after(() => {
+    delete globalThis.__processTextCalls;
+    delete globalThis.__neverRefuse;
+  });
   const store = await vite.ssrLoadModule("/stores/actionProcessingStore.ts");
   return { store, calls, updates, budgetCalls };
 }
@@ -70,7 +74,7 @@ test("a Foundry CONTEXT_TOO_LARGE refusal splits the transcript against foundryM
   const material = {
     notes: "My note.",
     meetingContext: "## Meeting Context\nAlice records.",
-    transcript: LINE.repeat(400).trim(),
+    transcript: LINE.repeat(150).trim(),
   };
   store.runBackgroundAction(
     1,
@@ -85,8 +89,46 @@ test("a Foundry CONTEXT_TOO_LARGE refusal splits the transcript against foundryM
   await waitFor(() => updates.length > 0);
   assert.deepEqual(budgetCalls, [], "no local runtime is asked about its window");
   const parts = calls.slice(1, -1);
-  // The same 400 lines pack into 3 parts at an 8192-token window (see actionProcessingChunked).
-  assert.equal(parts.length, 3, "parts are planned against foundryMaxInputTokens");
-  assert.equal(calls[0].config.maxTokens, 3000, "the output limit rides as maxTokens");
+  // Small enough to pass the pre-send estimate, so only the server's refusal splits it.
+  assert.ok(parts.length >= 2, "parts are planned against foundryMaxInputTokens");
+  assert.ok(calls[0].config.maxTokens <= 3000, "the output limit rides as maxTokens");
   for (const part of parts) assert.ok(part.config.maxTokens <= 3000);
+});
+
+test("a prompt over foundryMaxInputTokens goes straight to parts, never as one request", async (t) => {
+  const { store, calls, updates } = await loadStore(t, { neverRefuse: true });
+  const material = {
+    notes: "My note.",
+    meetingContext: "## Meeting Context\nAlice records.",
+    transcript: LINE.repeat(400).trim(),
+  };
+  store.runBackgroundAction(
+    1,
+    [material.notes, material.meetingContext, `## Meeting Transcript\n${material.transcript}`].join(
+      "\n\n"
+    ),
+    "hash",
+    ACTION,
+    { modelId: "gpt-x", isCloudMode: false, isMeetingNote: true, material },
+    LABELS
+  );
+  await waitFor(() => updates.length > 0);
+  const whole = calls.filter((c) => c.text.includes(material.transcript));
+  assert.equal(whole.length, 0, "the whole transcript is never sent in one request");
+  assert.ok(calls.length >= 4, "parts then a merge");
+});
+
+test("a short prompt is still one request", async (t) => {
+  const { store, calls, updates } = await loadStore(t, { neverRefuse: true });
+  const material = { notes: "", meetingContext: "", transcript: LINE.repeat(3).trim() };
+  store.runBackgroundAction(
+    1,
+    `## Meeting Transcript\n${material.transcript}`,
+    "hash",
+    ACTION,
+    { modelId: "gpt-x", isCloudMode: false, isMeetingNote: true, material },
+    LABELS
+  );
+  await waitFor(() => updates.length > 0);
+  assert.equal(calls.length, 1);
 });

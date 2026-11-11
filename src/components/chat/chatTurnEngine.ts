@@ -63,7 +63,12 @@ import { pickSkillForRequest } from "../../utils/localSkillPick";
 import type { SkillRef, SkillSummary } from "../../types/skills";
 import { getLlmDictionaryWords } from "../../utils/snippets";
 import { noteAttendeesContext, withoutAttendeesFence } from "../../utils/noteAttendees";
-import { FULL_TRANSCRIPT_MAX_TOKENS } from "../../utils/transcriptEvidence";
+import {
+  FOUNDRY_HISTORY_SHARE,
+  FOUNDRY_TRANSCRIPT_SHARE,
+  FULL_TRANSCRIPT_MAX_TOKENS,
+  capForFoundry,
+} from "../../utils/transcriptEvidence";
 import { createToolRegistry } from "../../services/tools";
 import {
   createLookAtScreenTool,
@@ -597,6 +602,8 @@ export function createChatTurnEngine(
       const contextTier =
         !isCloudAgent && (isLocalProvider || isLanAgent) ? "selfHosted" : "hosted";
 
+      const isFoundryAgent = llmMode === "enterprise" && llmConfig.provider === "foundry";
+
       let usableSkills: SkillSummary[] = [];
       // The skills this chat may use: the user's, less those taken off it. The creator still
       // hears of every skill, so it doesn't propose one the user already has.
@@ -816,7 +823,13 @@ export function createChatTurnEngine(
       // by whole-note actions, which work from the complete source.
       const maxTranscriptTokens =
         registry?.get("get_note") && !options?.requestText
-          ? FULL_TRANSCRIPT_MAX_TOKENS[contextTier]
+          ? isFoundryAgent
+            ? capForFoundry(
+                FULL_TRANSCRIPT_MAX_TOKENS[contextTier],
+                settings.foundryMaxInputTokens,
+                FOUNDRY_TRANSCRIPT_SHARE
+              )
+            : FULL_TRANSCRIPT_MAX_TOKENS[contextTier]
           : Infinity;
       const currentNote: OpenNoteContext =
         typeof currentOpenNote === "function"
@@ -896,7 +909,13 @@ export function createChatTurnEngine(
         {
           toolHistory,
           isOffered: (name) => offeredTools?.some((tool) => tool.name === name) ?? false,
-          maxTokens: HISTORY_MAX_TOKENS[contextTier],
+          maxTokens: isFoundryAgent
+            ? capForFoundry(
+                HISTORY_MAX_TOKENS[contextTier],
+                settings.foundryMaxInputTokens,
+                FOUNDRY_HISTORY_SHARE
+              )
+            : HISTORY_MAX_TOKENS[contextTier],
         }
       );
 
