@@ -33,6 +33,15 @@ Platformen: macOS Apple Silicon (macOS 15.5 of nieuwer) en Windows x64. Gebruik 
 - [ ] **Windows-build** (`npm run build:local:win`) op een Windows-machine, installeren op een schone gebruikersmap.
 - [ ] **Ondertekende installers**: blijft open zolang er geen eigen certificaten zijn. Eigen signing en een eigen update-feed zijn later configuratie plus het weghalen van de updater-guard.
 
+## Rebrand naar Meetscribe
+
+- [ ] **Bestaande data**: start Meetscribe op een computer met een `OpenWhispr`-datamap (macOS: `~/Library/Application Support/OpenWhispr`, Windows: `%APPDATA%\OpenWhispr`). Notities, notulen, instellingen en audio zijn er; de oude map is verplaatst naar `Meetscribe`.
+- [ ] **Oude app draait nog**: met OpenWhispr open start Meetscribe zonder de oude map te verplaatsen; na het sluiten van OpenWhispr verplaatst de volgende start de map alsnog.
+- [ ] **Sleutelhanger**: macOS vraagt eenmalig of Meetscribe de sleutelhanger mag gebruiken. Na weigeren start de app, vraagt Instellingen om de Foundry-key en crasht niets.
+- [ ] **Namen**: Dock, menubalk, venstertitel en de permissiedialogen (microfoon, systeemaudio, agenda, toegankelijkheid) tonen Meetscribe. Audio MIDI Setup toont tijdens een opname "Meetscribe Audio Tap".
+- [ ] **Permissies opnieuw**: door de nieuwe bundle-ID (`com.meetscribe.app`) vraagt macOS microfoon, systeemaudio, agenda en toegankelijkheid opnieuw.
+- [ ] **Windows**: installer, Startmenu en Taakbeheer tonen Meetscribe. Een oude OpenWhispr-installatie verwijder je zelf via Instellingen → Apps.
+
 ## Niet in scope
 
 Een Nederlandse app-interface, Entra ID en vectorzoekopdrachten voor de passage-index.

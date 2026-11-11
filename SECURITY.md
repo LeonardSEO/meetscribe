@@ -1,64 +1,35 @@
 # Security Policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.10.x  | :white_check_mark: |
-| < 1.10  | :x:                |
+**Please do not open a public issue for a security problem.**
 
-## Reporting a Vulnerability
-
-**Please do not open public issues for security vulnerabilities.**
-
-Use [GitHub's private vulnerability reporting](https://github.com/OpenWhispr/openwhispr/security/advisories/new)
-to submit a report. You can also email security@openwhispr.com.
-
-We will acknowledge your report within **48 hours** and aim to release a fix
-within **7 days** for critical issues.
+Report it through [GitHub's private vulnerability reporting](https://github.com/LeonardSEO/meetscribe/security/advisories/new).
+Only the latest version of Meetscribe receives security fixes.
 
 ## Scope
 
-The following are in scope:
+In scope:
 
-- Remote code execution via crafted audio files or transcription output
-- Privilege escalation through native binaries (key listeners, paste helpers)
-- Credential exposure (API keys, OAuth tokens, database credentials)
+- Code execution through a crafted audio file or transcription output
+- Privilege escalation through the bundled native helpers
+- Exposure of the stored API key for the AI endpoint
 - Cross-site scripting (XSS) in the Electron renderer
-- Insecure IPC between main and renderer processes
-- Supply chain attacks via dependencies or native compilation
+- Insecure IPC between the main and renderer processes
+- Supply chain attacks through dependencies or native compilation
 
 Out of scope:
 
-- Issues requiring physical access to an already-unlocked machine
-- Denial of service against the local application
+- Issues that require physical access to an already unlocked computer
+- Denial of service against the local app
 - Social engineering
 
-## Security Model
+## Security model
 
-- **Local-first audio processing** — Audio is transcribed on-device using
-  whisper.cpp or nvidia parakeet. Recordings are not sent to external servers unless explicitly
-  configured by the user.
-- **Credential storage** — API keys provided by users (BYOK) and enterprise
-  cloud credentials (AWS, Azure, Vertex) are encrypted at rest using
-  Electron's `safeStorage` API, which delegates to the OS keychain (Keychain
-  on macOS, DPAPI on Windows, libsecret on Linux). Encrypted blobs are stored
-  under `userData/secure-keys/`. Non-secret preferences (regions, endpoints,
-  hotkeys, flags) continue to live in `.env`. On Linux systems without a
-  keyring, secrets fall back to plaintext to match Electron's default
-  behavior.
-- **Native binaries** — Platform-specific helpers (key listeners, paste
-  utilities) are compiled from source during the build process.
-- **Context isolation** — The Electron renderer runs with context isolation
-  enabled and a restricted preload bridge.
-
-## Automated Scanning
-
-[`.oss-scanner/`](.oss-scanner/) holds the build image and threat model for Anthropic's
-[OSS Scanner](https://github.com/anthropics/oss-scanner), which sends its model-generated
-vulnerability reports for both the desktop and mobile apps to security@openwhispr.com.
-
-## Disclosure Policy
-
-We follow coordinated disclosure. Once a fix is released, we will credit
-reporters in the changelog (unless they prefer to remain anonymous).
+- **Local processing.** Recordings are transcribed on the computer itself with Orukeet. Only
+  summaries, minutes and chat go to the AI endpoint the user configures.
+- **Key storage.** The AI endpoint's API key is stored encrypted through the operating system's
+  keychain (macOS Keychain, Windows DPAPI), never in the database, `.env` or localStorage. A new
+  endpoint on a different origin deletes the stored key.
+- **Native helpers** are compiled from source during the build.
+- **Context isolation.** The renderer runs with context isolation and a restricted preload bridge.
