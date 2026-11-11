@@ -113,7 +113,7 @@ final class AudioTapCapture {
 
     private func createAggregateDevice(tapUID: String) throws {
         let description: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "OpenWhispr Audio Tap",
+            kAudioAggregateDeviceNameKey: "Meetscribe Audio Tap",
             kAudioAggregateDeviceUIDKey: "com.openwhispr.audio-tap.\(UUID().uuidString)",
             kAudioAggregateDeviceSubDeviceListKey: [],
             kAudioAggregateDeviceTapListKey: [[kAudioSubTapUIDKey: tapUID]],
