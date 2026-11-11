@@ -99,6 +99,7 @@ const TOOL_GROUPS: Record<string, string> = {
   get_openwhispr_context: "Current OpenWhispr settings (read only)",
   web_search: "Web search",
   search_notes: "The user's notes",
+  search_meetings: "The user's recorded meetings",
   get_note: "The user's notes",
   create_note: "The user's notes",
   update_note: "The user's notes",
@@ -158,6 +159,9 @@ const OPEN_NOTE_TRANSCRIPT_RULE = `Its transcript is too long to include, so onl
 // answers from other notes read as the chat leaking past its note (#2551).
 const OPEN_NOTE_SEARCH_RULE =
   'In this chat, this rule overrides the search_notes guidance above: use search_notes only when the user asks you to look beyond this note (for example "check my other notes" or "did this come up in another meeting"), and name the note your answer comes from. When this note doesn\'t cover a question, offer to search their other notes rather than searching them yourself.';
+
+const OPEN_NOTE_MEETINGS_RULE =
+  "Likewise, use search_meetings only when the user asks you to look beyond this note (for example what other meetings said about a topic).";
 
 const RECORDED_ACTIONS_RULE =
   "An action marked sent or draft opened already happened: never do it again unless the user asks, and use its reference or link when you need it. One that may have been sent must not be retried. When the user answers your question or asks you to retry, do only what is still outstanding.";
@@ -290,7 +294,8 @@ export function getAgentSystemPrompt(
 
   if (options.openNote) {
     const canSearch = tools.some((tool) => tool.name === "search_notes");
-    prompt += `\n\n${OPEN_NOTE_RULE}${options.openNoteTranscriptPreview ? ` ${OPEN_NOTE_TRANSCRIPT_RULE}` : ""}${canSearch ? ` ${OPEN_NOTE_SEARCH_RULE}` : ""}\n\n${options.openNote}`;
+    const canSearchMeetings = tools.some((tool) => tool.name === "search_meetings");
+    prompt += `\n\n${OPEN_NOTE_RULE}${options.openNoteTranscriptPreview ? ` ${OPEN_NOTE_TRANSCRIPT_RULE}` : ""}${canSearch ? ` ${OPEN_NOTE_SEARCH_RULE}` : ""}${canSearchMeetings ? ` ${OPEN_NOTE_MEETINGS_RULE}` : ""}\n\n${options.openNote}`;
   }
 
   return prompt;

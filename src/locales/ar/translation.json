@@ -2685,7 +2685,8 @@
       "request_api_keyName": "مفتاح API",
       "request_api_keyStatus": "جارٍ طلب مفتاح API...",
       "open_settingsName": "الإعدادات",
-      "open_settingsStatus": "جارٍ توجيهك إلى الإعدادات..."
+      "open_settingsStatus": "جارٍ توجيهك إلى الإعدادات...",
+      "search_meetingsStatus": "جارٍ البحث في الاجتماعات..."
     },
     "turn": {
       "reasoning": "الاستدلال",
@@ -6996,5 +6997,18 @@
       "skip": "تخطَّ الآن",
       "skipHint": "يمكنك إضافته لاحقًا من الإعدادات ضمن نماذج الذكاء الاصطناعي."
     }
+  },
+  "meetingSources": {
+    "title": "المصادر",
+    "untitled": "اجتماع بلا عنوان",
+    "atTime": "عند {{time}}",
+    "showPassage": "عرض المقطع",
+    "hidePassage": "إخفاء المقطع",
+    "openMeeting": "فتح الاجتماع",
+    "toolStatus": {
+      "found": "المقاطع التي عُثر عليها في اجتماعاتك: {{count}}",
+      "none": "لم يُعثر على مقاطع مطابقة في اجتماعاتك"
+    },
+    "sourceLabel": "المصدر {{ref}}"
   }
 }

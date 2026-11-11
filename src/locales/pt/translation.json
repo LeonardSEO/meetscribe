@@ -4723,7 +4723,8 @@
       "request_api_keyName": "Chave de API",
       "request_api_keyStatus": "Pedindo uma chave de API...",
       "open_settingsName": "Configurações",
-      "open_settingsStatus": "Indicando as configurações..."
+      "open_settingsStatus": "Indicando as configurações...",
+      "search_meetingsStatus": "Pesquisando nas reuniões..."
     },
     "turn": {
       "reasoning": "Raciocínio",
@@ -6514,5 +6515,18 @@
       "skip": "Pular por enquanto",
       "skipHint": "Você pode adicionar isso depois em Configurações, em Modelos de IA."
     }
+  },
+  "meetingSources": {
+    "title": "Fontes",
+    "untitled": "Reunião sem título",
+    "atTime": "em {{time}}",
+    "showPassage": "Mostrar trecho",
+    "hidePassage": "Ocultar trecho",
+    "openMeeting": "Abrir reunião",
+    "toolStatus": {
+      "found": "Trechos encontrados nas suas reuniões: {{count}}",
+      "none": "Nenhum trecho correspondente encontrado nas suas reuniões"
+    },
+    "sourceLabel": "Fonte {{ref}}"
   }
 }

@@ -39,6 +39,7 @@ const ECHOED_TRACE = /^\s*\[Tools used:[^\]\n]*\]\s*/;
 const TRACE_ARGUMENT: Record<string, string> = {
   web_search: "query",
   search_notes: "query",
+  search_meetings: "query",
   linear_search_issues: "query",
   github_search_issues: "query",
   find_contact: "name",

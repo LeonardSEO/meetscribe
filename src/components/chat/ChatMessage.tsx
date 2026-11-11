@@ -25,6 +25,8 @@ import { openProviderSettings } from "../../utils/describeProviderError";
 import type { AssistantTurn, MessageError, ToolCallInfo } from "./types";
 import { toolCallStepText, visibleToolCalls } from "./toolCallText";
 import { extractNoteCards } from "./noteCards";
+import { citationRef, extractMeetingSources, parseCitations } from "./meetingCitations";
+import { MeetingSources } from "./MeetingSources";
 import { helpAnswerPlainText } from "./helpEvidenceText";
 import { HelpEvidence } from "./GroundedHelpEvidence";
 import { extractHelpEvidence } from "./helpEvidence";
@@ -354,8 +356,10 @@ export const ChatMessage = memo(function ChatMessage({
 }: ChatMessageProps) {
   const { t, i18n } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [sourceFocus, setSourceFocus] = useState<{ ref: number; nonce: number } | null>(null);
 
   const helpEvidence = role === "assistant" ? extractHelpEvidence(toolCalls) : null;
+  const meetingSources = role === "assistant" ? extractMeetingSources(toolCalls) : [];
 
   const handleCopy = async () => {
     try {
@@ -424,14 +428,29 @@ export const ChatMessage = memo(function ChatMessage({
         )}
 
         {hasContent && (
-          <MarkdownRenderer
-            content={content}
-            className="text-[13px] leading-relaxed [&_p]:text-[13px] [&_li]:text-[13px]"
-            codeBlockActions={copyCodeBlock}
-          />
+          <div
+            onClick={(event) => {
+              const ref = citationRef(
+                (event.target as HTMLElement).closest?.("a")?.getAttribute("href")
+              );
+              if (ref == null) return;
+              event.preventDefault();
+              setSourceFocus({ ref, nonce: Date.now() });
+            }}
+          >
+            <MarkdownRenderer
+              content={parseCitations(content, meetingSources)}
+              className="text-[13px] leading-relaxed [&_p]:text-[13px] [&_li]:text-[13px]"
+              codeBlockActions={copyCodeBlock}
+            />
+          </div>
         )}
 
         {helpEvidence && <HelpEvidence evidence={helpEvidence} />}
+
+        {meetingSources.length > 0 && !isStreaming && (
+          <MeetingSources sources={meetingSources} focus={sourceFocus} onOpenNote={onOpenNote} />
+        )}
 
         {isStreaming && hasContent && (
           <span

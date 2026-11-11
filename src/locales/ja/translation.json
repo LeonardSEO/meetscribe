@@ -4695,7 +4695,8 @@
       "request_api_keyName": "API キー",
       "request_api_keyStatus": "API キーを依頼しています...",
       "open_settingsName": "設定",
-      "open_settingsStatus": "設定を案内しています..."
+      "open_settingsStatus": "設定を案内しています...",
+      "search_meetingsStatus": "会議を検索しています..."
     },
     "turn": {
       "reasoning": "推論",
@@ -6486,5 +6487,18 @@
       "skip": "今はスキップ",
       "skipHint": "あとで設定の「AIモデル」から追加できます。"
     }
+  },
+  "meetingSources": {
+    "title": "情報源",
+    "untitled": "無題の会議",
+    "atTime": "{{time}}",
+    "showPassage": "該当箇所を表示",
+    "hidePassage": "該当箇所を隠す",
+    "openMeeting": "会議を開く",
+    "toolStatus": {
+      "found": "会議で見つかった該当箇所: {{count}}",
+      "none": "会議に一致する該当箇所は見つかりませんでした"
+    },
+    "sourceLabel": "情報源 {{ref}}"
   }
 }

@@ -23,6 +23,7 @@ import {
 
 export const toolIcons: Record<string, typeof Search> = {
   search_notes: Search,
+  search_meetings: Search,
   web_search: Globe,
   copy_to_clipboard: ClipboardCheck,
   get_calendar_events: Calendar,

@@ -4768,7 +4768,8 @@
       "request_api_keyName": "Clave de API",
       "request_api_keyStatus": "Pidiendo una clave de API...",
       "open_settingsName": "Ajustes",
-      "open_settingsStatus": "Indicándote Ajustes..."
+      "open_settingsStatus": "Indicándote Ajustes...",
+      "search_meetingsStatus": "Buscando en las reuniones..."
     },
     "turn": {
       "reasoning": "Razonamiento",
@@ -6507,5 +6508,18 @@
       "skip": "Omitir por ahora",
       "skipHint": "Puedes añadirlo más tarde en Ajustes, en Modelos de IA."
     }
+  },
+  "meetingSources": {
+    "title": "Fuentes",
+    "untitled": "Reunión sin título",
+    "atTime": "en {{time}}",
+    "showPassage": "Mostrar fragmento",
+    "hidePassage": "Ocultar fragmento",
+    "openMeeting": "Abrir reunión",
+    "toolStatus": {
+      "found": "Fragmentos encontrados en tus reuniones: {{count}}",
+      "none": "No se encontraron fragmentos coincidentes en tus reuniones"
+    },
+    "sourceLabel": "Fuente {{ref}}"
   }
 }

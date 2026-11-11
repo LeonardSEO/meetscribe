@@ -5076,7 +5076,8 @@
       "request_api_keyName": "Clé API",
       "request_api_keyStatus": "Demande d'une clé API...",
       "open_settingsName": "Réglages",
-      "open_settingsStatus": "Redirection vers les réglages..."
+      "open_settingsStatus": "Redirection vers les réglages...",
+      "search_meetingsStatus": "Recherche dans les réunions..."
     },
     "turn": {
       "reasoning": "Raisonnement",
@@ -6514,5 +6515,18 @@
       "skip": "Passer pour l’instant",
       "skipHint": "Vous pourrez l’ajouter plus tard dans Paramètres, sous Modèles d’IA."
     }
+  },
+  "meetingSources": {
+    "title": "Sources",
+    "untitled": "Réunion sans titre",
+    "atTime": "à {{time}}",
+    "showPassage": "Afficher le passage",
+    "hidePassage": "Masquer le passage",
+    "openMeeting": "Ouvrir la réunion",
+    "toolStatus": {
+      "found": "Passages trouvés dans vos réunions : {{count}}",
+      "none": "Aucun passage correspondant trouvé dans vos réunions"
+    },
+    "sourceLabel": "Source {{ref}}"
   }
 }

@@ -4857,7 +4857,8 @@
       "request_api_keyName": "Ключ API",
       "request_api_keyStatus": "Запрашиваю ключ API...",
       "open_settingsName": "Настройки",
-      "open_settingsStatus": "Направляю в настройки..."
+      "open_settingsStatus": "Направляю в настройки...",
+      "search_meetingsStatus": "Поиск по встречам..."
     },
     "turn": {
       "reasoning": "Рассуждение",
@@ -6726,5 +6727,18 @@
       "skip": "Пропустить",
       "skipHint": "Позже это можно добавить в Настройках, в разделе «Модели ИИ»."
     }
+  },
+  "meetingSources": {
+    "title": "Источники",
+    "untitled": "Встреча без названия",
+    "atTime": "на {{time}}",
+    "showPassage": "Показать фрагмент",
+    "hidePassage": "Скрыть фрагмент",
+    "openMeeting": "Открыть встречу",
+    "toolStatus": {
+      "found": "Найдено фрагментов в ваших встречах: {{count}}",
+      "none": "В ваших встречах не найдено подходящих фрагментов"
+    },
+    "sourceLabel": "Источник {{ref}}"
   }
 }

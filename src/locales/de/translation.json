@@ -5048,7 +5048,8 @@
       "request_api_keyName": "API-Schlüssel",
       "request_api_keyStatus": "Bitte um einen API-Schlüssel...",
       "open_settingsName": "Einstellungen",
-      "open_settingsStatus": "Verweise auf die Einstellungen..."
+      "open_settingsStatus": "Verweise auf die Einstellungen...",
+      "search_meetingsStatus": "Meetings werden durchsucht..."
     },
     "turn": {
       "reasoning": "Gedankengang",
@@ -6486,5 +6487,18 @@
       "skip": "Vorerst überspringen",
       "skipHint": "Sie können dies später in den Einstellungen unter KI-Modelle hinzufügen."
     }
+  },
+  "meetingSources": {
+    "title": "Quellen",
+    "untitled": "Meeting ohne Titel",
+    "atTime": "bei {{time}}",
+    "showPassage": "Textstelle anzeigen",
+    "hidePassage": "Textstelle ausblenden",
+    "openMeeting": "Meeting öffnen",
+    "toolStatus": {
+      "found": "Gefundene Textstellen in Ihren Meetings: {{count}}",
+      "none": "Keine passenden Textstellen in Ihren Meetings gefunden"
+    },
+    "sourceLabel": "Quelle {{ref}}"
   }
 }

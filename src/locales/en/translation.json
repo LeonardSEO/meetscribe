@@ -5048,7 +5048,8 @@
       "request_api_keyName": "API key",
       "request_api_keyStatus": "Asking for an API key...",
       "open_settingsName": "Settings",
-      "open_settingsStatus": "Pointing you to Settings..."
+      "open_settingsStatus": "Pointing you to Settings...",
+      "search_meetingsStatus": "Searching meetings..."
     },
     "turn": {
       "reasoning": "Reasoning",
@@ -6486,5 +6487,18 @@
       "skip": "Skip for now",
       "skipHint": "You can add this later in Settings, under AI Models."
     }
+  },
+  "meetingSources": {
+    "title": "Sources",
+    "untitled": "Untitled meeting",
+    "atTime": "at {{time}}",
+    "showPassage": "Show passage",
+    "hidePassage": "Hide passage",
+    "openMeeting": "Open meeting",
+    "toolStatus": {
+      "found": "Passages found in your meetings: {{count}}",
+      "none": "No matching passages found in your meetings"
+    },
+    "sourceLabel": "Source {{ref}}"
   }
 }

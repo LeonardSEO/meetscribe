@@ -4695,7 +4695,8 @@
       "request_api_keyName": "API 密钥",
       "request_api_keyStatus": "正在请求 API 密钥...",
       "open_settingsName": "设置",
-      "open_settingsStatus": "正在引导你前往设置..."
+      "open_settingsStatus": "正在引导你前往设置...",
+      "search_meetingsStatus": "正在搜索会议..."
     },
     "turn": {
       "reasoning": "推理过程",
@@ -6486,5 +6487,18 @@
       "skip": "暂时跳过",
       "skipHint": "您可以稍后在“设置”的“AI 模型”中添加。"
     }
+  },
+  "meetingSources": {
+    "title": "来源",
+    "untitled": "未命名会议",
+    "atTime": "于 {{time}}",
+    "showPassage": "显示片段",
+    "hidePassage": "隐藏片段",
+    "openMeeting": "打开会议",
+    "toolStatus": {
+      "found": "在你的会议中找到的片段数：{{count}}",
+      "none": "在你的会议中未找到匹配的片段"
+    },
+    "sourceLabel": "来源 {{ref}}"
   }
 }

@@ -4716,7 +4716,8 @@
       "request_api_keyName": "Chiave API",
       "request_api_keyStatus": "Richiesta di una chiave API...",
       "open_settingsName": "Impostazioni",
-      "open_settingsStatus": "Ti indirizzo alle impostazioni..."
+      "open_settingsStatus": "Ti indirizzo alle impostazioni...",
+      "search_meetingsStatus": "Ricerca nelle riunioni..."
     },
     "turn": {
       "reasoning": "Ragionamento",
@@ -6507,5 +6508,18 @@
       "skip": "Salta per ora",
       "skipHint": "Puoi aggiungerlo più tardi in Impostazioni, sotto Modelli IA."
     }
+  },
+  "meetingSources": {
+    "title": "Fonti",
+    "untitled": "Riunione senza titolo",
+    "atTime": "a {{time}}",
+    "showPassage": "Mostra il passaggio",
+    "hidePassage": "Nascondi il passaggio",
+    "openMeeting": "Apri riunione",
+    "toolStatus": {
+      "found": "Passaggi trovati nelle tue riunioni: {{count}}",
+      "none": "Nessun passaggio corrispondente trovato nelle tue riunioni"
+    },
+    "sourceLabel": "Fonte {{ref}}"
   }
 }

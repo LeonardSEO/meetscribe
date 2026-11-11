@@ -1,6 +1,7 @@
 import { productHelpTools } from "./productHelpTools";
 import { ToolRegistry } from "./ToolRegistry";
 import { createSearchNotesTool } from "./searchNotesTool";
+import { searchMeetingsTool } from "./searchMeetingsTool";
 import { getNoteTool } from "./getNoteTool";
 import { createNoteTool } from "./createNoteTool";
 import { updateNoteTool } from "./updateNoteTool";
@@ -29,6 +30,7 @@ import {
 
 import { getSettings, selectCalendarConnected } from "../../stores/settingsStore";
 import type { ContainerScope } from "../../types/chat";
+import { isLocalOnly } from "../../config/localOnly";
 
 export { ToolRegistry } from "./ToolRegistry";
 export type { ToolDefinition, ToolResult } from "./ToolRegistry";
@@ -61,6 +63,10 @@ export function createToolRegistry(settings: ToolRegistrySettings): ToolRegistry
 
   const useCloudSearch = settings.isSignedIn && settings.cloudBackupEnabled;
   registry.register(createSearchNotesTool({ useCloudSearch, fixedScope: settings.searchScope }));
+  // Reads only this computer's transcript index, so it needs no account. Upstream
+  // builds keep their own tool set, and a chat pinned to a container must not
+  // search past it (this tool takes no scope).
+  if (isLocalOnly() && !settings.searchScope) registry.register(searchMeetingsTool);
   registry.register(getNoteTool);
   registry.register(createNoteTool);
   if (!settings.keepNotesUnchanged) registry.register(updateNoteTool);
