@@ -5457,11 +5457,11 @@ class DatabaseManager {
       const params = [tokens.join(" OR "), ...accountScope.params];
       let filters = "";
       if (typeof dateFrom === "string" && dateFrom) {
-        filters += " AND date(n.created_at) >= date(?)";
+        filters += " AND date(n.created_at, 'localtime') >= date(?)";
         params.push(dateFrom);
       }
       if (typeof dateTo === "string" && dateTo) {
-        filters += " AND date(n.created_at) <= date(?)";
+        filters += " AND date(n.created_at, 'localtime') <= date(?)";
         params.push(dateTo);
       }
       const onlyNote = typeof noteId === "boolean" ? NaN : Number(noteId);
