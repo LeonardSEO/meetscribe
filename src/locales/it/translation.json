@@ -6471,7 +6471,12 @@
     "model": {
       "label": "Distribuzione o modello",
       "help": "Il nome della distribuzione in Azure AI Foundry, o il nome del modello atteso dal tuo provider.",
-      "required": "Inserisci il nome della distribuzione o del modello."
+      "required": "Inserisci il nome della distribuzione o del modello.",
+      "list": "Carica modelli",
+      "listNeedsSave": "Salva prima l'URL di base e la chiave API per caricare l'elenco.",
+      "pick": "Scegli dall'elenco",
+      "listFailed": "Impossibile caricare l'elenco dei modelli: {{message}}",
+      "listEmpty": "Il server non ha restituito alcun modello."
     },
     "apiKey": {
       "label": "Chiave API",

@@ -184,6 +184,147 @@ function applyFoundryConfig(env, input, clearKey) {
   return { baseUrl, wireApi, keyCleared };
 }
 
+// Some OpenAI-compatible servers leave `index` out of chat choices, which the
+// SDK requires. Choices without one get their position, in plain JSON replies
+// and in each `data:` line of a stream.
+function indexChoices(json) {
+  if (!json || typeof json !== "object" || !Array.isArray(json.choices)) return false;
+  let changed = false;
+  json.choices.forEach((choice, position) => {
+    if (choice && typeof choice === "object" && typeof choice.index !== "number") {
+      choice.index = position;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function indexDataLine(line) {
+  const match = /^data:\s?(.*)$/.exec(line);
+  if (!match || !match[1].startsWith("{")) return line;
+  try {
+    const json = JSON.parse(match[1]);
+    return indexChoices(json) ? `data: ${JSON.stringify(json)}` : line;
+  } catch {
+    return line;
+  }
+}
+
+async function withChoiceIndexes(response) {
+  if (!response.ok || !response.body) return response;
+  const type = response.headers.get("content-type") || "";
+  const init = {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  };
+  if (type.includes("text/event-stream")) {
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    let pending = "";
+    const flushLines = (controller, text) => {
+      const lines = text.split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) controller.enqueue(encoder.encode(`${indexDataLine(line)}\n`));
+    };
+    const body = response.body.pipeThrough(
+      new TransformStream({
+        transform(chunk, controller) {
+          flushLines(controller, pending + decoder.decode(chunk, { stream: true }));
+        },
+        flush(controller) {
+          const rest = pending + decoder.decode();
+          if (rest) controller.enqueue(encoder.encode(indexDataLine(rest)));
+        },
+      })
+    );
+    return new Response(body, init);
+  }
+  if (!type.includes("json")) return response;
+  const text = await response.text();
+  try {
+    const json = JSON.parse(text);
+    if (indexChoices(json)) return new Response(JSON.stringify(json), init);
+  } catch {
+    // Not JSON after all: hand it on unchanged.
+  }
+  return new Response(text, init);
+}
+
+const MAX_LISTED_MODELS = 200;
+
+function shortText(value, max) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+/**
+ * Lists the models (or agents) the saved server offers at `GET {baseUrl}/models`,
+ * with the saved key. Only id, name and description are kept; whatever the
+ * server sends is shown as plain text and nothing else is read from it.
+ */
+async function listFoundryModels(env, { timeoutMs = 10_000 } = {}) {
+  const { providerHttpError, asProviderError } = require("./providerHttpErrors");
+  const saved = env?.getFoundryConfig?.() || {};
+  if (!saved.baseUrl) throw new Error("Save the base URL first.");
+  const baseURL = normalizeFoundryBaseUrl(saved.baseUrl);
+  validateFoundryEndpoint(baseURL);
+  const apiKey = getFoundryCredential(env).apiKey;
+  const azure = isAzureHost(hostnameOf(new URL(baseURL)));
+  const headers = { accept: "application/json" };
+  if (apiKey) {
+    headers.authorization = `Bearer ${apiKey}`;
+    if (azure) headers["api-key"] = apiKey;
+  }
+  let response;
+  try {
+    response = await globalThis.fetch(`${baseURL}/models`, {
+      headers,
+      redirect: "error",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    throw asProviderError(error, {
+      provider: "foundry",
+      surface: "llm",
+      selfHosted: !azure,
+      foundry: true,
+    });
+  }
+  const text = await response.text().catch(() => "");
+  if (!response.ok) {
+    throw providerHttpError({
+      provider: "foundry",
+      status: response.status,
+      body: text,
+      headers: response.headers,
+      surface: "llm",
+      selfHosted: !azure,
+      foundry: true,
+    });
+  }
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("The server did not return a model list.");
+  }
+  const items = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+  const seen = new Set();
+  const models = [];
+  for (const item of items) {
+    const id = shortText(item?.id, 200);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    models.push({
+      id,
+      name: shortText(item?.name, 120) || id,
+      description: shortText(item?.description, 300),
+    });
+    if (models.length >= MAX_LISTED_MODELS) break;
+  }
+  return models.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 // Models (per base URL) that answered 400 to `include`; skipped for the rest of the process.
 const includeUnsupported = new Set();
 
@@ -202,13 +343,17 @@ function createFoundryFetch(azure, baseURL) {
       }
     }
     if (!body || typeof body !== "object") return globalThis.fetch(input, init);
+    const chat = /\/chat\/completions(?:$|[?#])/.test(String(input?.url ?? input));
     if (azure && "max_tokens" in body) {
       if (body.max_completion_tokens == null) body.max_completion_tokens = body.max_tokens;
       delete body.max_tokens;
     }
     const compatKey = `${baseURL}|${body.model}`;
     if (includeUnsupported.has(compatKey)) delete body.include;
-    const send = (payload) => globalThis.fetch(input, { ...init, body: JSON.stringify(payload) });
+    const send = async (payload) => {
+      const response = await globalThis.fetch(input, { ...init, body: JSON.stringify(payload) });
+      return chat ? withChoiceIndexes(response) : response;
+    };
     const response = await send(body);
     if (response.status === 400 && Array.isArray(body.include) && body.include.length > 0) {
       const text = await response
@@ -277,5 +422,6 @@ module.exports = {
   getFoundryCredential,
   resolveFoundryRuntime,
   applyFoundryConfig,
+  listFoundryModels,
   isAzureHost,
 };

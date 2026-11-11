@@ -507,3 +507,92 @@ test("requests never follow redirects, so the key cannot reach another host", as
   const responses = await call(responsesModel("redirect-dep"));
   assert.equal(responses.init.redirect, "error");
 });
+
+// OpenAI-compatible servers that leave `index` out of chat choices.
+const compatBase = { foundryBaseUrl: "https://llm.example.com/v1", foundryWireApi: "chat" };
+
+test("chat stream without choice indexes still yields text", async () => {
+  const sse = [
+    'data: {"object":"chat.completion.chunk","choices":[{"delta":{"content":"1"}}]}',
+    'data: {"object":"chat.completion.chunk","choices":[{"delta":{"content":"2"}}]}',
+    "data: [DONE]",
+    "",
+  ].join("\n\n");
+  global.fetch = async () =>
+    new Response(sse, { status: 200, headers: { "content-type": "text/event-stream" } });
+  const { stream } = await createFoundryModel("agent_x", "k", compatBase).doStream({ prompt });
+  const reader = stream.getReader();
+  let text = "";
+  const errors = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value.type === "text-delta") text += value.delta;
+    if (value.type === "error") errors.push(value.error);
+  }
+  assert.deepEqual(errors, []);
+  assert.equal(text, "12");
+});
+
+test("chat reply without choice indexes still parses", async () => {
+  global.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        object: "chat.completion",
+        choices: [{ message: { role: "assistant", content: "Hallo" }, finish_reason: "stop" }],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+  const result = await createFoundryModel("agent_x", "k", compatBase).doGenerate({ prompt });
+  assert.equal(result.content.find((part) => part.type === "text")?.text, "Hallo");
+});
+
+function listEnv(baseUrl, key = "k") {
+  return {
+    getFoundryConfig: () => ({ baseUrl, wireApi: "chat" }),
+    getFoundryApiKey: () => key,
+  };
+}
+
+test("lists models from /models with the saved key", async () => {
+  const seen = [];
+  global.fetch = async (url, init) => {
+    seen.push({ url: String(url), init });
+    return new Response(
+      JSON.stringify({
+        object: "list",
+        data: [
+          { id: "agent_b", object: "model", name: "Web Search", description: "Searches" },
+          { id: "agent_a", object: "model" },
+          { id: "agent_a", object: "model" },
+          { object: "model" },
+        ],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+  };
+  const { listFoundryModels } = require("../../src/helpers/foundryProvider.js");
+  const models = await listFoundryModels(listEnv("https://llm.example.com/v1"));
+  assert.equal(seen[0].url, "https://llm.example.com/v1/models");
+  assert.equal(seen[0].init.headers.authorization, "Bearer k");
+  assert.equal(seen[0].init.redirect, "error");
+  assert.deepEqual(models, [
+    { id: "agent_a", name: "agent_a", description: "" },
+    { id: "agent_b", name: "Web Search", description: "Searches" },
+  ]);
+});
+
+test("a refused model list is classified, and an unsaved URL is refused", async () => {
+  global.fetch = async () =>
+    new Response('{"error":"bad key"}', {
+      status: 401,
+      headers: { "content-type": "application/json" },
+    });
+  const { listFoundryModels } = require("../../src/helpers/foundryProvider.js");
+  await assert.rejects(listFoundryModels(listEnv("https://llm.example.com/v1")), (error) => {
+    assert.equal(error.code, "PROVIDER_AUTH_FAILED");
+    return true;
+  });
+  await assert.rejects(listFoundryModels(listEnv("")));
+  await assert.rejects(listFoundryModels(listEnv("http://169.254.169.254/v1")));
+});

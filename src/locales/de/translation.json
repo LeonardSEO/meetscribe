@@ -6450,7 +6450,12 @@
     "model": {
       "label": "Bereitstellung oder Modell",
       "help": "Der Bereitstellungsname in Azure AI Foundry oder der Modellname, den Ihr Anbieter erwartet.",
-      "required": "Geben Sie den Bereitstellungs- oder Modellnamen ein."
+      "required": "Geben Sie den Bereitstellungs- oder Modellnamen ein.",
+      "list": "Modelle laden",
+      "listNeedsSave": "Speichere zuerst Basis-URL und API-Schlüssel, um die Liste zu laden.",
+      "pick": "Aus der Liste wählen",
+      "listFailed": "Die Modellliste konnte nicht geladen werden: {{message}}",
+      "listEmpty": "Der Server hat keine Modelle zurückgegeben."
     },
     "apiKey": {
       "label": "API-Schlüssel",

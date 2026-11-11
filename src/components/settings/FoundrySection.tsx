@@ -6,6 +6,7 @@ import { Check, Loader2 } from "../icons";
 import TestConnectionButton from "../TestConnectionButton";
 import { SectionHeader, SettingsPanel, SettingsPanelRow } from "../ui/SettingsSection";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { describeProviderError } from "../../utils/describeProviderError";
 import {
   fieldForTestFailure,
   foundryKeyRequired,
@@ -17,6 +18,12 @@ import {
 } from "./foundryForm";
 
 type WireApi = "responses" | "chat";
+
+interface ListedModel {
+  id: string;
+  name: string;
+  description: string;
+}
 
 interface FoundryFormProps {
   /** Called after the config and key were saved. */
@@ -75,6 +82,9 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [listedModels, setListedModels] = useState<ListedModel[] | null>(null);
+  const [listingModels, setListingModels] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,6 +193,36 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
     }
   };
 
+  // Asks the saved server for its models (or agents) with the saved key.
+  const handleListModels = async () => {
+    setListingModels(true);
+    setListError(null);
+    try {
+      const result = await window.electronAPI?.listFoundryModels?.();
+      if (!result || result.error) {
+        setListedModels(null);
+        setListError(
+          t("foundry.model.listFailed", {
+            message: result?.error ? describeProviderError(result.error, t).description : "",
+          })
+        );
+        return;
+      }
+      const models = result.models ?? [];
+      setListedModels(models);
+      if (models.length === 0) setListError(t("foundry.model.listEmpty"));
+    } catch (error) {
+      setListedModels(null);
+      setListError(t("foundry.model.listFailed", { message: ipcErrorMessage(error) }));
+    } finally {
+      setListingModels(false);
+    }
+  };
+
+  const canListModels =
+    loaded && !dirty && Boolean(baseUrl.trim()) && (hasKey || !foundryKeyRequired(baseUrl));
+  const pickedModel = listedModels?.find((item) => item.id === model.trim());
+
   const fieldProps = (field: FoundryField) => ({
     "aria-invalid": errors[field] ? true : undefined,
     "aria-describedby": `foundry-${field}-msg`,
@@ -233,6 +273,57 @@ export function FoundryForm({ onSaved, saveLabel }: FoundryFormProps) {
           error={errors.model ?? (testFailure?.field === "model" ? testFailure.message : undefined)}
           hint={t("foundry.model.help")}
         />
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => void handleListModels()}
+            disabled={!canListModels || listingModels}
+          >
+            {listingModels && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
+            {t("foundry.model.list")}
+          </Button>
+          {!canListModels && (
+            <span dir="auto" className="text-xs text-muted-foreground/70">
+              {t("foundry.model.listNeedsSave")}
+            </span>
+          )}
+        </div>
+        {listedModels && listedModels.length > 0 && (
+          <div className="space-y-1">
+            <label htmlFor="foundry-modelList" className="sr-only">
+              {t("foundry.model.pick")}
+            </label>
+            <select
+              id="foundry-modelList"
+              value={pickedModel ? pickedModel.id : ""}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                setModel(e.target.value);
+                touch();
+              }}
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            >
+              <option value="">{t("foundry.model.pick")}</option>
+              {listedModels.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name === item.id ? item.id : `${item.name} (${item.id})`}
+                </option>
+              ))}
+            </select>
+            {pickedModel?.description && (
+              <p dir="auto" className="text-xs text-muted-foreground/70">
+                {pickedModel.description}
+              </p>
+            )}
+          </div>
+        )}
+        {listError && (
+          <p role="alert" dir="auto" className="text-xs text-destructive">
+            {listError}
+          </p>
+        )}
       </div>
 
       <div className="space-y-1.5">

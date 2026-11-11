@@ -5735,6 +5735,22 @@ class IPCHandlers {
       }
       return result;
     });
+    // Models or agents from the saved server's /models, called with the stored key.
+    // Errors come back as data, since IPC keeps only an Error's message.
+    ipcMain.handle("list-foundry-models", async () => {
+      try {
+        return { models: await foundryProvider.listFoundryModels(this.environmentManager) };
+      } catch (error) {
+        return {
+          error: {
+            message: String(error?.message || error),
+            ...(error?.code ? { code: error.code } : {}),
+            ...(error?.messageKey ? { messageKey: error.messageKey } : {}),
+            ...(error?.messageParams ? { messageParams: error.messageParams } : {}),
+          },
+        };
+      }
+    });
     // Base URL and wire API only; the key is never returned.
     ipcMain.handle("get-foundry-config", async () => this.environmentManager.getFoundryConfig());
     ipcMain.handle("has-foundry-api-key", async () =>

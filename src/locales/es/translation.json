@@ -6471,7 +6471,12 @@
     "model": {
       "label": "Implementación o modelo",
       "help": "El nombre de la implementación en Azure AI Foundry, o el nombre de modelo que espera tu proveedor.",
-      "required": "Introduce el nombre de la implementación o del modelo."
+      "required": "Introduce el nombre de la implementación o del modelo.",
+      "list": "Cargar modelos",
+      "listNeedsSave": "Guarda primero la URL base y la clave de API para cargar la lista.",
+      "pick": "Elegir de la lista",
+      "listFailed": "No se pudo cargar la lista de modelos: {{message}}",
+      "listEmpty": "El servidor no devolvió ningún modelo."
     },
     "apiKey": {
       "label": "Clave de API",

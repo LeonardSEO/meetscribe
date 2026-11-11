@@ -6450,7 +6450,12 @@
     "model": {
       "label": "Deployment or model",
       "help": "The deployment name in Azure AI Foundry, or the model name your provider expects.",
-      "required": "Enter the deployment or model name."
+      "required": "Enter the deployment or model name.",
+      "list": "Load models",
+      "listNeedsSave": "Save the base URL and API key first to load the list.",
+      "pick": "Choose from the list",
+      "listFailed": "The model list could not be loaded: {{message}}",
+      "listEmpty": "The server returned no models."
     },
     "apiKey": {
       "label": "API key",

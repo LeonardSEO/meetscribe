@@ -2841,6 +2841,15 @@ declare global {
         wireApi: "responses" | "chat";
       }) => Promise<{ baseUrl: string; wireApi: "responses" | "chat"; keyCleared: boolean }>;
       getFoundryConfig?: () => Promise<{ baseUrl: string; wireApi: "responses" | "chat" }>;
+      listFoundryModels?: () => Promise<{
+        models?: Array<{ id: string; name: string; description: string }>;
+        error?: {
+          message: string;
+          code?: string;
+          messageKey?: string;
+          messageParams?: Record<string, string | number>;
+        };
+      }>;
       getAzureDeployment?: () => Promise<string | null>;
       saveAzureDeployment?: (value: string) => Promise<void>;
       getAzureApiVersion?: () => Promise<string | null>;

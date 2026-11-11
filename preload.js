@@ -704,6 +704,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   hasFoundryApiKey: () => ipcRenderer.invoke("has-foundry-api-key"),
   saveFoundryConfig: (config) => ipcRenderer.invoke("save-foundry-config", config),
   getFoundryConfig: () => ipcRenderer.invoke("get-foundry-config"),
+  listFoundryModels: () => ipcRenderer.invoke("list-foundry-models"),
   getAzureDeployment: () => ipcRenderer.invoke("get-azure-deployment"),
   saveAzureDeployment: (value) => ipcRenderer.invoke("save-azure-deployment", value),
   getAzureApiVersion: () => ipcRenderer.invoke("get-azure-api-version"),

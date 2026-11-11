@@ -6450,7 +6450,12 @@
     "model": {
       "label": "部署或模型",
       "help": "Azure AI Foundry 中的部署名稱，或您的供應商要求的模型名稱。",
-      "required": "請輸入部署名稱或模型名稱。"
+      "required": "請輸入部署名稱或模型名稱。",
+      "list": "載入模型",
+      "listNeedsSave": "請先儲存基礎 URL 和 API 金鑰，再載入清單。",
+      "pick": "從清單中選擇",
+      "listFailed": "無法載入模型清單：{{message}}",
+      "listEmpty": "伺服器未傳回任何模型。"
     },
     "apiKey": {
       "label": "API 金鑰",

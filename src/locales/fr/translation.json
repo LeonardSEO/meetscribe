@@ -6478,7 +6478,12 @@
     "model": {
       "label": "Déploiement ou modèle",
       "help": "Le nom du déploiement dans Azure AI Foundry, ou le nom de modèle attendu par votre fournisseur.",
-      "required": "Saisissez le nom du déploiement ou du modèle."
+      "required": "Saisissez le nom du déploiement ou du modèle.",
+      "list": "Charger les modèles",
+      "listNeedsSave": "Enregistrez d'abord l'URL de base et la clé API pour charger la liste.",
+      "pick": "Choisir dans la liste",
+      "listFailed": "Impossible de charger la liste des modèles : {{message}}",
+      "listEmpty": "Le serveur n'a renvoyé aucun modèle."
     },
     "apiKey": {
       "label": "Clé API",
