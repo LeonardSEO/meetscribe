@@ -517,6 +517,7 @@ function mapFoundryError(error, config = {}) {
     provider: "Azure AI Foundry",
     surface: "llm",
     selfHosted: !azure,
+    foundry: true,
   });
   if (!classified?.messageKey) return { message: error?.message || String(error) };
   return {

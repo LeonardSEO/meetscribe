@@ -3,6 +3,7 @@
 // both sides classify a provider failure the same way.
 
 import { LLM_REQUEST_TIMEOUT_CODE } from "./llmRequestTimeout.js";
+import { isLocalOnly } from "../config/localOnly.js";
 
 export const PROVIDER_ERROR_CODES = Object.freeze({
   AUTH_FAILED: "PROVIDER_AUTH_FAILED",
@@ -201,9 +202,13 @@ function requestIdFrom(headers) {
   );
 }
 
-function codeForStatus(status, text, selfHosted) {
-  if (status === 400 && CONTEXT_LENGTH_SIGNAL.test(text)) return C.CONTEXT_TOO_LARGE;
-  if (status === 400 && CONTENT_FILTER_SIGNAL.test(text)) return C.CONTENT_FILTERED;
+function codeForStatus(status, text, selfHosted, readsOversizeAndFilter) {
+  // Foundry/Azure, or any provider in a local-only build; upstream keeps classifying
+  // other providers' 400s as before.
+  if (readsOversizeAndFilter || isLocalOnly()) {
+    if (status === 400 && CONTEXT_LENGTH_SIGNAL.test(text)) return C.CONTEXT_TOO_LARGE;
+    if (status === 400 && CONTENT_FILTER_SIGNAL.test(text)) return C.CONTENT_FILTERED;
+  }
   if (status === 401) return C.AUTH_FAILED;
   if ((status === 400 || status === 403) && INVALID_KEY_SIGNAL.test(text)) return C.AUTH_FAILED;
   if (status === 402) return C.QUOTA_EXHAUSTED;
@@ -269,12 +274,21 @@ function toError(classification, extra = {}) {
 }
 
 export function providerHttpError(args) {
-  const { provider, status, body, headers, model, surface, selfHosted = false } = args;
+  const {
+    provider,
+    status,
+    body,
+    headers,
+    model,
+    surface,
+    selfHosted = false,
+    foundry = false,
+  } = args;
   const text = bodyToText(body);
   const underlyingError = redactProviderBody(text);
   const requestId = requestIdFrom(headers);
   return toError(
-    buildClassification(codeForStatus(status, text, selfHosted), {
+    buildClassification(codeForStatus(status, text, selfHosted, foundry), {
       provider,
       model,
       surface,

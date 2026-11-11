@@ -227,6 +227,9 @@ const target = {
   _enterpriseAudioBinding: null,
   _enterpriseAudioScope: null,
   _enterpriseAudioScopeRevision: 0,
+  // The handlers' proxy would answer a missing method with a truthy stand-in, which a
+  // local start reads as "model not downloaded"; upstream mode never refuses here.
+  _checkLocalMeetingModel: () => null,
   // A system audio tap on every platform, so each meeting opens two streams.
   audioTapManager: { isSupported: () => true, start: async () => {}, stop: async () => {} },
   _mintStoredCortiToken: async () => ({

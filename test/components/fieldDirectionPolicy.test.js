@@ -81,6 +81,8 @@ const EXPECTED_SHARED_FIELD_DIRECTIONS = {
   "src/components/settings/DictationAgentSettings.tsx": ["auto"],
   "src/components/settings/EnterpriseAudioSettings.tsx": ["ltr"],
   "src/components/settings/EnterpriseCheckoutDialog.tsx": ["inherit"],
+  // Endpoint URL, API key, deployment name and token limits: always LTR.
+  "src/components/settings/FoundrySection.tsx": ["ltr", "ltr", "ltr", "ltr", "ltr"],
   "src/components/settings/ProfileSection.tsx": ["auto", "ltr", "ltr", "ltr"],
   // Teamspace search: names in any script.
   "src/components/settings/TeamSpacesPanel.tsx": ["auto"],

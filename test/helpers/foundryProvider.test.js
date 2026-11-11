@@ -481,8 +481,17 @@ test("shared classifier: BYOK status handling is unchanged outside the new 400 c
   assert.equal(code(400, "something else"), "PROVIDER_BAD_REQUEST");
   assert.equal(code(413, "big"), "PROVIDER_PAYLOAD_TOO_LARGE");
   assert.equal(code(503, "down"), "PROVIDER_UNAVAILABLE");
-  assert.equal(code(400, '{"error":{"code":"context_length_exceeded"}}'), "CONTEXT_TOO_LARGE");
-  assert.equal(code(400, '{"error":{"code":"content_filter"}}'), "PROVIDER_CONTENT_FILTERED");
+  // Upstream mode leaves other providers' 400s alone; only local-only reads these codes.
+  assert.equal(code(400, '{"error":{"code":"context_length_exceeded"}}'), "PROVIDER_BAD_REQUEST");
+  assert.equal(code(400, '{"error":{"code":"content_filter"}}'), "PROVIDER_BAD_REQUEST");
+  const upstream = globalThis.__OW_UPSTREAM_MODE;
+  globalThis.__OW_UPSTREAM_MODE = false;
+  try {
+    assert.equal(code(400, '{"error":{"code":"context_length_exceeded"}}'), "CONTEXT_TOO_LARGE");
+    assert.equal(code(400, '{"error":{"code":"content_filter"}}'), "PROVIDER_CONTENT_FILTERED");
+  } finally {
+    globalThis.__OW_UPSTREAM_MODE = upstream;
+  }
   // Only 400 is reinterpreted: a 500 mentioning the words stays an outage.
   assert.equal(code(500, "context_length_exceeded"), "PROVIDER_UNAVAILABLE");
   assert.equal(code(429, "content_filter"), "PROVIDER_RATE_LIMITED");
