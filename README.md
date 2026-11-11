@@ -48,10 +48,12 @@ Intel Macs and Linux are not supported. The interface is available in English an
 
 There are no ready-made downloads yet. Build the app yourself (see [Development](#development)); the installer ends up in `dist/`.
 
-The builds are not signed, so your operating system warns you on first launch:
+The macOS build is signed ad-hoc (no Apple Developer ID, not notarized) and the Windows installer is not signed, so your operating system warns you on first launch:
 
-- **macOS:** open Meetscribe once and dismiss the message. Go to **System Settings → Privacy & Security**, choose **Open Anyway** at the bottom and confirm.
+- **macOS:** open Meetscribe once and dismiss the message. Go to **System Settings → Privacy & Security**, choose **Open Anyway** at the bottom and confirm. An ad-hoc signature changes with every build, so after installing a new build macOS may ask for microphone, system audio and accessibility access again.
 - **Windows:** in the SmartScreen window, choose **More info** and then **Run anyway**.
+
+With an Apple Developer ID certificate in the repository secrets (`APPLE_CERTIFICATE_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_API_KEY_BASE64`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `APPLE_TEAM_ID`), the release workflow signs with it and notarizes instead.
 
 On first launch, Meetscribe asks for access to your microphone, system audio and (optionally) your calendar.
 
@@ -79,7 +81,7 @@ npm ci
 npm run dev                # start the app in development mode
 npm test                   # test suite
 npm run quality-check      # registry check, formatting and typecheck
-npm run build:local:mac    # macOS Apple Silicon, unsigned
+npm run build:local:mac    # macOS Apple Silicon, ad-hoc signed
 npm run build:local:win    # Windows x64, on a Windows computer, unsigned
 ```
 

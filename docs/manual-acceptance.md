@@ -31,7 +31,7 @@ Platformen: macOS Apple Silicon (macOS 15.5 of nieuwer) en Windows x64. Gebruik 
 - [ ] **Notulen**: bewerken, opnieuw genereren en als Markdown exporteren. Zonder geldige configuratie blijven transcript en bestaande notulen onaangeroerd en wijst de melding naar Instellingen.
 - [ ] **Chat over eerdere vergaderingen**: de vraag "wat hebben we vorige week besloten over project X?" geeft een antwoord met controleerbare bronnen (genummerde passages met vergadering, spreker en tijd). Een vraag zonder treffer geeft een duidelijke "niets gevonden".
 - [ ] **Windows-build** (`npm run build:local:win`) op een Windows-machine, installeren op een schone gebruikersmap.
-- [ ] **Ondertekende installers**: blijft open zolang er geen eigen certificaten zijn. Eigen signing en een eigen update-feed zijn later configuratie plus het weghalen van de updater-guard.
+- [ ] **Ondertekende installers**: macOS is ad-hoc ondertekend en Windows ongetekend; blijft open zolang er geen Apple Developer ID en Windows-certificaat (of Microsoft Store-pakket) is. Eigen signing en een eigen update-feed zijn later configuratie plus het weghalen van de updater-guard.
 
 ## Rebrand naar Meetscribe
 
