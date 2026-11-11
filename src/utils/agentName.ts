@@ -3,7 +3,9 @@ import { getSettings, useSettingsStore } from "../stores/settingsStore";
 import { agentNameDictionaryChanges } from "../helpers/agentNameDictionary";
 
 const AGENT_NAME_KEY = "agentName";
-const DEFAULT_AGENT_NAME = "OpenWhispr";
+const DEFAULT_AGENT_NAME = "Meetscribe";
+// The default before the app was renamed; a name still stored as it moves to Meetscribe.
+const LEGACY_DEFAULT_AGENT_NAME = "OpenWhispr";
 
 export const getAgentName = (): string => {
   return localStorage.getItem(AGENT_NAME_KEY) || DEFAULT_AGENT_NAME;
@@ -25,6 +27,12 @@ export const setAgentName = (name: string): void => {
   const trimmed = name.trim() || DEFAULT_AGENT_NAME;
   localStorage.setItem(AGENT_NAME_KEY, trimmed);
   syncAgentNameToDictionary(trimmed, oldName);
+};
+
+export const migrateLegacyAgentName = (): void => {
+  if (localStorage.getItem(AGENT_NAME_KEY) === LEGACY_DEFAULT_AGENT_NAME) {
+    setAgentName(DEFAULT_AGENT_NAME);
+  }
 };
 
 export const ensureAgentNameInDictionary = (): void => {

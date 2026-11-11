@@ -251,7 +251,7 @@ const cleanupFailureFromError = (error) => ({
 
 const cloudSignInRequiredError = () => {
   const err = new Error(
-    "OpenWhispr Cloud requires sign-in. Please sign in again or switch to BYOK mode."
+    "Meetscribe Cloud requires sign-in. Please sign in again or switch to BYOK mode."
   );
   err.code = "AUTH_REQUIRED";
   err.messageKey = "hooks.audioRecording.errorDescriptions.sessionExpired";
@@ -3484,7 +3484,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
     const cleanupReachable = !!settings.useCleanupModel && (!!cleanupModel || isCloud);
     const agentReachable = dictationAgentReachable(settings);
     const agentName =
-      typeof window !== "undefined" && window.localStorage ? getAgentName() : "OpenWhispr";
+      typeof window !== "undefined" && window.localStorage ? getAgentName() : "Meetscribe";
     const blockedAgentCommand =
       isAgentScopeBlocked(settings) &&
       !this.translationRequested &&
@@ -5706,7 +5706,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
       } else if (error.code === "AUTH_EXPIRED" || error.code === "AUTH_REQUIRED") {
         errorTitle = "Sign-in Required";
         errorDescription =
-          "Your OpenWhispr Cloud session is unavailable. Please sign in again from Settings.";
+          "Your Meetscribe Cloud session is unavailable. Please sign in again from Settings.";
       } else if (error.code === "NETWORK_ERROR") {
         errorTitle = "streaming.errors.cloudUnreachable.title";
         errorDescription = error.messageKey || "streaming.errors.cloudUnreachable.generic";
@@ -6450,7 +6450,7 @@ registerProcessor("pcm-streaming-processor", PCMStreamingProcessor);
       const target = resolveStreamingFallbackTarget(getSettings());
       if (target === "skip") {
         logger.warn(
-          "Skipping batch fallback: OpenWhispr Cloud session signed out",
+          "Skipping batch fallback: Meetscribe Cloud session signed out",
           {},
           "streaming"
         );

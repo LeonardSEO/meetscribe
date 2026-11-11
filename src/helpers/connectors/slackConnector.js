@@ -123,7 +123,7 @@ function failureMessage(errorCode, label = "", fallback = "Slack didn't accept t
     case "ratelimited":
       return "Slack is busy. Try again shortly.";
     case "missing_scope":
-      return "OpenWhispr doesn't have permission to post there. Reconnect Slack in Settings.";
+      return "Meetscribe doesn't have permission to post there. Reconnect Slack in Settings.";
     case "msg_too_long":
       return "The message is too long for Slack (12,000 characters at most, once formatted).";
     case "no_text":

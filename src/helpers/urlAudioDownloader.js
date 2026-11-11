@@ -26,7 +26,7 @@ const MAX_DOWNLOAD_BYTES = 500 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
 // Reject absurdly long videos before downloading.
 const MAX_DURATION_SECONDS = 6 * 60 * 60;
-const USER_AGENT = "OpenWhispr/1.0";
+const USER_AGENT = "Meetscribe/1.0";
 
 // Writable yt-dlp cache, seeded from the read-only bundle so the binary can
 // self-update (the bundled copy is read-only / inside the signed bundle).

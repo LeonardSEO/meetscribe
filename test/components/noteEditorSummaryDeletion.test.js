@@ -143,7 +143,7 @@ function baseProps(enhancement) {
 async function loadNoteEditor(t, permission, options = {}) {
   const events = {};
   installBrowserGlobals(t, {
-    initialStorage: { customDictionary: '["OpenWhispr"]', ...options.initialStorage },
+    initialStorage: { customDictionary: '["Meetscribe"]', ...options.initialStorage },
     window: {
       addEventListener: (name, callback) => {
         events[name] = callback;

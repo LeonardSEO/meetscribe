@@ -58,7 +58,8 @@ interface ToolRegistrySettings {
 
 export function createToolRegistry(settings: ToolRegistrySettings): ToolRegistry {
   const registry = new ToolRegistry();
-  if (settings.productHelpEnabled !== false)
+  // The help tools search OpenWhispr's own documentation, which local-only blocks.
+  if (!isLocalOnly() && settings.productHelpEnabled !== false)
     for (const tool of productHelpTools) registry.register(tool);
 
   const useCloudSearch = settings.isSignedIn && settings.cloudBackupEnabled;

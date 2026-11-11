@@ -201,7 +201,7 @@ test("restart keeps every switched-off scope local", async (t) => {
   storage.removeItem("_dictationAgentSeeded");
   // Startup's reconciles run too. The agent's name is already in the
   // dictionary, so startup has no dictionary write to make.
-  storage.setItem("customDictionary", JSON.stringify(["OpenWhispr"]));
+  storage.setItem("customDictionary", JSON.stringify(["Meetscribe"]));
   vite.moduleGraph.invalidateAll();
   const restarted = await loadStore(vite);
   await restarted.initializeSettings();

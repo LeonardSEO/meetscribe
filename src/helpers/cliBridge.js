@@ -379,7 +379,7 @@ class CliBridge {
         const err = new Error(
           requested
             ? `Unknown model '${requested}'. Known models: ${models.map((m) => m.model).join(", ")}`
-            : "No local transcription model is selected. Choose one in OpenWhispr under Settings → Speech to Text, or pass 'model'."
+            : "No local transcription model is selected. Choose one in Meetscribe under Settings → Speech to Text, or pass 'model'."
         );
         err.code = "VALIDATION";
         throw err;
@@ -388,7 +388,7 @@ class CliBridge {
       ipc._localModelPolicy.release(lease);
       if (!match.downloaded) {
         const err = new Error(
-          `Model '${match.model}' is not downloaded. Open OpenWhispr and download it under Settings → Speech to Text.`
+          `Model '${match.model}' is not downloaded. Open Meetscribe and download it under Settings → Speech to Text.`
         );
         err.code = "VALIDATION";
         throw err;

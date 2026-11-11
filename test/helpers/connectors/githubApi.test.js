@@ -57,7 +57,7 @@ test("a GET goes to api.github.com with the version headers, the bearer token an
   assert.equal(call.authorization, "Bearer ghu-1");
   assert.equal(call.headers.Accept, "application/vnd.github+json");
   assert.equal(call.headers["X-GitHub-Api-Version"], "2022-11-28");
-  assert.equal(call.headers["User-Agent"], "OpenWhispr");
+  assert.equal(call.headers["User-Agent"], "Meetscribe");
   assert.equal(call.headers["Content-Type"], undefined);
 });
 
@@ -413,7 +413,7 @@ test("deviceCode posts the client id as a form to github.com, with no secret and
   assert.equal(call.origin, "https://github.com");
   assert.deepEqual(call.form, { client_id: "Iv1.test" });
   assert.equal(call.headers.Accept, "application/json");
-  assert.equal(call.headers["User-Agent"], "OpenWhispr");
+  assert.equal(call.headers["User-Agent"], "Meetscribe");
   assert.equal(call.authorization, null);
 });
 

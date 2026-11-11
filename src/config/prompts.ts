@@ -8,6 +8,7 @@ import {
   type UnavailableCapability,
 } from "./agentCapabilities";
 import { NOTE_TAKER_LABEL } from "../utils/transcriptEvidence";
+import { isLocalOnly } from "./localOnly";
 
 export {
   resolvePrompt,
@@ -35,6 +36,23 @@ export function getCleanupSystemPrompt(
 export function getWordBoost(customDictionary?: string[]): string[] {
   if (!customDictionary || customDictionary.length === 0) return [];
   return customDictionary.filter((w) => w.trim());
+}
+
+// Upstream sentences about OpenWhispr's own help tools and documentation. A
+// local-only build offers no help tools and blocks OpenWhispr's site, so it drops
+// them and names itself Meetscribe.
+const UPSTREAM_HELP_SENTENCES = [
+  " Explicit questions about OpenWhispr's product or settings still use its help tools.",
+  " For OpenWhispr topics outside the offered help catalog, search official OpenWhispr documentation.",
+];
+
+function toolInstruction(name: string): string | undefined {
+  const text = TOOL_INSTRUCTIONS[name];
+  if (!text || !isLocalOnly()) return text;
+  return UPSTREAM_HELP_SENTENCES.reduce((out, sentence) => out.replace(sentence, ""), text).replace(
+    "not OpenWhispr's unless explicitly named",
+    "not Meetscribe's unless explicitly named"
+  );
 }
 
 const TOOL_INSTRUCTIONS: Record<string, string> = {
@@ -267,7 +285,7 @@ export function getAgentSystemPrompt(
       prompt += " " + (options.toolHistory === "parts" ? TOOL_PARTS_RULE : TOOL_TRACE_RULE);
     }
     const toolLines = tools
-      .map((tool) => tool.promptInstruction ?? TOOL_INSTRUCTIONS[tool.name])
+      .map((tool) => tool.promptInstruction ?? toolInstruction(tool.name))
       .filter(Boolean);
     if (toolLines.length > 0) {
       prompt += "\n\nHow to use them:\n" + toolLines.map((line) => `- ${line}`).join("\n");

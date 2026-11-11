@@ -49,7 +49,7 @@ test("combined cleanup options honor every eligibility guard and use the actual 
   const manager = createManager();
   useSettingsStore.setState(good);
   assert.deepEqual(manager.getPipelineCleanupOptions(useSettingsStore.getState()), {
-    agentName: "OpenWhispr",
+    agentName: "Meetscribe",
     customDictionary: ["Orukeet"],
     customPrompt: good.customPrompts.cleanup,
     language: "en",
@@ -60,7 +60,7 @@ test("combined cleanup options honor every eligibility guard and use the actual 
   assert.deepEqual(
     manager.getPipelineCleanupOptions(useSettingsStore.getState(), { appCategory: "email" }),
     {
-      agentName: "OpenWhispr",
+      agentName: "Meetscribe",
       customDictionary: ["Orukeet"],
       customPrompt: good.customPrompts.cleanup,
       tone: "excited",
@@ -291,7 +291,7 @@ test("combined cleanup options carry shared words in sharedDictionary only when 
     sharedDictionaryHints: { space: ["Kube"], workspace: ["orukeet", "Acme"] },
   });
   assert.deepEqual(manager.getPipelineCleanupOptions(useSettingsStore.getState()), {
-    agentName: "OpenWhispr",
+    agentName: "Meetscribe",
     customDictionary: ["Orukeet"],
     sharedDictionary: ["Kube", "Acme"],
     customPrompt: good.customPrompts.cleanup,
@@ -304,7 +304,7 @@ test("combined cleanup options carry shared words in sharedDictionary only when 
   assert.equal(
     JSON.stringify(personalOnly),
     JSON.stringify({
-      agentName: "OpenWhispr",
+      agentName: "Meetscribe",
       customDictionary: ["Orukeet"],
       customPrompt: good.customPrompts.cleanup,
       language: "en",

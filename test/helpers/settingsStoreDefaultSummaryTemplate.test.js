@@ -6,7 +6,7 @@ const { GENERATE_NOTES_KEY } = require("../../src/helpers/builtinActions.js");
 test("default summary preference persists, reloads and follows other windows without losing failed writes", async (t) => {
   const listeners = new Map();
   const { storage } = installBrowserGlobals(t, {
-    initialStorage: { customDictionary: '["OpenWhispr"]' },
+    initialStorage: { customDictionary: '["Meetscribe"]' },
     window: {
       addEventListener: (name, listener) => listeners.set(name, listener),
       electronAPI: { getOpenAIKey: async () => "", setDictionary: async () => {} },

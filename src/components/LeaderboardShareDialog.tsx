@@ -55,7 +55,7 @@ function createLeaderboardCard(
   context.fillText(`${metricLabel} · ${periodLabel}`, 72, 410);
   context.fillStyle = "#94a3b8";
   context.font = "600 18px Inter, system-ui, sans-serif";
-  context.fillText("OpenWhispr", 72, 600);
+  context.fillText("Meetscribe", 72, 600);
   return canvas.toDataURL("image/png");
 }
 
@@ -74,7 +74,7 @@ export default function LeaderboardShareDialog({
     () =>
       createLeaderboardCard(
         leaderboard,
-        `OpenWhispr ${t("insights.leaderboard.title")}`,
+        `Meetscribe ${t("insights.leaderboard.title")}`,
         t(`insights.leaderboard.metrics.${metric}`),
         periodLabel,
         i18n.language
@@ -117,7 +117,7 @@ export default function LeaderboardShareDialog({
 
         <div className="rounded-xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-5 text-white">
           <p className="text-[10px] font-semibold tracking-[0.18em] text-indigo-200">
-            {`OpenWhispr ${t("insights.leaderboard.title")}`.toLocaleUpperCase(i18n.language)}
+            {`Meetscribe ${t("insights.leaderboard.title")}`.toLocaleUpperCase(i18n.language)}
           </p>
           <p className="mt-1 text-xs text-slate-300">
             {t(`insights.leaderboard.metrics.${metric}`)} · {periodLabel}

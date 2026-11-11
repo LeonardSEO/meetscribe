@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: "Helps the user turn a task they repeat into an OpenWhispr skill, or improve a skill they have, then proposes it for their approval. Use when the user starts Create with assistant, asks to make something into a skill, or asks to change or teach a skill. Not for running a skill."
+description: "Helps the user turn a task they repeat into an Meetscribe skill, or improve a skill they have, then proposes it for their approval. Use when the user starts Create with assistant, asks to make something into a skill, or asks to change or teach a skill. Not for running a skill."
 metadata:
   display_name: "Skill creator"
 ---
@@ -51,7 +51,7 @@ Then reflect back what you heard, and ask only about the biggest gap.
 Add a file only when it earns its place:
 
 - references/ for examples, voice samples, or a list of lessons the skill grows over time. Keep that list under 200 lines, and replace old points rather than piling up new ones.
-- scripts/ only for commands the user runs themselves. OpenWhispr never runs them. Never say you will run one; say "here's the command to run".
+- scripts/ only for commands the user runs themselves. Meetscribe never runs them. Never say you will run one; say "here's the command to run".
 
 ## Connectors
 

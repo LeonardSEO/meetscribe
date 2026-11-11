@@ -2,6 +2,7 @@ import { DOCS_ORIGIN } from "../helpers/productHelpFallback";
 import type { ConnectionTarget } from "../types/agentInteractions";
 import type { CalendarProvider } from "../utils/calendarConnect";
 import { getCachedPlatform } from "../utils/platform";
+import { isLocalOnly } from "./localOnly";
 
 /**
  * What the assistant can't do in this conversation, and why. Named in the
@@ -186,6 +187,16 @@ export function resolveUnavailableCapabilities(
 
 function describeOne({ name, reason, where }: UnavailableCapability): string {
   const at = where ? ` in ${where}` : "";
+  // Local-only has no accounts, plans or product help: name what is missing
+  // without sending the user to a service this app doesn't use.
+  if (isLocalOnly()) {
+    if (reason === "signedOut" || reason === "planRequired") {
+      return `${name}: not available in Meetscribe.`;
+    }
+    if (reason === "modelTooSmall") {
+      return `${name}: the selected model runs without tools (small or unrecognized local models do); the user can choose a larger model${at}. You can still use anything already in this prompt, such as note text, and write any text the user asks for.`;
+    }
+  }
   switch (reason) {
     case "signedOut":
       return `${name}: needs the user to sign in to OpenWhispr${at}.`;
