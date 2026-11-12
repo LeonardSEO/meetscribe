@@ -28,14 +28,14 @@ Platformen: macOS Apple Silicon (macOS 15.5 of nieuwer) en Windows x64. Gebruik 
 
 - [ ] **Nederlandse opname offline** op macOS en op Windows: opnemen, transcriberen en terugvinden zonder netwerk.
 - [ ] **Samenvatting en notulen op Azure Foundry** en op minstens één andere OpenAI-compatibele provider, met een echte key.
-- [ ] **Notulen**: bewerken, opnieuw genereren en als Markdown exporteren. Zonder geldige configuratie blijven transcript en bestaande notulen onaangeroerd en wijst de melding naar Instellingen.
-- [ ] **Chat over eerdere vergaderingen**: de vraag "wat hebben we vorige week besloten over project X?" geeft een antwoord met controleerbare bronnen (genummerde passages met vergadering, spreker en tijd). Een vraag zonder treffer geeft een duidelijke "niets gevonden".
+- [ ] **Notulen** (macOS 12-11-2026: opnieuw genereren, Markdown-export en de foutmeldingen bij een onbereikbaar, falend of onleesbaar endpoint zijn getest tegen een nep-endpoint; bewerken nog open): bewerken, opnieuw genereren en als Markdown exporteren. Zonder geldige configuratie blijven transcript en bestaande notulen onaangeroerd en wijst de melding naar Instellingen.
+- [x] **Chat over eerdere vergaderingen** (macOS arm64, 12-11-2026, ad-hoc build 1.11.1, tegen een nep-endpoint op 127.0.0.1; Windows en een echte provider nog open): de vraag "wat hebben we vorige week besloten over project X?" geeft een antwoord met controleerbare bronnen (genummerde passages met vergadering, spreker en tijd). Een vraag zonder treffer geeft een duidelijke "niets gevonden".
 - [ ] **Windows-build** (`npm run build:local:win`) op een Windows-machine, installeren op een schone gebruikersmap.
 - [ ] **Ondertekende installers**: macOS is ad-hoc ondertekend en Windows ongetekend; blijft open zolang er geen Apple Developer ID en Windows-certificaat (of Microsoft Store-pakket) is. Eigen signing en een eigen update-feed zijn later configuratie plus het weghalen van de updater-guard.
 
 ## Rebrand naar Meetscribe
 
-- [ ] **Bestaande data**: start Meetscribe op een computer met de datamap van een eerdere build (macOS: `~/Library/Application Support/open-whispr`, Windows: `%APPDATA%\open-whispr`; oudere builds: `OpenWhispr`). Notities, notulen, instellingen en audio zijn er; de oude map is verplaatst naar `Meetscribe`.
+- [x] **Bestaande data** (alleen macOS arm64, 12-11-2026, ad-hoc build 1.11.1; Windows nog open): start Meetscribe op een computer met de datamap van een eerdere build (macOS: `~/Library/Application Support/open-whispr`, Windows: `%APPDATA%\open-whispr`; oudere builds: `OpenWhispr`). Notities, notulen, instellingen en audio zijn er; de oude map is verplaatst naar `Meetscribe`.
 - [ ] **Oude app draait nog**: met OpenWhispr open toont Meetscribe een melding en sluit af zonder de oude map te verplaatsen; na het sluiten van OpenWhispr verplaatst de volgende start de map alsnog.
 - [ ] **Sleutelhanger**: macOS vraagt eenmalig of Meetscribe de sleutelhanger mag gebruiken. Na weigeren start de app, vraagt Instellingen om de Foundry-key en crasht niets.
 - [ ] **Namen**: Dock, menubalk, venstertitel en de permissiedialogen (microfoon, systeemaudio, agenda, toegankelijkheid) tonen Meetscribe. Audio MIDI Setup toont tijdens een opname "Meetscribe Audio Tap".

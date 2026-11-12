@@ -50,7 +50,7 @@ There are no ready-made downloads yet. Build the app yourself (see [Development]
 
 The macOS build is signed ad-hoc (no Apple Developer ID, not notarized) and the Windows installer is not signed, so your operating system warns you on first launch:
 
-- **macOS:** open Meetscribe once and dismiss the message. Go to **System Settings → Privacy & Security**, choose **Open Anyway** at the bottom and confirm. An ad-hoc signature changes with every build, so after installing a new build macOS may ask for microphone, system audio and accessibility access again.
+- **macOS:** open Meetscribe once and dismiss the message. Go to **System Settings → Privacy & Security**, choose **Open Anyway** at the bottom and confirm. An ad-hoc signature changes with every build, so after installing a new build macOS asks again whether Meetscribe may use its keychain item ("Meetscribe Safe Storage", where the API key is kept encrypted) and may ask for microphone, system audio and accessibility access again. Meetscribe waits on the keychain question before its window opens; choose **Always Allow**.
 - **Windows:** in the SmartScreen window, choose **More info** and then **Run anyway**.
 
 With an Apple Developer ID certificate in the repository secrets (`APPLE_CERTIFICATE_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_API_KEY_BASE64`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `APPLE_TEAM_ID`), the release workflow signs with it and notarizes instead.
