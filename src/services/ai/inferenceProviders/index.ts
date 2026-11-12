@@ -23,6 +23,8 @@ export const PROVIDER_REGISTRY: Readonly<Record<string, InferenceProvider>> = Ob
   bedrock: enterpriseProvider,
   azure: enterpriseProvider,
   vertex: enterpriseProvider,
+  // The local-only provider for every AI task; main resolves its config and key.
+  foundry: enterpriseProvider,
   openwhispr: openwhisprProvider,
   lan: lanProvider,
 });

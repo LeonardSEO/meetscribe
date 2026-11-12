@@ -48,3 +48,17 @@ test("local catalog ids never shadow an inference provider id", () => {
     );
   }
 });
+
+test("every enterprise provider known in code, foundry included, has an inference handler", () => {
+  // ENTERPRISE_PROVIDERS adds "foundry" in code, outside the vendored catalog, so the
+  // catalog check above never sees it; local-only runs every AI task through it.
+  const src = fs.readFileSync(path.join(__dirname, "../../src/models/ModelRegistry.ts"), "utf8");
+  const block = src.match(/ENTERPRISE_PROVIDERS[^=]*=\s*\[([\s\S]*?)\]/);
+  assert.ok(block, "ENTERPRISE_PROVIDERS declared in ModelRegistry.ts");
+  const ids = [...block[1].matchAll(/"([\w-]+)"/g)].map((m) => m[1]);
+  assert.ok(ids.includes("foundry"));
+  const handlers = inferenceProviderIds();
+  for (const id of ids) {
+    assert.ok(handlers.includes(id), `enterprise provider "${id}" has no inference handler`);
+  }
+});
