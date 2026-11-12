@@ -65,7 +65,8 @@ interface CalendarAccountRowsProps {
   primaryOnly: boolean;
   onPrimaryOnlyChange: (value: boolean) => void;
   isConnecting: boolean;
-  onAddAnother: () => void;
+  /** Left out when this build cannot connect another account (no OAuth client). */
+  onAddAnother?: () => void;
 }
 
 function CalendarAccountRows({
@@ -114,20 +115,22 @@ function CalendarAccountRows({
         </SettingsRow>
       </SettingsPanelRow>
 
-      <SettingsPanelRow>
-        <button
-          onClick={onAddAnother}
-          disabled={isConnecting}
-          className="flex items-center gap-2 ps-12 text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-        >
-          {isConnecting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-          {t(`${i18nKey}.addAnother`)}
-        </button>
-      </SettingsPanelRow>
+      {onAddAnother && (
+        <SettingsPanelRow>
+          <button
+            onClick={onAddAnother}
+            disabled={isConnecting}
+            className="flex items-center gap-2 ps-12 text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+          >
+            {isConnecting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Plus className="h-3.5 w-3.5" />
+            )}
+            {t(`${i18nKey}.addAnother`)}
+          </button>
+        </SettingsPanelRow>
+      )}
     </>
   );
 }
@@ -338,7 +341,7 @@ export function CalendarsPane({ title }: CalendarsPaneProps): ReactElement {
               primaryOnly={gcalPrimaryOnly}
               onPrimaryOnlyChange={setGcalPrimaryOnly}
               isConnecting={isConnecting}
-              onAddAnother={handleConnect}
+              onAddAnother={oauthConfigured.google ? handleConnect : undefined}
             />
           </>
         )}
@@ -360,7 +363,7 @@ export function CalendarsPane({ title }: CalendarsPaneProps): ReactElement {
               primaryOnly={mcalPrimaryOnly}
               onPrimaryOnlyChange={setMcalPrimaryOnly}
               isConnecting={isMsConnecting}
-              onAddAnother={handleMicrosoftConnect}
+              onAddAnother={oauthConfigured.microsoft ? handleMicrosoftConnect : undefined}
             />
           </>
         )}

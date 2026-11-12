@@ -26,7 +26,9 @@ export function useNotesOnboarding(): UseNotesOnboardingReturn {
   const isProLoading = !localOnly && usage !== null && usage.status !== "success";
   // The base URL lives in main (.env), not in the renderer store, so ask main for it.
   const foundryModel = useSettingsStore((settings) => settings.foundryModel);
-  const [foundryBaseUrl, setFoundryBaseUrl] = useState("");
+  // Saving the form sets the store's URL at once; main's value covers a fresh start.
+  const storeBaseUrl = useSettingsStore((settings) => settings.foundryBaseUrl);
+  const [mainBaseUrl, setFoundryBaseUrl] = useState("");
   useEffect(() => {
     if (!localOnly) return;
     let cancelled = false;
@@ -44,8 +46,11 @@ export function useNotesOnboarding(): UseNotesOnboardingReturn {
       cancelled = true;
       if (typeof unsubscribe === "function") unsubscribe();
     };
-  }, [localOnly, foundryModel]);
-  const foundryConfigured = isFoundryConfigured({ foundryBaseUrl, foundryModel });
+  }, [localOnly, foundryModel, storeBaseUrl]);
+  const foundryConfigured = isFoundryConfigured({
+    foundryBaseUrl: storeBaseUrl || mainBaseUrl,
+    foundryModel,
+  });
   const policyState = usePolicySnapshot();
   const { useCleanupModel, effectiveModel, isCloudCleanup } = useSettingsStore(
     useShallow((settings) => {
