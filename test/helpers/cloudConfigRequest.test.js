@@ -133,3 +133,30 @@ test("every config refetch bypasses the HTTP cache and declares the client capab
     ]
   );
 });
+
+test("local-only answers without a request or an error log", async () => {
+  const saved = globalThis.__OW_UPSTREAM_MODE;
+  delete globalThis.__OW_UPSTREAM_MODE;
+  try {
+    const errors = [];
+    const handler = createCloudConfigRequestHandler({
+      getApiUrl: () => {
+        throw new Error("must not read the API URL");
+      },
+      getAuthHeader: async () => ({}),
+      proxyFetch: async () => {
+        throw new Error("must not fetch");
+      },
+      withPolicyHeaders: (headers) => headers,
+      logger: { error: (...args) => errors.push(args) },
+      configPath: "stt-config",
+    });
+    const result = await handler({ sender: {} });
+    assert.equal(result.success, false);
+    assert.equal(result.code, "LOCAL_ONLY");
+    assert.deepEqual(errors, []);
+  } finally {
+    if (saved === undefined) delete globalThis.__OW_UPSTREAM_MODE;
+    else globalThis.__OW_UPSTREAM_MODE = saved;
+  }
+});

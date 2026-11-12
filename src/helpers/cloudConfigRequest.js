@@ -1,4 +1,5 @@
 const { readPolicyResponseError, toPolicyFailure } = require("./policyResponseError");
+const { isLocalOnly } = require("../config/localOnly");
 
 function createCloudConfigRequestHandler({
   getApiUrl,
@@ -9,6 +10,10 @@ function createCloudConfigRequestHandler({
   configPath,
 }) {
   return async function handleCloudConfigRequest(event) {
+    // Local-only has no cloud speech route to configure; asking is not an error.
+    if (isLocalOnly()) {
+      return { success: false, error: "Cloud services are off in local-only mode", code: "LOCAL_ONLY" };
+    }
     try {
       const apiUrl = getApiUrl();
       if (!apiUrl) throw new Error("OpenWhispr API URL not configured");
