@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   selectIsCloudCleanupMode,
@@ -24,7 +24,28 @@ export function useNotesOnboarding(): UseNotesOnboardingReturn {
   // Local-only has no plans: every AI task runs on the user's own Foundry provider.
   const isProUser = !localOnly && usage?.hasPaidAccess === true;
   const isProLoading = !localOnly && usage !== null && usage.status !== "success";
-  const foundryConfigured = useSettingsStore((settings) => isFoundryConfigured(settings));
+  // The base URL lives in main (.env), not in the renderer store, so ask main for it.
+  const foundryModel = useSettingsStore((settings) => settings.foundryModel);
+  const [foundryBaseUrl, setFoundryBaseUrl] = useState("");
+  useEffect(() => {
+    if (!localOnly) return;
+    let cancelled = false;
+    const load = () =>
+      window.electronAPI
+        ?.getFoundryConfig?.()
+        .then((config) => {
+          if (!cancelled) setFoundryBaseUrl(config?.baseUrl ?? "");
+        })
+        .catch(() => {});
+    void load();
+    // Saving the form updates the key; read the URL again then.
+    const unsubscribe = window.electronAPI?.onApiKeyUpdated?.(() => void load());
+    return () => {
+      cancelled = true;
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [localOnly, foundryModel]);
+  const foundryConfigured = isFoundryConfigured({ foundryBaseUrl, foundryModel });
   const policyState = usePolicySnapshot();
   const { useCleanupModel, effectiveModel, isCloudCleanup } = useSettingsStore(
     useShallow((settings) => {

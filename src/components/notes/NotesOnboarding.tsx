@@ -45,6 +45,11 @@ export default function NotesOnboarding({ onComplete }: NotesOnboardingProps) {
   const { isProUser, isProLoading, isLLMConfigured, complete } = useNotesOnboarding();
   const templates = useActionsOfKind("template");
   const [llmExpanded, setLlmExpanded] = useState(!isLLMConfigured && !isProUser);
+  // Local-only learns the Foundry setup from main after the first render; close the
+  // card once it reads as configured.
+  useEffect(() => {
+    if (isLocalOnly() && isLLMConfigured) setLlmExpanded(false);
+  }, [isLLMConfigured]);
   const [createExpanded, setCreateExpanded] = useState(false);
   const [actionName, setActionName] = useState("");
   const [actionDescription, setActionDescription] = useState("");
