@@ -151,6 +151,14 @@ export function CalendarsPane({ title }: CalendarsPaneProps): ReactElement {
     setAppleCalendarConnected,
   } = useSettingsStore();
   const [isConnecting, setIsConnecting] = useState(false);
+  // Until main answers, assume configured so a working build never flickers a row away.
+  const [oauthConfigured, setOauthConfigured] = useState({ google: true, microsoft: true });
+  useEffect(() => {
+    window.electronAPI
+      ?.calendarOAuthConfigured?.()
+      .then((configured) => configured && setOauthConfigured(configured))
+      .catch(() => {});
+  }, []);
   const [disconnectingEmail, setDisconnectingEmail] = useState<string | null>(null);
   const [confirmDisconnectEmail, setConfirmDisconnectEmail] = useState<string | null>(null);
   const [isMsConnecting, setIsMsConnecting] = useState(false);
@@ -312,41 +320,50 @@ export function CalendarsPane({ title }: CalendarsPaneProps): ReactElement {
   return (
     <IntegrationsPane title={title} description={t("integrations.notABot.description")}>
       <SettingsPanel>
-        <ProviderRow
-          icon={googleCalendarIcon}
-          i18nKey="integrations.googleCalendar"
-          connected={gcalAccounts.length > 0}
-          isConnecting={isConnecting}
-          onConnect={handleConnect}
-        />
-        <CalendarAccountRows
-          i18nKey="integrations.googleCalendar"
-          accounts={gcalAccounts}
-          disconnectingEmail={disconnectingEmail}
-          onUnlink={setConfirmDisconnectEmail}
-          primaryOnly={gcalPrimaryOnly}
-          onPrimaryOnlyChange={setGcalPrimaryOnly}
-          isConnecting={isConnecting}
-          onAddAnother={handleConnect}
-        />
+        {/* A build without a Google client hides the row, unless an account is still linked. */}
+        {(oauthConfigured.google || gcalAccounts.length > 0) && (
+          <>
+            <ProviderRow
+              icon={googleCalendarIcon}
+              i18nKey="integrations.googleCalendar"
+              connected={gcalAccounts.length > 0}
+              isConnecting={isConnecting}
+              onConnect={handleConnect}
+            />
+            <CalendarAccountRows
+              i18nKey="integrations.googleCalendar"
+              accounts={gcalAccounts}
+              disconnectingEmail={disconnectingEmail}
+              onUnlink={setConfirmDisconnectEmail}
+              primaryOnly={gcalPrimaryOnly}
+              onPrimaryOnlyChange={setGcalPrimaryOnly}
+              isConnecting={isConnecting}
+              onAddAnother={handleConnect}
+            />
+          </>
+        )}
 
-        <ProviderRow
-          icon={microsoftCalendarIcon}
-          i18nKey="integrations.microsoftCalendar"
-          connected={mcalAccounts.length > 0}
-          isConnecting={isMsConnecting}
-          onConnect={handleMicrosoftConnect}
-        />
-        <CalendarAccountRows
-          i18nKey="integrations.microsoftCalendar"
-          accounts={mcalAccounts}
-          disconnectingEmail={msDisconnectingEmail}
-          onUnlink={setConfirmMsDisconnectEmail}
-          primaryOnly={mcalPrimaryOnly}
-          onPrimaryOnlyChange={setMcalPrimaryOnly}
-          isConnecting={isMsConnecting}
-          onAddAnother={handleMicrosoftConnect}
-        />
+        {(oauthConfigured.microsoft || mcalAccounts.length > 0) && (
+          <>
+            <ProviderRow
+              icon={microsoftCalendarIcon}
+              i18nKey="integrations.microsoftCalendar"
+              connected={mcalAccounts.length > 0}
+              isConnecting={isMsConnecting}
+              onConnect={handleMicrosoftConnect}
+            />
+            <CalendarAccountRows
+              i18nKey="integrations.microsoftCalendar"
+              accounts={mcalAccounts}
+              disconnectingEmail={msDisconnectingEmail}
+              onUnlink={setConfirmMsDisconnectEmail}
+              primaryOnly={mcalPrimaryOnly}
+              onPrimaryOnlyChange={setMcalPrimaryOnly}
+              isConnecting={isMsConnecting}
+              onAddAnother={handleMicrosoftConnect}
+            />
+          </>
+        )}
 
         {isMac && (
           <ProviderRow

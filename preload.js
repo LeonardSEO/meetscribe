@@ -1430,6 +1430,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   broadcastSnippetsUpdated: () => ipcRenderer.invoke("db-broadcast-snippets-updated"),
 
   // Google Calendar
+  calendarOAuthConfigured: () => ipcRenderer.invoke("calendar-oauth-configured"),
   gcalStartOAuth: (requestId) => ipcRenderer.invoke("gcal-start-oauth", requestId),
   calendarCancelConnect: (requestId) => ipcRenderer.invoke("calendar-cancel-connect", requestId),
   gcalDisconnect: (email) => ipcRenderer.invoke("gcal-disconnect", email),

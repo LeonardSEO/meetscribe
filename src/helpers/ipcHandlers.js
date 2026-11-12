@@ -13741,6 +13741,13 @@ class IPCHandlers {
       this._calendarAuthorizationRequests.cancel(event.sender.id, requestId)
     );
 
+    // Which calendar OAuth clients this build carries; a build without one hides that
+    // provider rather than offering a connect that cannot work.
+    ipcMain.handle("calendar-oauth-configured", () => ({
+      google: Boolean(process.env.GOOGLE_CALENDAR_CLIENT_ID),
+      microsoft: Boolean(process.env.MICROSOFT_CALENDAR_CLIENT_ID),
+    }));
+
     // Google Calendar
     ipcMain.handle("gcal-start-oauth", (event, requestId) =>
       authorizeCalendar(event, requestId, (signal) =>

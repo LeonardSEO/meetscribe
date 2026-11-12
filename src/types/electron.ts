@@ -3604,6 +3604,7 @@ declare global {
       >;
 
       // Google Calendar
+      calendarOAuthConfigured?: () => Promise<{ google: boolean; microsoft: boolean }>;
       gcalStartOAuth?: (
         requestId?: string
       ) => Promise<{ success: boolean; email?: string; error?: string }>;
