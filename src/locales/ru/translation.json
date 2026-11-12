@@ -1590,6 +1590,7 @@
     "managedAccount": "Управляемый аккаунт",
     "groups": {
       "account": "Аккаунт",
+      "general": "Общие",
       "workspace": "Рабочее пространство",
       "aiModels": "Модели ИИ",
       "system": "Система"

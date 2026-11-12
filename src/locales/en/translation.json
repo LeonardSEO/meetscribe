@@ -1684,6 +1684,7 @@
     "managedAccount": "Managed account",
     "groups": {
       "account": "Account",
+      "general": "General",
       "workspace": "Workspace",
       "aiModels": "AI Models",
       "system": "System"

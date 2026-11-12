@@ -1569,6 +1569,7 @@
     "managedAccount": "Conta gerenciada",
     "groups": {
       "account": "Conta",
+      "general": "Geral",
       "workspace": "Espaço de trabalho",
       "aiModels": "Modelos de IA",
       "system": "Sistema"

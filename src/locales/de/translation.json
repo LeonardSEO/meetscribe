@@ -1684,6 +1684,7 @@
     "managedAccount": "Verwaltetes Konto",
     "groups": {
       "account": "Konto",
+      "general": "Allgemein",
       "workspace": "Workspace",
       "aiModels": "KI-Modelle",
       "system": "System"

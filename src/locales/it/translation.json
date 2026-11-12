@@ -1590,6 +1590,7 @@
     "managedAccount": "Account gestito",
     "groups": {
       "account": "Account",
+      "general": "Generale",
       "workspace": "Area di lavoro",
       "aiModels": "Modelli IA",
       "system": "Sistema"

@@ -6224,6 +6224,7 @@
     "managedAccount": "حساب مُدار",
     "groups": {
       "account": "الحساب",
+      "general": "عام",
       "workspace": "مساحة العمل",
       "aiModels": "نماذج الذكاء الاصطناعي",
       "system": "النظام"

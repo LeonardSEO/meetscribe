@@ -1590,6 +1590,7 @@
     "managedAccount": "管理対象アカウント",
     "groups": {
       "account": "アカウント",
+      "general": "一般",
       "workspace": "ワークスペース",
       "aiModels": "AIモデル",
       "system": "システム"

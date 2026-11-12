@@ -1590,6 +1590,7 @@
     "managedAccount": "受管理的账户",
     "groups": {
       "account": "账户",
+      "general": "常规",
       "workspace": "工作区",
       "aiModels": "AI 模型",
       "system": "系统"

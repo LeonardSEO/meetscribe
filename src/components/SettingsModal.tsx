@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { isLocalOnly } from "../config/localOnly.js";
 import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 import { usePolicyStore } from "../stores/policyStore";
@@ -104,7 +105,10 @@ export default function SettingsModal({
         label: t(`settingsModal.sections.${id}.label`),
         icon: SECTION_ICONS[id],
         description: t(`settingsModal.sections.${id}.description`),
-        group: t(`settingsModal.groups.${group}`),
+        // Local-only has no account: the group that holds Preferences is "General" there.
+        group: t(
+          `settingsModal.groups.${isLocalOnly() && group === "account" ? "general" : group}`
+        ),
       })),
     [nav, t]
   );
