@@ -12,6 +12,8 @@
 //    on distros that restrict unprivileged user namespaces).
 // 3. Fails the build if required binaries (ffmpeg-static, ps-list vendor exe,
 //    onnx worker script) are missing from app.asar.unpacked/.
+// 4. Fails the build if better-sqlite3 does not load in the packaged Electron
+//    (a Node build left behind by `npm rebuild`).
 
 const fs = require("fs");
 const path = require("path");
@@ -311,6 +313,54 @@ function verifyUnpackedBinaries(context) {
 }
 
 // ---------------------------------------------------------------------------
+// Native modules must load in the packaged Electron
+// ---------------------------------------------------------------------------
+
+// A native module built for Node instead of Electron (a stale @electron/rebuild
+// marker after `npm rebuild`) packages fine and only fails at launch, so load each
+// one with the packaged executable in Node mode (RunAsNode fuse) and fail the build.
+function verifyNativeModulesLoad(executable, modulePaths, run = execFileSync) {
+  for (const modulePath of modulePaths) {
+    try {
+      run(executable, ["-e", `require(${JSON.stringify(modulePath)})`], {
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 30_000,
+      });
+    } catch (error) {
+      // Electron prints its minified bootstrap before the error; keep only the cause.
+      const output = String(error.stderr || error.message || "");
+      const cause = output
+        .split("\n")
+        .filter((line) => /Error|NODE_MODULE_VERSION|compiled against/.test(line) && line.length < 400);
+      const detail = (cause.length ? cause.join("\n") : output.slice(-400)).trim();
+      throw new Error(
+        `afterPack: ${path.basename(modulePath)} does not load in the packaged Electron. ` +
+          `Run \`node scripts/clear-native-rebuild-cache.js\` and build again.\n${detail}`
+      );
+    }
+  }
+}
+
+function verifyPackagedNativeModules(context) {
+  // The packaged executable can only run on its own platform and architecture.
+  const hostArch = process.arch === "arm64" ? Arch.arm64 : process.arch === "x64" ? Arch.x64 : null;
+  if (context.electronPlatformName !== process.platform || context.arch !== hostArch) return;
+  if (!["darwin", "win32"].includes(process.platform)) return;
+
+  const productFilename = context.packager.appInfo.productFilename;
+  const executable =
+    process.platform === "darwin"
+      ? path.join(resolveAppPath(context), "Contents", "MacOS", productFilename)
+      : path.join(context.appOutDir, `${productFilename}.exe`);
+  const unpacked = path.join(resolveResourcesDir(context), "app.asar.unpacked", "node_modules");
+  const modules = [path.join(unpacked, "better-sqlite3", "build", "Release", "better_sqlite3.node")];
+
+  verifyNativeModulesLoad(executable, modules);
+  console.log("  afterPack: native modules load in the packaged Electron");
+}
+
+// ---------------------------------------------------------------------------
 // Main hook
 // ---------------------------------------------------------------------------
 
@@ -319,8 +369,10 @@ exports.default = async function (context) {
   wrapLinuxBinary(context);
   verifyMeetingAecHelper(context);
   verifyUnpackedBinaries(context);
+  verifyPackagedNativeModules(context);
   registerMacResourceBinariesForSigning(context);
 };
 
 exports.verifyWindowsOnnxRuntimePrivatized = verifyWindowsOnnxRuntimePrivatized;
 exports.verifyWindowsKeyListener = verifyWindowsKeyListener;
+exports.verifyNativeModulesLoad = verifyNativeModulesLoad;
