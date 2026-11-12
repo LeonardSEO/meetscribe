@@ -626,9 +626,17 @@ if startProcessMonitoring() {
     startAggregateFallback()
 }
 
+// When the app is force-quit nobody sends SIGTERM, and launchd adopts this helper.
+// A changed parent means the app is gone, so stop listening instead of running on.
+let launchParent = getppid()
+
 let heartbeatTimer = DispatchSource.makeTimerSource(queue: .main)
 heartbeatTimer.schedule(deadline: .now() + 5, repeating: 5)
 heartbeatTimer.setEventHandler {
+    if getppid() != launchParent {
+        removeAllListeners()
+        exit(0)
+    }
     switch listenerMode {
     case .process:
         reconcileProcessMonitoring()
