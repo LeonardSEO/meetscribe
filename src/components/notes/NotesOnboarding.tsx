@@ -23,6 +23,8 @@ import { notesInputClass, notesTextareaClass } from "./shared";
 import { useDialogs } from "../../hooks/useDialogs";
 import { AlertDialog } from "../ui/dialog";
 import ReasoningModelSelector from "../ReasoningModelSelector";
+import { FoundryForm } from "../settings/FoundrySection";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { useSystemAudioPermission } from "../../hooks/useSystemAudioPermission";
 import { canManageSystemAudioInApp } from "../../utils/systemAudioAccess";
 import { usePolicySnapshot } from "../../hooks/usePolicy";
@@ -177,17 +179,23 @@ export default function NotesOnboarding({ onComplete }: NotesOnboardingProps) {
                   {t("notes.onboarding.llm.description")}
                 </p>
 
-                <ReasoningModelSelector
-                  reasoningModel={cleanupConfig.model}
-                  setReasoningModel={setCleanupModel}
-                  localReasoningProvider={cleanupConfig.provider}
-                  setLocalReasoningProvider={setCleanupProvider}
-                  cloudReasoningBaseUrl={cleanupConfig.cloudBaseUrl ?? ""}
-                  setCloudReasoningBaseUrl={setCleanupCloudBaseUrl}
-                  customReasoningApiKey={cleanupConfig.customApiKey ?? ""}
-                  setCustomReasoningApiKey={setCleanupCustomApiKey}
-                  setReasoningMode={setCleanupMode}
-                />
+                {isLocalOnly() ? (
+                  // Local-only has one AI provider; the upstream picker would offer
+                  // cloud providers that are switched off.
+                  <FoundryForm />
+                ) : (
+                  <ReasoningModelSelector
+                    reasoningModel={cleanupConfig.model}
+                    setReasoningModel={setCleanupModel}
+                    localReasoningProvider={cleanupConfig.provider}
+                    setLocalReasoningProvider={setCleanupProvider}
+                    cloudReasoningBaseUrl={cleanupConfig.cloudBaseUrl ?? ""}
+                    setCloudReasoningBaseUrl={setCleanupCloudBaseUrl}
+                    customReasoningApiKey={cleanupConfig.customApiKey ?? ""}
+                    setCustomReasoningApiKey={setCleanupCustomApiKey}
+                    setReasoningMode={setCleanupMode}
+                  />
+                )}
               </div>
             )}
           </div>

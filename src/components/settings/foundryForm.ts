@@ -73,3 +73,15 @@ export function foundryKeyRequired(baseUrl: string): boolean {
     return true;
   }
 }
+
+/**
+ * Whether the one AI provider has been set up. The key is checked by main when a
+ * request is made: a local server may run without one, and an Azure host without a
+ * key gets the Settings message then.
+ */
+export function isFoundryConfigured(settings: {
+  foundryBaseUrl?: string;
+  foundryModel?: string;
+}): boolean {
+  return Boolean(settings.foundryBaseUrl?.trim() && settings.foundryModel?.trim());
+}

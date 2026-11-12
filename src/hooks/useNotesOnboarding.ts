@@ -7,6 +7,8 @@ import {
 } from "../stores/settingsStore";
 import { useUsage } from "./useUsage";
 import { usePolicySnapshot } from "./usePolicy";
+import { isLocalOnly } from "../config/localOnly.js";
+import { isFoundryConfigured } from "../components/settings/foundryForm";
 
 interface UseNotesOnboardingReturn {
   isComplete: boolean;
@@ -18,8 +20,11 @@ interface UseNotesOnboardingReturn {
 
 export function useNotesOnboarding(): UseNotesOnboardingReturn {
   const usage = useUsage();
-  const isProUser = usage?.hasPaidAccess === true;
-  const isProLoading = usage !== null && usage.status !== "success";
+  const localOnly = isLocalOnly();
+  // Local-only has no plans: every AI task runs on the user's own Foundry provider.
+  const isProUser = !localOnly && usage?.hasPaidAccess === true;
+  const isProLoading = !localOnly && usage !== null && usage.status !== "success";
+  const foundryConfigured = useSettingsStore((settings) => isFoundryConfigured(settings));
   const policyState = usePolicySnapshot();
   const { useCleanupModel, effectiveModel, isCloudCleanup } = useSettingsStore(
     useShallow((settings) => {
@@ -36,7 +41,9 @@ export function useNotesOnboarding(): UseNotesOnboardingReturn {
     () => localStorage.getItem("notesOnboardingComplete") === "true"
   );
 
-  const isLLMConfigured = isCloudCleanup || (useCleanupModel && !!effectiveModel);
+  const isLLMConfigured = localOnly
+    ? foundryConfigured
+    : isCloudCleanup || (useCleanupModel && !!effectiveModel);
 
   const complete = useCallback(() => {
     localStorage.setItem("notesOnboardingComplete", "true");

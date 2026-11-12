@@ -67,3 +67,11 @@ test("only Azure hosts require an API key", async () => {
   assert.equal(foundryKeyRequired("https://llm.example.com/v1"), false);
   assert.equal(foundryKeyRequired("not a url"), true);
 });
+
+test("Foundry counts as configured once a base URL and a model are saved", async () => {
+  const { isFoundryConfigured } = await import("../../src/components/settings/foundryForm.ts");
+  assert.equal(isFoundryConfigured({ foundryBaseUrl: "http://127.0.0.1:1/v1", foundryModel: "m" }), true);
+  assert.equal(isFoundryConfigured({ foundryBaseUrl: "", foundryModel: "m" }), false);
+  assert.equal(isFoundryConfigured({ foundryBaseUrl: "https://x/openai/v1", foundryModel: "  " }), false);
+  assert.equal(isFoundryConfigured({}), false);
+});
