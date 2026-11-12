@@ -52,11 +52,41 @@ test("passes when every native module loads in the packaged Electron", () => {
 test("fails the build when a native module was compiled for another runtime", () => {
   const run = () => {
     const error = new Error("Command failed");
-    error.stderr = Buffer.from("was compiled against a different Node.js version using NODE_MODULE_VERSION 137");
+    error.stderr = Buffer.from(
+      "was compiled against a different Node.js version using NODE_MODULE_VERSION 137"
+    );
     throw error;
   };
   assert.throws(
     () => verifyNativeModulesLoad("/App/Meetscribe", ["/x/better_sqlite3.node"], run),
     /better_sqlite3\.node does not load in the packaged Electron.*NODE_MODULE_VERSION 137/s
+  );
+});
+
+test("a load killed without output is tried again before failing the build", () => {
+  let calls = 0;
+  const run = () => {
+    calls += 1;
+    if (calls === 1) {
+      const error = new Error("spawnSync Meetscribe ETIMEDOUT");
+      error.signal = "SIGTERM";
+      error.stderr = Buffer.from("");
+      throw error;
+    }
+  };
+  verifyNativeModulesLoad("/App/Meetscribe", ["/x/better_sqlite3.node"], run);
+  assert.equal(calls, 2);
+});
+
+test("a load that keeps getting killed names the signal in the build error", () => {
+  const run = () => {
+    const error = new Error("spawnSync Meetscribe ETIMEDOUT");
+    error.signal = "SIGTERM";
+    error.stderr = Buffer.from("");
+    throw error;
+  };
+  assert.throws(
+    () => verifyNativeModulesLoad("/App/Meetscribe", ["/x/better_sqlite3.node"], run),
+    /signal SIGTERM/
   );
 });

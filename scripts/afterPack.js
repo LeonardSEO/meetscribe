@@ -319,29 +319,49 @@ function verifyUnpackedBinaries(context) {
 // A native module built for Node instead of Electron (a stale @electron/rebuild
 // marker after `npm rebuild`) packages fine and only fails at launch, so load each
 // one with the packaged executable in Node mode (RunAsNode fuse) and fail the build.
+// The first run of a freshly assembled binary waits on macOS's malware scan, which can
+// outlast a timeout; a run killed before printing anything is tried once more.
+const NATIVE_LOAD_ATTEMPTS = 2;
+
+function loadOnce(executable, modulePath, run) {
+  run(executable, ["-e", `require(${JSON.stringify(modulePath)})`], {
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 120_000,
+  });
+}
+
 function verifyNativeModulesLoad(executable, modulePaths, run = execFileSync) {
   for (const modulePath of modulePaths) {
-    try {
-      run(executable, ["-e", `require(${JSON.stringify(modulePath)})`], {
-        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 30_000,
-      });
-    } catch (error) {
-      // Electron prints its minified bootstrap before the error; keep only the cause.
-      const output = String(error.stderr || error.message || "");
-      const causeLines = output
-        .split("\n")
-        .filter(
-          (line) => /Error|NODE_MODULE_VERSION|compiled against/.test(line) && line.length < 400
-        );
-      const detail = (causeLines.length ? causeLines.join("\n") : output.slice(-400)).trim();
-      throw new Error(
-        `afterPack: ${path.basename(modulePath)} does not load in the packaged Electron. ` +
-          `Run \`node scripts/clear-native-rebuild-cache.js\` and build again.\n${detail}`,
-        { cause: error }
-      );
+    let lastError = null;
+    for (let attempt = 1; attempt <= NATIVE_LOAD_ATTEMPTS; attempt += 1) {
+      try {
+        loadOnce(executable, modulePath, run);
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error;
+        const killedSilently = Boolean(error.signal) && !String(error.stderr || "").trim();
+        if (!killedSilently) break;
+      }
     }
+    if (!lastError) continue;
+    // Electron prints its minified bootstrap before the error; keep only the cause.
+    const output = String(lastError.stderr || "").trim() || String(lastError.message || "");
+    const causeLines = output
+      .split("\n")
+      .filter(
+        (line) => /Error|NODE_MODULE_VERSION|compiled against/.test(line) && line.length < 400
+      );
+    const ended = lastError.signal
+      ? `signal ${lastError.signal}`
+      : `exit status ${lastError.status ?? lastError.code ?? "unknown"}`;
+    const detail = (causeLines.length ? causeLines.join("\n") : output.slice(-400)).trim();
+    throw new Error(
+      `afterPack: ${path.basename(modulePath)} does not load in the packaged Electron (${ended}). ` +
+        `Run \`node scripts/clear-native-rebuild-cache.js\` and build again.\n${detail}`,
+      { cause: lastError }
+    );
   }
 }
 
