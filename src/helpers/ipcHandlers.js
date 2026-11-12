@@ -6189,7 +6189,9 @@ class IPCHandlers {
       return this.environmentManager.saveAllKeysToEnvFile();
     });
 
-    ipcMain.handle("sync-startup-preferences", async (event, prefs) => {
+    ipcMain.handle("sync-startup-preferences", async (event, reported) => {
+      // Local-only always pre-warms Orukeet, whatever a window's stored profile says.
+      const prefs = require("../config/localOnlyDefaults").localOnlyStartupSpeechPrefs(reported);
       const setVars = {};
       const clearVars = [];
 

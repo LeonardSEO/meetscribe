@@ -61,3 +61,22 @@ export function startupSpeechEnv(env) {
     parakeetModel: model || DEFAULT_LOCAL_SPEECH_MODEL,
   };
 }
+
+// What a window reports to main for pre-warming. An upstream profile carried over by the
+// data-folder migration can still say cloud mode or Whisper, which would make main stop
+// the Orukeet server and clear its pre-warm settings, so local-only reports Orukeet always.
+// Orukeet models are recognised by their id here, since main has no model catalog in this
+// module; the renderer clamps through the catalog (localOnlySpeechClamp.ts).
+export function localOnlyStartupSpeechPrefs(prefs) {
+  if (!isLocalOnly()) return prefs;
+  const model =
+    typeof prefs?.model === "string" && prefs.model.startsWith("orukeet-")
+      ? prefs.model
+      : DEFAULT_LOCAL_SPEECH_MODEL;
+  return {
+    ...prefs,
+    useLocalWhisper: true,
+    localTranscriptionProvider: DEFAULT_LOCAL_SPEECH_PROVIDER,
+    model,
+  };
+}

@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { clampLocalOnlySpeech } from "../stores/localOnlySpeechClamp";
 import { useShallow } from "zustand/react/shallow";
 import {
   useSettingsStore,
@@ -225,7 +226,8 @@ function useSettingsInternal() {
     localHistoryPolicyResolved,
   ]);
 
-  // Sync startup pre-warming preferences to main process
+  // Sync startup pre-warming preferences to main process. Local-only reports the
+  // clamped speech route, never an upstream profile's stored cloud or Whisper choice.
   const {
     useLocalWhisper,
     localTranscriptionProvider,
@@ -234,7 +236,7 @@ function useSettingsInternal() {
     cohereModel,
     preferredLanguage,
     keepLocalModelLoaded,
-  } = store;
+  } = clampLocalOnlySpeech(store);
   // Every window runs this sync, and the main process stops the shared
   // llama-server from it, so it must see every scope's resolved local model.
   const policySnapshot = usePolicySnapshot();
