@@ -369,7 +369,7 @@ jobs:
           APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
         run: |
           if [ -z "$APPLE_CERTIFICATE_BASE64" ]; then
-            echo "No Apple Developer ID certificate configured: the build is signed ad-hoc and not notarized."
+            echo "::warning title=macOS build not notarized::No Apple Developer ID certificate configured, so this build is signed ad-hoc and not notarized. Gatekeeper will ask users to approve it."
             exit 0
           fi
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
