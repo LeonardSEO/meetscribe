@@ -12,7 +12,11 @@ function createCloudConfigRequestHandler({
   return async function handleCloudConfigRequest(event) {
     // Local-only has no cloud speech route to configure; asking is not an error.
     if (isLocalOnly()) {
-      return { success: false, error: "Cloud services are off in local-only mode", code: "LOCAL_ONLY" };
+      return {
+        success: false,
+        error: "Cloud services are off in local-only mode",
+        code: "LOCAL_ONLY",
+      };
     }
     try {
       const apiUrl = getApiUrl();

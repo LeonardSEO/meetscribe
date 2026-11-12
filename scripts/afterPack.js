@@ -330,13 +330,16 @@ function verifyNativeModulesLoad(executable, modulePaths, run = execFileSync) {
     } catch (error) {
       // Electron prints its minified bootstrap before the error; keep only the cause.
       const output = String(error.stderr || error.message || "");
-      const cause = output
+      const causeLines = output
         .split("\n")
-        .filter((line) => /Error|NODE_MODULE_VERSION|compiled against/.test(line) && line.length < 400);
-      const detail = (cause.length ? cause.join("\n") : output.slice(-400)).trim();
+        .filter(
+          (line) => /Error|NODE_MODULE_VERSION|compiled against/.test(line) && line.length < 400
+        );
+      const detail = (causeLines.length ? causeLines.join("\n") : output.slice(-400)).trim();
       throw new Error(
         `afterPack: ${path.basename(modulePath)} does not load in the packaged Electron. ` +
-          `Run \`node scripts/clear-native-rebuild-cache.js\` and build again.\n${detail}`
+          `Run \`node scripts/clear-native-rebuild-cache.js\` and build again.\n${detail}`,
+        { cause: error }
       );
     }
   }
@@ -354,7 +357,9 @@ function verifyPackagedNativeModules(context) {
       ? path.join(resolveAppPath(context), "Contents", "MacOS", productFilename)
       : path.join(context.appOutDir, `${productFilename}.exe`);
   const unpacked = path.join(resolveResourcesDir(context), "app.asar.unpacked", "node_modules");
-  const modules = [path.join(unpacked, "better-sqlite3", "build", "Release", "better_sqlite3.node")];
+  const modules = [
+    path.join(unpacked, "better-sqlite3", "build", "Release", "better_sqlite3.node"),
+  ];
 
   verifyNativeModulesLoad(executable, modules);
   console.log("  afterPack: native modules load in the packaged Electron");
