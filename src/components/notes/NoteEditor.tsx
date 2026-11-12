@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback, type ComponentProps } from "react";
+import { isLocalOnly } from "../../config/localOnly.js";
 import { useTranslation } from "react-i18next";
 import { useUiLocale } from "../../hooks/useUiLocale";
 import { usePolicySnapshot, useTranscriptionChoiceRefusal } from "../../hooks/usePolicy";
@@ -1390,17 +1391,22 @@ export default function NoteEditor({
                   className={cn(SPLIT_BUTTON_SEGMENT_CLASS, "gap-1.5 ps-2.5 pe-3")}
                 >
                   <Lock size={13} className={isShared ? "text-primary" : "text-foreground/60"} />
-                  {t("noteEditor.share.button")}
+                  {t(isLocalOnly() ? "noteEditor.share.dialog.export" : "noteEditor.share.button")}
                 </button>
-                <span aria-hidden="true" className={SPLIT_BUTTON_DIVIDER_CLASS} />
-                <button
-                  type="button"
-                  onClick={() => openShare("copy-link")}
-                  aria-label={t("noteEditor.share.dialog.copyLink")}
-                  className={cn(SPLIT_BUTTON_SEGMENT_CLASS, "w-[30px] justify-center")}
-                >
-                  <Link2 size={13} className="text-foreground/60" />
-                </button>
+                {/* Local-only has no cloud link to copy. */}
+                {!isLocalOnly() && (
+                  <>
+                    <span aria-hidden="true" className={SPLIT_BUTTON_DIVIDER_CLASS} />
+                    <button
+                      type="button"
+                      onClick={() => openShare("copy-link")}
+                      aria-label={t("noteEditor.share.dialog.copyLink")}
+                      className={cn(SPLIT_BUTTON_SEGMENT_CLASS, "w-[30px] justify-center")}
+                    >
+                      <Link2 size={13} className="text-foreground/60" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

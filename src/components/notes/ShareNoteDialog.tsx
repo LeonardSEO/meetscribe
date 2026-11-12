@@ -45,6 +45,7 @@ import {
 import { usePolicySnapshot } from "../../hooks/usePolicy";
 import { emailDomain, isPersonalEmailDomain } from "../../utils/personalEmailDomains";
 import { EMAIL_REGEX } from "../../utils/validation";
+import { isLocalOnly } from "../../config/localOnly.js";
 import type {
   NoteAccessGrant,
   NoteAccessState,
@@ -726,12 +727,17 @@ export default function ShareNoteDialog({
     }
   };
 
+  const localOnly = isLocalOnly();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md gap-3 p-5">
-        <DialogTitle className="text-base">{t("noteEditor.share.dialog.title")}</DialogTitle>
+        <DialogTitle className="text-base">
+          {t(localOnly ? "noteEditor.share.dialog.export" : "noteEditor.share.dialog.title")}
+        </DialogTitle>
 
-        {!cloudId ? (
+        {/* Local-only has no cloud copy to share; the dialog only exports. */}
+        {localOnly ? null : !cloudId ? (
           <>
             <DialogDescription className="text-xs text-foreground/50">
               {sharingRestrictedByPolicy
