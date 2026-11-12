@@ -231,3 +231,18 @@ test("upload titles fall back to the transcript, then the file name", async () =
   );
   assert.equal(uploadTitleFallback("   ", "board-meeting.m4a"), "board-meeting");
 });
+
+test("a speaker-labelled transcript titles the note from the spoken words", async () => {
+  const { uploadTitleFallback } = await load();
+  const text =
+    "[Speaker 1] 0:00 - 0:24 Goedemorgen allemaal, welkom bij het overleg over de lancering\n" +
+    "[Speaker 2] 0:24 - 1:05 Dank je";
+  assert.equal(uploadTitleFallback(text, "board.m4a"), "Goedemorgen allemaal, welkom bij het overleg...");
+  assert.equal(uploadTitleFallback("[Sanne] 1:02:03 - 1:02:09 Kort", "x.wav"), "Kort");
+  assert.equal(uploadTitleFallback("[Speaker 1] 0:00 - 0:01", "board-meeting.m4a"), "board-meeting");
+  // The diarized upload text puts each speaker header on its own line.
+  assert.equal(
+    uploadTitleFallback("[Speaker 1] 0:00 - 0:24\nWe moeten het budget bespreken\n\n[Speaker 2] 0:24 - 0:30\nJa", "a.wav"),
+    "We moeten het budget bespreken Ja"
+  );
+});

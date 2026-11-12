@@ -116,8 +116,11 @@ export async function saveUploadNote({
 }
 
 // First words of the transcript, else the file name without its extension.
+// "[Speaker 1] 0:00 - 0:24", the header a diarized upload puts before each turn.
+const SPEAKER_HEADER = /\[[^\]\n]{1,80}\]\s+\d{1,2}(?::\d{2}){1,2}\s+-\s+\d{1,2}(?::\d{2}){1,2}/g;
+
 export function uploadTitleFallback(text: string, fileName: string): string {
-  const words = text.trim().split(/\s+/);
+  const words = text.replace(SPEAKER_HEADER, " ").trim().split(/\s+/).filter(Boolean);
   const preview = words.slice(0, 6).join(" ") + (words.length > 6 ? "..." : "");
   return preview || fileName.replace(/\.[^.]+$/, "");
 }
